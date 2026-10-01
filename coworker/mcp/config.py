@@ -13,6 +13,7 @@ target the **global** file.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
@@ -106,7 +107,12 @@ def load_mcp_servers(
         for name, raw in (_read(path).get("mcpServers") or {}).items():
             if isinstance(raw, dict):
                 merged.setdefault(name, raw)  # global first → global wins on clash
-    return [_parse(name, raw, secrets) for name, raw in merged.items()]
+    parsed = [_parse(name, raw, secrets) for name, raw in merged.items()]
+    if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+        # stdio MCP commands run in the engine process, outside the agent tool
+        # sandbox. Never launch them under the shared hosted OS identity.
+        parsed = [server for server in parsed if server.transport == "http"]
+    return parsed
 
 
 # -- raw global-file mutation (REST) -------------------------------------------

@@ -75,15 +75,17 @@ def parse_join_url(join_url: str) -> tuple[str, str]:
     if parts.scheme not in ("http", "https") or not parts.netloc:
         raise ValueError(f"not a join URL: {join_url}")
     segments = [s for s in parts.path.split("/") if s]
-    if len(segments) != 2 or segments[0] != "j" or not segments[1]:
+    if len(segments) < 2 or segments[-2] != "j" or not segments[-1]:
         raise ValueError(f"not a join URL (expected …/j/<token>): {join_url}")
-    return f"{parts.scheme}://{parts.netloc}", segments[1]
+    prefix = "/".join(segments[:-2])
+    base = f"{parts.scheme}://{parts.netloc}" + (f"/{prefix}" if prefix else "")
+    return base, segments[-1]
 
 
 def _ws_url(controller: str) -> str:
     parts = urlsplit(controller)
     scheme = "wss" if parts.scheme == "https" else "ws"
-    return f"{scheme}://{parts.netloc}/ws/machine"
+    return f"{scheme}://{parts.netloc}{parts.path.rstrip('/')}/ws/machine"
 
 
 def default_name() -> str:

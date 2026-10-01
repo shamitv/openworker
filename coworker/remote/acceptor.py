@@ -24,6 +24,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import json
+import os
 import re
 import secrets as pysecrets
 import time
@@ -63,6 +64,15 @@ _PROXY_SKIP_RESPONSE_HEADERS = {
     "connection",
     "content-encoding",
 }
+
+
+def _public_join_base(request: Request) -> str:
+    """The browser-facing controller URL for hosted private engines."""
+    origin = os.environ.get("OPENWORKER_PUBLIC_ORIGIN", "").rstrip("/")
+    user_id = os.environ.get("OPENWORKER_HOSTED_USER_ID", "")
+    if origin and re.fullmatch(r"[0-9a-f]{32}", user_id):
+        return f"{origin}/h/{user_id}"
+    return str(request.base_url).rstrip("/")
 
 
 class _LiveMachine:
@@ -298,7 +308,7 @@ def mount_acceptor(
         if tenant is None:
             return _unauthorized
         token, expiry = acceptor.arm(org_id=tenant["org_id"], actor=tenant.get("actor", ""))
-        base = str(request.base_url).rstrip("/")
+        base = _public_join_base(request)
         return {
             "join_url": f"{base}/j/{token}",
             "expires_at": expiry,
@@ -432,7 +442,7 @@ def mount_acceptor(
                 "actor": tenant.get("actor", ""),
             }
         )
-        base = str(request.base_url).rstrip("/")
+        base = _public_join_base(request)
         acceptor.ephemera.update_grant(
             grant["device_code"],
             status="approved",

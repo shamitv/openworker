@@ -42,6 +42,14 @@ CLIENT_NAME = "OpenWorker"
 
 def redirect_base() -> str:
     """The sidecar's own loopback origin — the DCR-registered redirect must match it."""
+    if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+        import re
+
+        origin = os.environ.get("OPENWORKER_PUBLIC_ORIGIN", "").rstrip("/")
+        user_id = os.environ.get("OPENWORKER_HOSTED_USER_ID", "")
+        if origin.startswith("https://") and re.fullmatch(r"[0-9a-f]{32}", user_id):
+            return f"{origin}/h/{user_id}"
+        raise RuntimeError("hosted OAuth callback origin is not configured")
     port = os.environ.get("COWORKER_PORT") or "8765"
     return f"http://127.0.0.1:{port}"
 
@@ -203,6 +211,9 @@ async def _open_browser(url: str) -> None:
     global last_authorize_url, _expected_state
     last_authorize_url = url
     _expected_state = _state_from_url(url)
+    if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+        logger.info("mcp oauth: waiting for browser to open returned consent URL")
+        return
     import webbrowser
 
     logger.info("mcp oauth: opening browser for sign-in")

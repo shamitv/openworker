@@ -98,6 +98,11 @@ def _browser_page(
         f'<div class="ico ok">✓{badge}</div>' if ok else '<div class="ico bad">✕</div>'
     )
     err = f'<div class="err">{_html.escape(error)}</div>' if error else ""
+    if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+        origin = os.environ.get("OPENWORKER_PUBLIC_ORIGIN", "").rstrip("/")
+        foot = f'<a href="{_html.escape(origin, quote=True)}/">Return to OpenWorker</a>'
+    else:
+        foot = "Served locally by OpenWorker on your Mac"
     return (
         "<!doctype html><html><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width, initial-scale=1'>"
@@ -135,7 +140,7 @@ def _browser_page(
         "</style></head><body>"
         '<div class="card"><div class="mark"><i></i>OpenWorker</div>'
         f"{icon}<h1>{_html.escape(title)}</h1><p>{_html.escape(detail)}</p>{err}</div>"
-        '<div class="foot">Served locally by OpenWorker on your Mac</div>'
+        f'<div class="foot">{foot}</div>'
         "</body></html>"
     )
 
@@ -259,7 +264,11 @@ def create_app(manager: SessionManager) -> FastAPI:
         The SAME SPA serves both tiers; this server-driven flag — never a build
         config — is what tells it which surfaces exist. The desktop sidecar is
         a full home; the acceptor-only cloud service answers mode:"cloud"."""
-        return {"mode": "desktop"}
+        return (
+            {"mode": "desktop", "headless_web": True}
+            if os.environ.get("OPENWORKER_HOSTED_WEB") == "1"
+            else {"mode": "desktop"}
+        )
 
     @app.get("/v1/health")
     def health(request: Request) -> dict[str, Any]:
@@ -500,8 +509,18 @@ def create_app(manager: SessionManager) -> FastAPI:
         reg = manager.personas
         try:
             if body.get("git_url"):
+                if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+                    from urllib.parse import urlsplit
+
+                    source = urlsplit(str(body["git_url"]))
+                    if source.scheme != "https" or not source.netloc:
+                        return {"ok": False, "error": "Hosted persona Git sources must use HTTPS."}
                 summaries = reg.install_from_git(str(body["git_url"]))
             elif body.get("dir"):
+                if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+                    from ..basedir import ensure_under_base
+
+                    ensure_under_base(str(body["dir"]), "persona directory")
                 summaries = reg.install_from_dir(str(body["dir"]))
             elif body.get("zip_b64"):
                 # Sharing v1 (OPE-7): a bundle zip — the export format — round-trips
@@ -556,6 +575,13 @@ def create_app(manager: SessionManager) -> FastAPI:
     def export_persona(persona_id: str, body: dict) -> dict[str, Any]:
         # Sharing v1 (OPE-7): zip the persona's bundle into the chosen folder. The zip
         # is the import format — send it to a teammate, they import it from the picker.
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            try:
+                from ..basedir import ensure_under_base
+
+                ensure_under_base(str((body or {}).get("dir", "")), "export directory")
+            except ValueError as exc:
+                return {"ok": False, "error": str(exc)}
         return manager.personas.export_persona(
             persona_id, str((body or {}).get("dir", ""))
         )
@@ -670,7 +696,10 @@ def create_app(manager: SessionManager) -> FastAPI:
 
     @app.get("/v1/skills")
     def skills(workspace: str = "") -> dict[str, Any]:
-        return {"skills": manager.list_skills(workspace or None)}
+        try:
+            return {"skills": manager.list_skills(workspace or None)}
+        except ValueError as exc:
+            return {"skills": [], "error": str(exc)}
 
     @app.post("/v1/skills")
     def create_skill(body: dict) -> dict[str, Any]:
@@ -747,6 +776,8 @@ def create_app(manager: SessionManager) -> FastAPI:
 
     @app.post("/v1/workspaces/pick")
     async def pick_workspace() -> dict[str, Any]:
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            return {"ok": False, "error": "Enter a VM workspace path instead."}
         # Native folder picker opened by the LOCAL sidecar (browser GUIs can't get absolute
         # paths from web file dialogs). Off the event loop: blocks until pick/cancel.
         return await asyncio.to_thread(manager.pick_native_folder)
@@ -797,8 +828,26 @@ def create_app(manager: SessionManager) -> FastAPI:
     def session_artifact_read(session_id: str, path: str) -> dict[str, Any]:
         return manager.read_artifact(session_id, path)
 
+    @app.get("/v1/sessions/{session_id}/artifacts/download")
+    def session_artifact_download(session_id: str, path: str):
+        from fastapi.responses import FileResponse
+
+        target, _ = manager._artifact_target(session_id, path)
+        if target is None or not target.is_file():
+            return JSONResponse({"error": "artifact not found"}, status_code=404)
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            try:
+                from ..basedir import ensure_under_base
+
+                ensure_under_base(target, "artifact")
+            except ValueError:
+                return JSONResponse({"error": "artifact not found"}, status_code=404)
+        return FileResponse(target, filename=target.name, media_type="application/octet-stream")
+
     @app.post("/v1/sessions/{session_id}/artifacts/reveal")
     def session_artifact_reveal(session_id: str, body: dict) -> dict[str, Any]:
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            return {"ok": False, "error": "Download the artifact in your browser."}
         body = body or {}
         return manager.reveal_artifact(
             session_id, str(body.get("path", "")), str(body.get("mode", "reveal"))
@@ -1790,7 +1839,8 @@ def create_app(manager: SessionManager) -> FastAPI:
         from ..config import load_config
 
         out = cloud.begin_login(load_config())
-        webbrowser.open(out["authorize_url"])
+        if os.environ.get("OPENWORKER_HOSTED_WEB") != "1":
+            webbrowser.open(out["authorize_url"])
         return {"ok": True, "authorize_url": out["authorize_url"]}
 
     @app.post("/v1/cloud/logout")
@@ -1895,7 +1945,8 @@ def create_app(manager: SessionManager) -> FastAPI:
             )
         )
         if out.get("ok"):
-            webbrowser.open(out["authorize_url"])
+            if os.environ.get("OPENWORKER_HOSTED_WEB") != "1":
+                webbrowser.open(out["authorize_url"])
         return out
 
     @asynccontextmanager
@@ -2299,6 +2350,8 @@ def create_app(manager: SessionManager) -> FastAPI:
 
     @app.post("/v1/providers/openai-codex/signin")
     async def codex_signin() -> dict[str, Any]:
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            return {"ok": False, "error": "This provider's fixed loopback callback is available only in the desktop app."}
         # Opens the system browser and waits on the loopback callback — that can
         # take minutes, so it runs as a background task; the GUI polls the status
         # route for the flip (authorizing → signed_in | last_error). Same shape as
@@ -2401,6 +2454,8 @@ def create_app(manager: SessionManager) -> FastAPI:
 
     @app.post("/v1/settings/sandbox")
     def settings_set_sandbox(body: dict) -> dict[str, Any]:
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            return {"ok": False, "error": "The hosted sandbox is configured by the VM administrator."}
         from ..sandbox import settings as sandbox_settings
 
         result = sandbox_settings.update(body or {})

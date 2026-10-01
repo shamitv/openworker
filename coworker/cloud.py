@@ -24,6 +24,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import os
+import re
 import secrets as _secrets
 import time
 import urllib.parse
@@ -70,6 +71,19 @@ def _now() -> float:
     return time.time()
 
 
+def _hosted_callback_path(path: str) -> str | None:
+    """Public callback for one hosted engine; the gateway routes by account id."""
+    origin = os.environ.get("OPENWORKER_PUBLIC_ORIGIN", "").rstrip("/")
+    user_id = os.environ.get("OPENWORKER_HOSTED_USER_ID", "")
+    if origin.startswith("https://") and re.fullmatch(r"[0-9a-f]{32}", user_id):
+        return f"{origin}/h/{user_id}{path}"
+    return None
+
+
+def _login_redirect_uri(config: Config) -> str:
+    return _hosted_callback_path("/auth/callback") or config.cloud_base_url.rstrip("/") + "/v1/auth/callback"
+
+
 # --- sign-in -----------------------------------------------------------------
 
 
@@ -87,14 +101,14 @@ def begin_login(config: Config) -> dict[str, Any]:
     verifier = _b64url(_secrets.token_bytes(48))
     challenge = _b64url(hashlib.sha256(verifier.encode()).digest())
     port = os.environ.get("COWORKER_PORT") or config.port
-    state = f"{_secrets.token_urlsafe(16)}.{port}"
+    state = _secrets.token_urlsafe(24) if _hosted_callback_path("/auth/callback") else f"{_secrets.token_urlsafe(16)}.{port}"
 
     for key, pending in list(_pending_logins.items()):  # expire stale attempts
         if float(pending["created"]) < _now() - _PENDING_TTL:
             _pending_logins.pop(key, None)
     _pending_logins[state] = {"verifier": verifier, "created": _now()}
 
-    redirect_uri = config.cloud_base_url.rstrip("/") + "/v1/auth/callback"
+    redirect_uri = _login_redirect_uri(config)
     authorize_url = (
         f"https://{config.cloud_auth_domain}/authorize?"
         + urllib.parse.urlencode(
@@ -131,7 +145,7 @@ def complete_login(
             # broker bounce, not the loopback. The bounce change (eda23c9) updated only the
             # authorize leg; the stale loopback here made Auth0 reject every exchange
             # ("token exchange failed" on all sign-ins from 07-09 to 07-11).
-            "redirect_uri": config.cloud_base_url.rstrip("/") + "/v1/auth/callback",
+            "redirect_uri": _login_redirect_uri(config),
         },
         timeout=15,
     )
@@ -376,7 +390,7 @@ def begin_managed_connect(
             config.cloud_base_url.rstrip("/") + f"/v1/oauth/{provider}/start",
             json={
                 "connector": connector,
-                "redirect": f"http://127.0.0.1:{port}/oauth/callback",
+                "redirect": _hosted_callback_path("/oauth/callback") or f"http://127.0.0.1:{port}/oauth/callback",
                 "app_state": app_state,
                 **({"access": access} if access else {}),
                 **({"flow": flow} if flow else {}),

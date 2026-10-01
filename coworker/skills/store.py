@@ -91,7 +91,9 @@ class SkillStore:
 
     # -- scope dirs ---------------------------------------------------------------
     def project_dir(self, workspace: str | Path) -> Path:
-        return Path(workspace).expanduser().resolve() / ".coworker" / "skills"
+        from ..basedir import ensure_under_base
+
+        return ensure_under_base(workspace, "workspace") / ".coworker" / "skills"
 
     def _base(self, scope: str, workspace: Optional[str | Path]) -> Path:
         if scope == GLOBAL_SCOPE:

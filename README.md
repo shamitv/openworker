@@ -10,6 +10,8 @@
 
 It runs on your machine and doesn't lock you into any model: bring your own API key for OpenAI, Anthropic, Google, or an open-weight provider, or run fully local with Ollama. Your data leaves your machine only through the model and integrations *you* choose. Every action an agent takes is governed and logged — see [Governed by design](#governed-by-design) — and its commands can run inside an [NVIDIA OpenShell](docs/openshell.md) sandbox.
 
+For an opt-in, multi-account browser deployment on a headless VM, see [Hosting the full UI](docs/headless-vm-ui.md).
+
 [![How OpenWorker works](docs/assets/how-it-works.png)](https://openworker.com)
 
 ## Download

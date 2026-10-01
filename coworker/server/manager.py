@@ -552,6 +552,10 @@ class SessionManager:
         if not str(path).strip():
             return {"ok": False, "error": "workspace path is required"}
         candidate = Path(path).expanduser()
+        try:
+            ensure_under_base(candidate, "folder")
+        except OutsideBaseDir as exc:
+            return {"ok": False, "error": str(exc)}
         if trusted and not candidate.is_dir():
             return {"ok": False, "error": "workspace is not a directory"}
         canonical = self.workspace_trust.set_trusted(candidate, trusted)
@@ -2133,6 +2137,10 @@ class SessionManager:
                     "auth_hint": name in self._mcp_auth_hints,
                     "last_test_at": self._prefs.get("mcp_last_test", {}).get(name),
                     "last_error": self._mcp_errors.get(name),
+                    "authorize_url": (
+                        mcp_oauth.last_authorize_url
+                        if name in self._mcp_authorizing and is_oauth else None
+                    ),
                     "tool_count": (
                         len(self.mcp._conns[name].tools) if connected else None
                     ),
@@ -2148,6 +2156,9 @@ class SessionManager:
         2026-08-21 — the button looked dead). Known names only, so an unknown
         server can't wedge the flag (connect_mcp only clears it on a match)."""
         if name in read_global():
+            from ..mcp import oauth as mcp_oauth
+
+            mcp_oauth.last_authorize_url = None
             self._mcp_authorizing.add(name)
 
     async def connect_mcp(self, name: str) -> dict[str, Any]:
@@ -2163,6 +2174,7 @@ class SessionManager:
         ):
             if server.name != name:
                 continue
+            mcp_oauth.last_authorize_url = None
             self._mcp_authorizing.add(name)
             self._mcp_errors.pop(name, None)
             self._mcp_auth_hints.discard(name)
@@ -2248,10 +2260,16 @@ class SessionManager:
         return {"ok": True, "had_tokens": removed}
 
     def add_mcp(self, name: str, config: dict[str, Any]) -> dict[str, Any]:
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1" and not config.get("url"):
+            return {"ok": False, "error": "Hosted mode supports HTTP MCP servers only."}
         put_global_server(name, config)
         return {"ok": True, "name": name}
 
     def patch_mcp(self, name: str, changes: dict[str, Any]) -> dict[str, Any]:
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            merged = {**(read_global().get(name) or {}), **changes}
+            if not merged.get("url"):
+                return {"ok": False, "error": "Hosted mode supports HTTP MCP servers only."}
         ok = patch_global_server(name, changes)
         return {"ok": ok, "name": name}
 
@@ -2406,7 +2424,11 @@ class SessionManager:
         # Enrich two-way connectors with the live gateway's recently-seen senders, so the Connectors
         # tab can manage the allow-list inline (each recent sender flagged authorized or not).
         connectors = connector_list(self.secrets)
+        from ..mcp import oauth as mcp_oauth
+
         for c in connectors:
+            if c.get("name") in self._mcp_authorizing:
+                c["authorize_url"] = mcp_oauth.last_authorize_url
             if not (c.get("two_way") and c.get("connected")):
                 continue
             allowed = set(c.get("allowed_users") or [])
@@ -4916,6 +4938,10 @@ class SessionManager:
         path = (path or "").strip()
         if not path:
             return {"ok": False, "error": "empty path"}
+        try:
+            ensure_under_base(path, "scratch folder")
+        except OutsideBaseDir as exc:
+            return {"ok": False, "error": str(exc)}
         try:
             Path(path).expanduser().mkdir(parents=True, exist_ok=True)
         except OSError as exc:
