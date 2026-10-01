@@ -1,7 +1,9 @@
 # Phase 2 todo
 
-- [ ] Add per-user engine process supervisor, state roots, ports, and tokens.
-- [ ] Start enabled engines and monitor, restart, and stop them on account changes.
-- [ ] Enforce account-to-home mapping and path confinement.
-- [ ] Require an enforcing sandbox for all agent shell and file tools.
-- [ ] Add engine isolation, crash recovery, automation, and sandbox-failure tests.
+- [x] Add a per-account engine supervisor with private homes, ephemeral loopback ports, and process-only launch tokens.
+- [x] Start enabled engines at gateway startup; reconcile account changes, stop disabled engines, and restart crashes with backoff.
+- [x] Resolve account-to-home mappings from the account store and reject homes outside the managed homes directory.
+- [x] Require a supported enforcing sandbox provider and fail closed when provider preflight fails.
+- [x] Add mocked supervisor tests for the 20-account limit, restart, disable, and sandbox-unavailable behavior.
+- [ ] Verify real sandbox enforcement and non-loopback isolation on a target host.
+- [ ] Verify scheduled work continues without a browser and resumes after a real engine crash/restart.
