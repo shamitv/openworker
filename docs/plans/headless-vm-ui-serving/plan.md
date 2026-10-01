@@ -8,7 +8,7 @@ Serve the full OpenWorker UI from a headless VM to up to 20 admin-provisioned us
 
 Browser → HTTPS reverse proxy → authenticated web gateway → user's loopback-only `openworker-server` → sandboxed tools. The gateway serves the built React SPA, owns account sessions, checks the user-to-home mapping, and proxies HTTP and WebSockets to the correct engine. The browser never receives an engine launch token. Engines stay running after logout so automations continue.
 
-The gateway binds to loopback, accepts only the configured public origin, and trusts forwarded headers only from the local reverse proxy. The public API is cookie-authenticated with CSRF protection. Engine processes use separate state and workspace roots. Disable `direct` tool execution in this deployment and fail closed if the configured sandbox cannot start.
+The gateway binds to loopback, checks the configured public origin on state-changing browser requests and browser WebSockets, and reads forwarded client addresses only from its loopback peer. The public API is cookie-authenticated with CSRF protection. Engine processes use separate state and workspace roots. Disable `direct` tool execution in this deployment and fail closed if the configured sandbox cannot start.
 
 ## Phase order
 
@@ -20,12 +20,16 @@ The gateway binds to loopback, accepts only the configured public origin, and tr
 
 Each phase has `plan.md`, `todo.md`, and `status.md`. A phase is complete only after its acceptance criteria and tests pass; its status file records the evidence.
 
+## Current progress
+
+Implementation for phases 1–4 is present. [`tests/test_hosted_web.py`](../../../tests/test_hosted_web.py) contains four backend tests covering account/session revocation, mocked supervisor recovery and sandbox failure, OAuth callback and join URL handling, and gateway HTTP/WebSocket isolation. The tests are present; execution results are not recorded here. Phase 5 deployment and operations guidance is present in [`docs/headless-vm-ui.md`](../../headless-vm-ui.md). No phase is recorded as complete: browser, VM, real-sandbox, unattended-work, and desktop regression verification remains outstanding. See each phase's `status.md` for implementation evidence, test coverage, and remaining checks.
+
 ## Public interfaces
 
-- `openworker-web serve --spa DIR --data-dir DIR --public-origin https://HOST --sandbox-provider NAME` starts the gateway on loopback; `--host` and `--port` configure its local listener.
+- `openworker-web serve --spa DIR --data-dir DIR --public-origin https://HOST --sandbox-provider NAME` starts the gateway on loopback; `--host` and `--port` configure its local listener. Supported providers are `openshell`, `seatbelt`, and `windows`.
 - `openworker-web user create|list|disable|reset-password USERNAME` administers accounts without putting passwords in command-line arguments.
-- `/web/auth/login`, `/web/auth/session`, `/web/auth/logout`, and `/web/auth/password` manage cookie sessions. The gateway proxies `/v1/*` and `/ws/*` to the account's engine.
-- The full-engine `/v1/capabilities` response gains a hosted-headless flag. Artifact downloads use an authenticated endpoint scoped to the account's workspace.
+- `/web/auth/login`, `/web/auth/session`, `/web/auth/logout`, and `/web/auth/password` manage cookie sessions. The gateway proxies `/v1/*` and `/ws/*` to the signed-in account's engine; the engine reports `{"mode":"desktop","headless_web":true}` from `/v1/capabilities`.
+- `GET /web/artifacts/download?session=ID&path=PATH` streams an authenticated account-scoped artifact. Public account routes under `/h/{account-id}/` allow the engine's OAuth callbacks and `/j/{token}` join links; joined machines use `/h/{account-id}/ws/machine`.
 
 ## Acceptance
 
@@ -37,4 +41,5 @@ Two users can run concurrent sessions from different browsers without reading or
 - Private homes with a separate engine process per user; account and authorization state is in the gateway database.
 - One VM supports up to 20 enabled accounts in the first release. Engines remain resident for unattended work.
 - No migration of existing desktop state in this feature.
+- Hosted OpenAI Codex subscription sign-in is unavailable because its fixed localhost callback is not supported. Cloud Auth0 and third-party OAuth providers need to allow the deployment's public HTTPS callback URLs.
 - A backend code-execution compromise could cross homes because engine processes share an OS identity. Supported API paths and agent tools are constrained in code and by the required sandbox; this is not process-level isolation.
