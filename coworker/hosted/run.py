@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import getpass
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -38,8 +39,8 @@ def main(argv: list[str] | None = None) -> None:
     if args.action == "user":
         from .accounts import AccountStore
 
-        store = AccountStore(args.data_dir)
         try:
+            store = AccountStore(args.data_dir)
             if args.user_action == "list":
                 for user in store.list_users():
                     print(f"{user['username']}\t{'enabled' if user['enabled'] else 'disabled'}\t{user['home']}")
@@ -52,6 +53,8 @@ def main(argv: list[str] | None = None) -> None:
             elif args.user_action == "reset-password":
                 store.reset_password(args.username, _password())
                 print(f"Reset {args.username}; password change required at next login")
+        except sqlite3.Error:
+            parser.error("account database operation failed")
         except (ValueError, KeyError, OSError) as exc:
             parser.error(str(exc))
         return
@@ -62,6 +65,8 @@ def main(argv: list[str] | None = None) -> None:
 
     try:
         app = create_app(spa=args.spa, data_dir=args.data_dir, public_origin=args.public_origin, sandbox_provider=args.sandbox_provider)
+    except sqlite3.Error:
+        parser.error("account database operation failed")
     except (ValueError, OSError) as exc:
         parser.error(str(exc))
     import uvicorn

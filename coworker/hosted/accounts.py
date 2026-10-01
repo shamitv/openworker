@@ -14,7 +14,7 @@ import secrets
 import sqlite3
 import time
 import uuid
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from pathlib import Path
 from typing import Iterator
 
@@ -38,6 +38,80 @@ _THROTTLE_WINDOW = 15 * 60
 _ACCOUNT_FAILURE_LIMIT = 5
 _IP_FAILURE_LIMIT = 20
 _MAX_ENABLED_ACCOUNTS = 20
+
+_SCHEMA_STATEMENTS = (
+    """CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        home TEXT NOT NULL UNIQUE,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        must_change INTEGER NOT NULL DEFAULT 1,
+        created_at REAL NOT NULL,
+        updated_at REAL NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS sessions (
+        token_hash TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        csrf TEXT NOT NULL,
+        created_at REAL NOT NULL,
+        last_seen_at REAL NOT NULL,
+        idle_expires_at REAL NOT NULL,
+        absolute_expires_at REAL NOT NULL
+    )""",
+    """CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id)""",
+    """CREATE TABLE IF NOT EXISTS login_failures (
+        kind TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        window_started_at REAL NOT NULL,
+        failures INTEGER NOT NULL,
+        PRIMARY KEY(kind, subject)
+    )""",
+    """CREATE TABLE IF NOT EXISTS account_audit (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        occurred_at REAL NOT NULL,
+        event TEXT NOT NULL,
+        user_id TEXT,
+        username TEXT,
+        client_ip TEXT
+    )""",
+)
+_SCHEMA_VERSION = 1
+
+
+def _schema_signature(db: sqlite3.Connection) -> dict:
+    tables = db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").fetchall()
+    result = {}
+    for row in tables:
+        name = row[0]
+        quoted = '"' + name.replace('"', '""') + '"'
+        columns = tuple(tuple(r) for r in db.execute(f"PRAGMA table_info({quoted})"))
+        foreign_keys = tuple(tuple(r) for r in db.execute(f"PRAGMA foreign_key_list({quoted})"))
+        indexes = []
+        for index in db.execute(f"PRAGMA index_list({quoted})"):
+            index_name = '"' + index[1].replace('"', '""') + '"'
+            indexes.append((index[2], tuple(r[2] for r in db.execute(f"PRAGMA index_info({index_name})")), index[4]))
+        result[name] = (columns, foreign_keys, tuple(sorted(indexes)))
+    return result
+
+
+def _validate_schema(db: sqlite3.Connection) -> None:
+    with closing(sqlite3.connect(":memory:")) as expected:
+        for statement in _SCHEMA_STATEMENTS:
+            expected.execute(statement)
+        if _schema_signature(db) != _schema_signature(expected):
+            raise ValueError("incompatible account database schema")
+
+
+def _migrate_v1(db: sqlite3.Connection) -> None:
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' LIMIT 1").fetchone():
+        _validate_schema(db)
+    else:
+        for statement in _SCHEMA_STATEMENTS:
+            db.execute(statement)
+
+
+_MIGRATIONS = (_migrate_v1,)
 
 
 def _normalize_username(username: str) -> str:
@@ -93,54 +167,44 @@ class AccountStore:
         if os.name != "nt":
             self.db_path.chmod(0o600)
         with self._connection() as db:
-            db.executescript(
-                """
-                CREATE TABLE IF NOT EXISTS users (
-                    id TEXT PRIMARY KEY,
-                    username TEXT NOT NULL UNIQUE,
-                    password_hash TEXT NOT NULL,
-                    home TEXT NOT NULL UNIQUE,
-                    enabled INTEGER NOT NULL DEFAULT 1,
-                    must_change INTEGER NOT NULL DEFAULT 1,
-                    created_at REAL NOT NULL,
-                    updated_at REAL NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS sessions (
-                    token_hash TEXT PRIMARY KEY,
-                    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                    csrf TEXT NOT NULL,
-                    created_at REAL NOT NULL,
-                    last_seen_at REAL NOT NULL,
-                    idle_expires_at REAL NOT NULL,
-                    absolute_expires_at REAL NOT NULL
-                );
-                CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
-                CREATE TABLE IF NOT EXISTS login_failures (
-                    kind TEXT NOT NULL,
-                    subject TEXT NOT NULL,
-                    window_started_at REAL NOT NULL,
-                    failures INTEGER NOT NULL,
-                    PRIMARY KEY(kind, subject)
-                );
-                CREATE TABLE IF NOT EXISTS account_audit (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    occurred_at REAL NOT NULL,
-                    event TEXT NOT NULL,
-                    user_id TEXT,
-                    username TEXT,
-                    client_ip TEXT
-                );
-                """
-            )
+            db.execute("BEGIN IMMEDIATE")
+            try:
+                version = db.execute("PRAGMA user_version").fetchone()[0]
+                if version > _SCHEMA_VERSION:
+                    raise ValueError("account database schema is newer than this application")
+                for target in range(version + 1, _SCHEMA_VERSION + 1):
+                    _MIGRATIONS[target - 1](db)
+                    db.execute(f"PRAGMA user_version={target}")
+                _validate_schema(db)
+                db.commit()
+            except BaseException:
+                db.rollback()
+                raise
 
     @contextmanager
     def _connection(self) -> Iterator[sqlite3.Connection]:
         db = sqlite3.connect(self.db_path, timeout=10, isolation_level=None)
         db.row_factory = sqlite3.Row
-        db.execute("PRAGMA busy_timeout=10000")
-        db.execute("PRAGMA journal_mode=WAL")
-        db.execute("PRAGMA foreign_keys=ON")
         try:
+            db.execute("PRAGMA busy_timeout=10000")
+            # Concurrent first opens can race while SQLite changes journal mode;
+            # that upgrade can return BUSY without honoring busy_timeout.
+            deadline = time.monotonic() + 10
+            while True:
+                try:
+                    if db.execute("PRAGMA journal_mode").fetchone()[0] != "wal":
+                        db.execute("PRAGMA journal_mode=WAL")
+                    break
+                except sqlite3.OperationalError as exc:
+                    # sqlite_errorcode is available starting with Python 3.11.
+                    code = getattr(exc, "sqlite_errorcode", 0) & 0xFF
+                    busy = code in (5, 6) or str(exc) in (
+                        "database is locked", "database table is locked",
+                    )
+                    if not busy or time.monotonic() >= deadline:
+                        raise
+                    time.sleep(0.01)
+            db.execute("PRAGMA foreign_keys=ON")
             yield db
         finally:
             db.close()
@@ -180,6 +244,8 @@ class AccountStore:
         with self._connection() as db:
             db.execute("BEGIN IMMEDIATE")
             try:
+                if db.execute("SELECT 1 FROM users WHERE username=?", (normalized,)).fetchone():
+                    raise ValueError("username already exists")
                 enabled_count = db.execute(
                     "SELECT COUNT(*) FROM users WHERE enabled=1"
                 ).fetchone()[0]
@@ -313,12 +379,27 @@ class AccountStore:
         lookup = normalized if _USERNAME.fullmatch(normalized) else ""
         username_subject = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
         now = time.time()
+        # Already throttled attempts are audited without expensive password work
+        # or changing the failure window. Recheck after verification for races.
         with self._connection() as db:
-            if self._throttled(db, "ip", ip, _IP_FAILURE_LIMIT, now) or self._throttled(
-                db, "username", username_subject, _ACCOUNT_FAILURE_LIMIT, now
-            ):
-                return None
-        # Always perform one Argon2 verification, including for unknown names.
+            db.execute("BEGIN IMMEDIATE")
+            try:
+                if self._throttled(db, "ip", ip, _IP_FAILURE_LIMIT, now) or self._throttled(
+                    db, "username", username_subject, _ACCOUNT_FAILURE_LIMIT, now
+                ):
+                    row = db.execute("SELECT id FROM users WHERE username=?", (lookup,)).fetchone()
+                    self._audit(
+                        db, "login_throttled",
+                        user_id=row["id"] if row is not None else None,
+                        username=normalized[:64], client_ip=ip,
+                    )
+                    db.commit()
+                    return None
+                db.commit()
+            except BaseException:
+                db.rollback()
+                raise
+        # Unthrottled attempts always verify Argon2, including unknown names.
         with self._connection() as db:
             row = db.execute(
                 "SELECT * FROM users WHERE username=?", (lookup,)
