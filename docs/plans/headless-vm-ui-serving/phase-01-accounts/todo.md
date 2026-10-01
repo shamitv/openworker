@@ -1,7 +1,9 @@
 # Phase 1 todo
 
-- [ ] Add account, home ownership, event, and session storage with migrations.
-- [ ] Add Argon2id hashing, login throttling, and generic failure responses.
-- [ ] Add admin create/list/disable/reset commands with hidden password prompts.
-- [ ] Add login, session, logout, and password-change endpoints with secure cookies and CSRF.
-- [ ] Add authentication, revocation, expiry, and cross-user ownership tests.
+- [x] Add SQLite account, home ownership, audit-event, login-failure, and browser-session storage.
+- [ ] Add explicit schema versioning and upgrade migrations.
+- [x] Add Argon2id password hashing, account/IP login throttling, and generic login failures.
+- [x] Add create/list/disable/reset-password commands with hidden password prompts.
+- [x] Add login, session, logout, and password-change endpoints with secure cookies, origin checks, and CSRF validation.
+- [x] Add account tests for first-login password change, password-change revocation, and disable revocation.
+- [ ] Add and run tests for expiry, lockout thresholds, concurrent login/password changes, CLI behavior, and broader cross-user ownership.
