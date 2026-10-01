@@ -289,3 +289,98 @@ def test_gateway_private_http_websocket_and_csrf(tmp_path, monkeypatch):
         bob_server.should_exit = True
         alice_thread.join(timeout=3)
         bob_thread.join(timeout=3)
+
+
+def _assert_cookie(response, *, cleared=False):
+    from http.cookies import SimpleCookie
+    cookie = SimpleCookie(response.headers["set-cookie"])[hosted_app.COOKIE]
+    assert cookie["secure"] and cookie["httponly"]
+    assert cookie["samesite"].lower() == "strict"
+    assert cookie["path"] == "/" and not cookie["domain"]
+    assert cookie["max-age"] == ("0" if cleared else str(7 * 86400))
+
+
+def test_phase_one_independent_clients_and_home_ownership(tmp_path, monkeypatch):
+    data, spa = tmp_path / "data", tmp_path / "spa"
+    spa.mkdir()
+    (spa / "index.html").write_text("<html><head></head><body>UI</body></html>")
+    store = AccountStore(data)
+    users = {name: store.create(name, f"{name} initial password long") for name in ("alice", "bob")}
+    engines = [_serve(_engine(name, f"{name}-engine-token")) for name in users]
+    selected = []
+    class RecordingSupervisor(_Supervisor):
+        async def ensure(self, user):
+            selected.append((user["id"], user["home"]))
+            return await super().ensure(user)
+    monkeypatch.setattr(hosted_app, "EngineSupervisor", RecordingSupervisor)
+    apps = [hosted_app.create_app(spa=spa, data_dir=data, public_origin=ORIGIN, sandbox_provider="openshell") for _ in users]
+    for app in apps:
+        app.state.supervisor.endpoints.update({name: EngineEndpoint(engine[0], f"{name}-engine-token") for name, engine in zip(users, engines)})
+    try:
+        with TestClient(apps[0], base_url=ORIGIN) as alice, TestClient(apps[1], base_url=ORIGIN) as bob:
+            sessions = {}
+            for name, client in (("alice", alice), ("bob", bob)):
+                initial = f"{name} initial password long"
+                replacement = f"{name} replacement password long"
+                response = client.post("/web/auth/login", headers={"Origin": ORIGIN}, json={"username": name, "password": initial})
+                _assert_cookie(response)
+                session = client.get("/web/auth/session").json()
+                assert session["must_change"]
+                assert client.get("/v1/whoami").status_code == 403
+                assert client.get("/", follow_redirects=False).headers["location"] == "/web/change-password"
+                for headers in ({}, {"Origin": ORIGIN}, {"Origin": "https://evil.example", "X-CSRF-Token": session["csrf"]}, {"Origin": ORIGIN, "X-CSRF-Token": "wrong"}):
+                    assert client.post("/web/auth/password", headers=headers, json={"current": initial, "new": replacement}).status_code == 403
+                response = client.post("/web/auth/password", headers={"Origin": ORIGIN, "X-CSRF-Token": session["csrf"]}, json={"current": initial, "new": replacement})
+                assert response.status_code == 200
+                _assert_cookie(response, cleared=True)
+                sessions[name] = _login(client, name, replacement)
+                assert sessions[name]["workspace_root"] == str(Path(users[name]["home"]) / "workspace")
+                assert not sessions[name]["must_change"]
+            assert alice.cookies.get(hosted_app.COOKIE) != bob.cookies.get(hosted_app.COOKIE)
+            for name, other, client in (("alice", "bob", alice), ("bob", "alice", bob)):
+                forged = {"X-OpenWorker-Actor": other, "X-OpenWorker-Token": f"{other}-engine-token", "X-OCW-Org": other}
+                result = client.get("/v1/whoami", headers=forged, params={"user_id": users[other]["id"], "home": users[other]["home"]})
+                assert result.json() == {"user": name, "actor": name, "cookie": None}
+                assert selected[-1] == (users[name]["id"], users[name]["home"])
+                assert client.get(f"/v1/sessions/{other}-session").status_code == 404
+                assert client.get("/web/artifacts/download", params={"session": f"{other}-session", "path": "secret.txt"}).status_code == 404
+                for headers in ({}, {"Origin": ORIGIN}, {"Origin": "https://evil.example", "X-CSRF-Token": sessions[name]["csrf"]}, {"Origin": ORIGIN, "X-CSRF-Token": sessions[other]["csrf"]}):
+                    assert client.post("/web/auth/logout", headers=headers).status_code == 403
+                    assert client.post("/v1/write", headers=headers).status_code == 403
+                text = client.get("/").text + client.get("/web/auth/session").text
+                assert "engine-token" not in text and "password_hash" not in text
+            response = alice.post("/web/auth/logout", headers={"Origin": ORIGIN, "X-CSRF-Token": sessions["alice"]["csrf"]})
+            _assert_cookie(response, cleared=True)
+            assert alice.get("/web/auth/session").status_code == 401
+            assert bob.get("/v1/whoami").json()["user"] == "bob"
+            store.reset_password("bob", "bob admin reset password long")
+            assert bob.get("/web/auth/session").status_code == 401
+            assert bob.get("/v1/whoami").status_code == 401
+    finally:
+        for _, server, thread in engines:
+            server.should_exit = True
+            thread.join(timeout=3)
+
+
+def test_phase_one_generic_login_errors(tmp_path, monkeypatch):
+    data, spa = tmp_path / "data", tmp_path / "spa"
+    spa.mkdir()
+    (spa / "index.html").write_text("<head></head>")
+    store = AccountStore(data)
+    for name in ("alice", "disabled", "locked"):
+        store.create(name, "initial password long enough")
+    store.disable("disabled")
+    for i in range(5):
+        store.authenticate("locked", "bad", f"192.0.2.{i}")
+    monkeypatch.setattr(hosted_app, "EngineSupervisor", _Supervisor)
+    app = hosted_app.create_app(spa=spa, data_dir=data, public_origin=ORIGIN, sandbox_provider="openshell")
+    with TestClient(app, base_url=ORIGIN) as client:
+        for name, password in (("alice", "wrong"), ("unknown", "initial password long enough"), ("disabled", "initial password long enough"), ("locked", "initial password long enough")):
+            response = client.post("/web/auth/login", headers={"Origin": ORIGIN}, json={"username": name, "password": password})
+            assert response.status_code == 401
+            assert response.json() == {"error": "invalid credentials"}
+            assert "set-cookie" not in response.headers
+        for origin in (None, "https://evil.example"):
+            response = client.post("/web/auth/login", headers={"Origin": origin} if origin else {}, json={"username": "alice", "password": "initial password long enough"})
+            assert response.status_code == 403
+        assert client.post("/web/auth/register", json={}).status_code in (404, 405)

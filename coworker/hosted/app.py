@@ -157,7 +157,7 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
             return JSONResponse({"error": "invalid credentials"}, status_code=401)
         token, csrf, user = result
         response = _no_cache(JSONResponse({"ok": True, "must_change": user["must_change"]}))
-        response.set_cookie(COOKIE, token, secure=True, httponly=True, samesite="lax", path="/", max_age=7 * 86400)
+        response.set_cookie(COOKIE, token, secure=True, httponly=True, samesite="strict", path="/", max_age=7 * 86400)
         return response
 
     @app.get("/web/auth/session")
@@ -176,7 +176,7 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
             return JSONResponse({"error": "request verification failed"}, status_code=403)
         store.revoke(request.cookies[COOKIE])
         response = _no_cache(JSONResponse({"ok": True}))
-        response.delete_cookie(COOKIE, path="/")
+        response.delete_cookie(COOKIE, path="/", secure=True, httponly=True, samesite="strict")
         return response
 
     @app.post("/web/auth/password")
@@ -195,7 +195,7 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
             return JSONResponse({"error": "password change failed"}, status_code=400)
         # Password change revokes every existing session; user signs in with the new password.
         response = _no_cache(JSONResponse({"ok": True}))
-        response.delete_cookie(COOKIE, path="/")
+        response.delete_cookie(COOKIE, path="/", secure=True, httponly=True, samesite="strict")
         return response
 
     @app.get("/web/health")
