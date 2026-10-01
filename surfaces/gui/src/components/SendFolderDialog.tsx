@@ -4,6 +4,7 @@ import { getRecentWorkspaces, openWorkspace, type Machine, type RecentWorkspace 
 import { chooseFolder } from "../tauri";
 import { baseName } from "../paths";
 import { Icon } from "./Icon";
+import { isHostedWeb, webWorkspaceRoot } from "../hostedWeb";
 
 // UX-029: folder enforcement AT SEND, not at session start. A code-family coworker with no
 // folder picked gets this dialog when the user hits send; the message goes out the moment a
@@ -25,7 +26,7 @@ export function SendFolderDialog({ coworkerName, machine, onPick, onTemp, onCanc
   const [recents, setRecents] = useState<RecentWorkspace[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [typedPath, setTypedPath] = useState("");
+  const [typedPath, setTypedPath] = useState(() => webWorkspaceRoot());
 
   useEffect(() => {
     getRecentWorkspaces(machine?.id).then(setRecents).catch(() => {});
@@ -64,7 +65,7 @@ export function SendFolderDialog({ coworkerName, machine, onPick, onTemp, onCanc
         <p className="text-ui text-muted mb-3">
           {machine
             ? t("onmachine.folder.send_sub", { machine: machine.name })
-            : t("folder_gate.send_sub")}
+            : t(isHostedWeb() ? "folder_gate.vm_path_note" : "folder_gate.send_sub")}
         </p>
         {recents
           .filter((w) => w.exists)
@@ -81,7 +82,7 @@ export function SendFolderDialog({ coworkerName, machine, onPick, onTemp, onCanc
               <span className="ml-auto text-meta text-faint truncate max-w-[45%]">{w.path}</span>
             </button>
           ))}
-        {machine && (
+        {(machine || isHostedWeb()) && (
           <form
             className="flex gap-2 mt-1"
             onSubmit={(e) => {
@@ -91,7 +92,9 @@ export function SendFolderDialog({ coworkerName, machine, onPick, onTemp, onCanc
           >
             <input
               className="flex-1 min-w-0 px-2.5 py-2 rounded-lg border border-line bg-paper font-mono text-meta text-ink outline-none focus:border-accent"
-              placeholder={t("onmachine.folder.path_placeholder", { machine: machine.name })}
+              placeholder={machine
+                ? t("onmachine.folder.path_placeholder", { machine: machine.name })
+                : t("folder_gate.vm_path_placeholder")}
               value={typedPath}
               onChange={(e) => setTypedPath(e.target.value)}
               data-testid="remote-path-input"
@@ -109,7 +112,7 @@ export function SendFolderDialog({ coworkerName, machine, onPick, onTemp, onCanc
         )}
         <div className="flex gap-2 mt-3">
           {/* The native picker browses THIS computer — never shown for a remote draft. */}
-          {!machine && (
+          {!machine && !isHostedWeb() && (
             <button
               className="flex-1 text-center text-ui px-2.5 py-2 rounded-lg border border-lineStrong text-ink hover:bg-paper"
               onClick={() => void browse()}

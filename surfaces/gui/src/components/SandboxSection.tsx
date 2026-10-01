@@ -31,6 +31,7 @@ import {
 } from "../api";
 import { siDocker, siGithub, siGooglecloud, siKubernetes, siNpm, siTerraform } from "simple-icons";
 import { chooseFolder, openExternal } from "../tauri";
+import { isHostedWeb } from "../hostedWeb";
 import { Toggle } from "./Toggle";
 import { PanelHead } from "./IntegrationsView";
 
@@ -602,15 +603,17 @@ export function SandboxSection({ machine, onProviderChanged }: { machine?: Machi
                     <label className="text-ui text-muted">{t("settingsx.sandbox.field_toolchain_path")}</label>
                     <div className="flex gap-2">
                       <input className={INPUT + " font-mono"} value={toolPath} onChange={(e) => setToolPath(e.target.value)} />
-                      <button
-                        className={BTN_BORDERED}
-                        onClick={async () => {
-                          const picked = await chooseFolder();
-                          if (picked) setToolPath(picked);
-                        }}
-                      >
-                        {t("settingsx.sandbox.browse")}
-                      </button>
+                      {!isHostedWeb() && (
+                        <button
+                          className={BTN_BORDERED}
+                          onClick={async () => {
+                            const picked = await chooseFolder();
+                            if (picked) setToolPath(picked);
+                          }}
+                        >
+                          {t("settingsx.sandbox.browse")}
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 mt-3">
@@ -1244,16 +1247,18 @@ export function CredentialEditor({
           </span>
           <span className="flex gap-2">
             <input className={INPUT + " font-mono"} value={path} onChange={(e) => setPath(e.target.value)} data-testid="sandbox-credential-path" />
-            <button
-              className={BTN_BORDERED}
-              onClick={async (e) => {
-                e.preventDefault();
-                const picked = await chooseFolder();
-                if (picked) setPath(picked);
-              }}
-            >
-              {t("settingsx.sandbox.browse")}
-            </button>
+            {!isHostedWeb() && (
+              <button
+                className={BTN_BORDERED}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  const picked = await chooseFolder();
+                  if (picked) setPath(picked);
+                }}
+              >
+                {t("settingsx.sandbox.browse")}
+              </button>
+            )}
           </span>
         </label>
         <label className="block">

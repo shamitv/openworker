@@ -13,6 +13,7 @@ import {
 import { useMachineData } from "../useMachineData";
 import { CachedNote, LoadingRow, UnreachableRow } from "./ScopedStatus";
 import { chooseFolder } from "../tauri";
+import { isHostedWeb, webWorkspaceRoot } from "../hostedWeb";
 import type { SessionInfo } from "../types";
 import { Icon } from "./Icon";
 import { Toggle } from "./Toggle";
@@ -116,9 +117,11 @@ export function PersonasTab({
     setSrc("");
   };
 
-  // Folder installs go through the native picker — no path typing (owner, 2026-08-21).
+  // Hosted browsers choose a path on the VM; desktops keep the native picker.
   const installDir = async () => {
-    const dir = await chooseFolder();
+    const dir = isHostedWeb()
+      ? window.prompt(t("folder_gate.vm_path_placeholder"), webWorkspaceRoot())
+      : await chooseFolder();
     if (!dir) return;
     setBusy(true);
     setMsg(null);

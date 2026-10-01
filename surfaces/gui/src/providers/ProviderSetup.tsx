@@ -13,6 +13,7 @@ import {
   type ProviderInfo,
 } from "../api";
 import { openExternal } from "../tauri";
+import { isHostedWeb } from "../hostedWeb";
 import { PROVIDER_LOGOS, providerRank } from "./logos";
 
 // The provider gallery ⇄ key form, shared by Onboarding step 1 (§39) and
@@ -356,6 +357,13 @@ function OAuthSignIn({ info, tp, onChanged }: { info: ProviderInfo; tp: string; 
           {t("provider.oauth_plan_note")}
         </p>
       </div>
+    );
+
+  if (isHostedWeb())
+    return (
+      <p className="mt-4 text-ui text-muted" data-testid={`${tp}-oauth-hosted-unavailable`}>
+        {t("provider.oauth_hosted_unavailable")}
+      </p>
     );
 
   return (

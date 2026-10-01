@@ -65,10 +65,10 @@ export async function pickFolder(): Promise<string | null> {
   return typeof path === "string" && path ? path : null;
 }
 
-/** The folder picker that works EVERYWHERE: Tauri's native dialog in the desktop shell, else the
- * sidecar-opened OS dialog (the sidecar is local, so the browser GUI still gets a real picker —
- * owner report 2026-07-04: "Browse" was desktop-only and the browser had paste-a-path only). */
+/** Desktop uses a native dialog; a local browser can use the sidecar's OS dialog.
+ * Hosted browsers enter VM paths instead of opening an OS dialog on the server. */
 export async function chooseFolder(): Promise<string | null> {
+  if ((globalThis as any).__COWORKER_WEB__ === true) return null;
   if (isTauri()) return pickFolder();
   const { pickFolderViaServer } = await import("./api");
   return pickFolderViaServer();

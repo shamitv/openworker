@@ -10,6 +10,7 @@ import {
   toolResponseMessage,
 } from "./cardPayloads";
 import type { GroupedQuestion, QuestionOption, SessionInfo, WsEvent } from "./types";
+import { isHostedWeb, redirectToWebLogin, webCsrfToken } from "./hostedWeb";
 
 declare const __COWORKER_DEV_TOKEN__: string;
 
@@ -21,17 +22,23 @@ declare const __COWORKER_DEV_TOKEN__: string;
 const servedOverHttps = (): boolean =>
   typeof location !== "undefined" && location.protocol === "https:";
 export const httpBase = (): string =>
-  (globalThis as any).__COWORKER_HTTP__ ||
-  (import.meta as any).env?.VITE_COWORKER_HTTP ||
-  (servedOverHttps() ? location.origin : "http://127.0.0.1:8765");
+  isHostedWeb()
+    ? location.origin
+    : (globalThis as any).__COWORKER_HTTP__ ||
+      (import.meta as any).env?.VITE_COWORKER_HTTP ||
+      (servedOverHttps() ? location.origin : "http://127.0.0.1:8765");
 const wsBase = (): string =>
-  (globalThis as any).__COWORKER_WS__ ||
-  (import.meta as any).env?.VITE_COWORKER_WS ||
-  (servedOverHttps() ? `wss://${location.host}` : "ws://127.0.0.1:8765");
+  isHostedWeb()
+    ? `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}`
+    : (globalThis as any).__COWORKER_WS__ ||
+      (import.meta as any).env?.VITE_COWORKER_WS ||
+      (servedOverHttps() ? `wss://${location.host}` : "ws://127.0.0.1:8765");
 const apiToken = (): string =>
-  (globalThis as any).__COWORKER_API_TOKEN__ ||
-  (import.meta as any).env?.VITE_COWORKER_API_TOKEN ||
-  (typeof __COWORKER_DEV_TOKEN__ === "string" ? __COWORKER_DEV_TOKEN__ : "");
+  isHostedWeb()
+    ? ""
+    : (globalThis as any).__COWORKER_API_TOKEN__ ||
+      (import.meta as any).env?.VITE_COWORKER_API_TOKEN ||
+      (typeof __COWORKER_DEV_TOKEN__ === "string" ? __COWORKER_DEV_TOKEN__ : "");
 
 // The org this browser acts in (hosted multi-tenant only; empty elsewhere). Set at cloud
 // boot from /v1/me and by the org switcher; rides every request so the backend's resolver
@@ -54,6 +61,10 @@ export function getActiveOrg(): string {
 export const API_UNAUTHORIZED = "openworker:api-unauthorized";
 let unauthorizedAnnounced = 0;
 const announceUnauthorized = () => {
+  if (isHostedWeb()) {
+    redirectToWebLogin();
+    return;
+  }
   const now = Date.now();
   if (now - unauthorizedAnnounced < 2000) return;
   unauthorizedAnnounced = now;
@@ -68,6 +79,10 @@ const fetch = (
   const token = apiToken();
   if (token) headers.set("X-OpenWorker-Token", token);
   if (activeOrg) headers.set("X-OCW-Org", activeOrg);
+  if (isHostedWeb() && !["GET", "HEAD", "OPTIONS"].includes((init.method || "GET").toUpperCase())) {
+    const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url, location.href);
+    if (url.origin === location.origin) headers.set("X-CSRF-Token", webCsrfToken());
+  }
   return globalThis.fetch(input, { ...init, headers }).then((res) => {
     // Only the local sidecar's own 401 means "this window is signed out". A machine or
     // cloud call (/m/… proxies, cloud routes) returning 401 is that machine's problem
@@ -601,12 +616,27 @@ export async function revealArtifact(
   path: string,
   mode: "reveal" | "open" = "reveal",
 ): Promise<{ ok: boolean; error?: string }> {
+  if (isHostedWeb()) {
+    downloadArtifact(sessionId, path);
+    return { ok: true };
+  }
   const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/artifacts/reveal`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path, mode }),
   });
   return res.json();
+}
+
+/** Same-origin gateway route streams an authorized artifact with a download disposition. */
+export function downloadArtifact(sessionId: string, path: string): void {
+  const query = new URLSearchParams({ session: sessionId, path });
+  const link = document.createElement("a");
+  link.href = `/web/artifacts/download?${query}`;
+  link.download = path.split("/").pop() || "artifact";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 // -- session roots (orphan Cowork: scratch + added folders) -------------------
@@ -663,6 +693,7 @@ export interface McpServer {
   // Epoch seconds of the last successful explicit Test (persisted server-side).
   last_test_at?: number | null;
   last_error?: string | null;
+  authorize_url?: string | null;
   tool_count: number | null;
   config: Record<string, any>;
 }
@@ -741,13 +772,67 @@ export async function reloadMcp() {
   return res.json();
 }
 
-/** Connect one MCP server now. For OAuth servers this opens the system browser;
- * poll getMcpServers() for the status flip (authorizing → connected / needs_auth). */
+/** Connect one MCP server now. Hosted mode opens its consent URL in this browser;
+ * desktop keeps the system browser flow. */
 export async function connectMcp(name: string): Promise<{ ok: boolean; started?: boolean }> {
   const res = await fetch(`${httpBase()}/v1/mcp/${encodeURIComponent(name)}/connect`, {
     method: "POST",
   });
-  return res.json();
+  const result = await res.json();
+  if (isHostedWeb() && result.ok) {
+    if (!navigateHostedAuthorization(result.authorize_url)) void waitForHostedMcpAuthorization(name);
+  }
+  return result;
+}
+
+/** A hosted engine cannot open a browser on the user's computer. */
+function navigateHostedAuthorization(raw: unknown): boolean {
+  if (!isHostedWeb() || typeof raw !== "string") return false;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+    window.location.assign(url.href);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const pendingMcpAuthorization = new Set<string>();
+async function waitForHostedMcpAuthorization(name: string): Promise<void> {
+  if (pendingMcpAuthorization.has(name)) return;
+  pendingMcpAuthorization.add(name);
+  try {
+    for (let attempt = 0; attempt < 80; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      const server = (await getMcpServers()).find((entry) => entry.name === name);
+      if (!server || server.status !== "authorizing") return;
+      if (navigateHostedAuthorization(server.authorize_url)) return;
+    }
+  } catch {
+    // The normal status poll still reports connection errors; this only opens consent.
+  } finally {
+    pendingMcpAuthorization.delete(name);
+  }
+}
+
+const pendingConnectorAuthorization = new Set<string>();
+async function waitForHostedConnectorAuthorization(name: string): Promise<void> {
+  if (pendingConnectorAuthorization.has(name)) return;
+  pendingConnectorAuthorization.add(name);
+  try {
+    for (let attempt = 0; attempt < 80; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      const connector = (await getConnectors()).find((entry) => entry.name === name);
+      if (!connector) return;
+      if (navigateHostedAuthorization(connector.authorize_url)) return;
+      if (connector.connected) return;
+    }
+  } catch {
+    // The connection view reports errors; this poll only opens consent.
+  } finally {
+    pendingConnectorAuthorization.delete(name);
+  }
 }
 
 /** Drop the connection and forget the stored OAuth tokens. */
@@ -871,6 +956,7 @@ export interface Connector {
   logo: string; // stable logo id keyed into the frontend registry (empty → fallback glyph)
   aliases?: string[]; // extra typeahead terms ("calendar" surfaces Outlook)
   mcp?: boolean; // MCP-backed one-click (vendor-hosted MCP + local OAuth — no cloud sign-in)
+  authorize_url?: string | null; // hosted consent URL while this connector authorizes
   allowed_users: string[]; // the allow-list (managed inline in the Connectors tab)
   allowed_user_names?: Record<string, string | null>; // id → display name (people directory)
   approval_owner_ids?: string[]; // Manual Slack: humans allowed to resolve approvals
@@ -919,9 +1005,11 @@ export async function getCloudStatus(): Promise<CloudStatus> {
 }
 
 export async function cloudLogin(): Promise<{ ok: boolean }> {
-  // The sidecar opens the system browser; the GUI just polls status after.
+  // Hosted mode opens the returned consent URL here; desktop opens the system browser.
   const res = await fetch(`${httpBase()}/v1/cloud/login`, { method: "POST" });
-  return res.json();
+  const result = await res.json();
+  if (result.ok) navigateHostedAuthorization(result.authorize_url);
+  return result;
 }
 
 /** Poll cloud status until the browser sign-in lands (or the bound runs out).
@@ -975,7 +1063,9 @@ export async function connectManaged(
       }),
     },
   );
-  return res.json();
+  const result = await res.json();
+  if (result.ok) navigateHostedAuthorization(result.authorize_url);
+  return result;
 }
 
 /** One-click connect for an MCP-backed connector (monday, asana, jira): the sidecar
@@ -986,7 +1076,11 @@ export async function connectMcpBacked(name: string): Promise<{ ok: boolean; err
     `${httpBase()}/v1/connectors/${encodeURIComponent(name)}/mcp-connect`,
     { method: "POST" },
   );
-  return res.json();
+  const result = await res.json();
+  if (isHostedWeb() && result.ok) {
+    if (!navigateHostedAuthorization(result.authorize_url)) void waitForHostedConnectorAuthorization(name);
+  }
+  return result;
 }
 
 export interface ConnectorTool {

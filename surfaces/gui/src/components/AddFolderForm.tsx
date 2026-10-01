@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { chooseFolder } from "../tauri";
 import { Icon } from "./Icon";
+import { isHostedWeb, webWorkspaceRoot } from "../hostedWeb";
 
 // A single "Give access to a folder" affordance. Collapsed it's one button; expanded it's a path
 // field (Browse on desktop, paste anywhere) + an "Allow writing" checkbox that's OFF by default —
@@ -23,12 +24,12 @@ export function AddFolderForm({
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(!!startOpen);
-  const [path, setPath] = useState("");
+  const [path, setPath] = useState(() => webWorkspaceRoot());
   const [writable, setWritable] = useState(false);
 
   const reset = () => {
     setOpen(false);
-    setPath("");
+    setPath(webWorkspaceRoot());
     setWritable(false);
     onDismiss?.();
   };
@@ -58,7 +59,7 @@ export function AddFolderForm({
         <input
           className="addfolder-path"
           autoFocus
-          placeholder={t("access.addfolder_path_placeholder")}
+          placeholder={isHostedWeb() ? t("folder_gate.vm_path_placeholder") : t("access.addfolder_path_placeholder")}
           value={path}
           spellCheck={false}
           onChange={(e) => setPath(e.target.value)}
@@ -67,9 +68,11 @@ export function AddFolderForm({
             else if (e.key === "Escape") reset();
           }}
         />
-        <button className="btn icon-only" onClick={browse} title={t("access.choose_location")} aria-label={t("access.choose_location")}>
-          <Icon name="folder" size={15} />
-        </button>
+        {!isHostedWeb() && (
+          <button className="btn icon-only" onClick={browse} title={t("access.choose_location")} aria-label={t("access.choose_location")}>
+            <Icon name="folder" size={15} />
+          </button>
+        )}
       </div>
       <div className="addfolder-actions">
         <label className="addfolder-write" title={t("access.allow_writes_help")}>

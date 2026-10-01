@@ -29,6 +29,7 @@ import {
   TAG_QUIET,
 } from "./ui";
 import { SavedTick, ToolRow, ToolsCountLine, useSavedTick } from "./ToolReview";
+import { isHostedWeb } from "../../hostedWeb";
 
 // Custom/BYO MCP servers on the Connectors page (UX-DECISIONS §21 + UX-034: the
 // separate MCP tab is retired). They render as a "Custom · MCP" group at the end
@@ -137,14 +138,16 @@ export function CustomMcpGroup({
         {/* ONE common window into the file all servers share (owner call
             2026-08-30): reveal mcp.json in the file manager — never auto-open,
             the default app for .json is a lottery across machines. */}
-        <button
-          className="font-normal normal-case tracking-normal text-faint hover:text-ink"
-          title={t("mcp.config_reveal_tip")}
-          data-testid="mcp-config-reveal"
-          onClick={() => void revealMcpConfig()}
-        >
-          {t("mcp.config_reveal")}
-        </button>
+        {!isHostedWeb() && (
+          <button
+            className="font-normal normal-case tracking-normal text-faint hover:text-ink"
+            title={t("mcp.config_reveal_tip")}
+            data-testid="mcp-config-reveal"
+            onClick={() => void revealMcpConfig()}
+          >
+            {t("mcp.config_reveal")}
+          </button>
+        )}
       </div>
       <div className={GRP} data-testid="custom-mcp-group">
         {servers.map((s) => (

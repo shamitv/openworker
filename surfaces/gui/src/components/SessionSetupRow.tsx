@@ -12,6 +12,7 @@ import { fullPersonaName } from "../personaScope";
 import { baseName } from "../paths";
 import { Icon } from "./Icon";
 import { MachineFolderDialog } from "./MachineFolderDialog";
+import { isHostedWeb, webWorkspaceRoot } from "../hostedWeb";
 
 // UX-029: the session-setup row — per-SESSION choices (coworker + folder) in their own
 // quiet chip row above the composer, a different species from the per-MESSAGE controls
@@ -66,6 +67,7 @@ export function SessionSetupRow(props: Props) {
   const [machineDialog, setMachineDialog] = useState(false);
   const [recents, setRecents] = useState<RecentWorkspace[] | null>(null);
   const [error, setError] = useState("");
+  const [typedPath, setTypedPath] = useState(() => webWorkspaceRoot());
   const personas = (props.personas || []).filter((p) => p.enabled);
   const current = personas.find((p) => p.id === props.agent);
   const machines = props.machines || [];
@@ -211,14 +213,31 @@ export function SessionSetupRow(props: Props) {
                     </span>
                   </button>
                 ))}
-              <div className={(recents || []).some((w) => w.exists) ? "border-t border-line mt-1 pt-1" : ""}>
-                <button
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-paper text-meta text-accent"
-                  onClick={() => void browse()}
-                >
-                  {props.folderName ? t("setup.choose_another_folder") : t("setup.choose_a_folder")}
-                </button>
-              </div>
+              {isHostedWeb() ? (
+                <form className="border-t border-line mt-1 pt-1 flex gap-1" onSubmit={(e) => {
+                  e.preventDefault();
+                  if (typedPath.trim()) void pickFolder(typedPath.trim());
+                }}>
+                  <input
+                    className="min-w-0 flex-1 px-2 py-1.5 rounded-lg border border-line bg-paper text-meta text-ink"
+                    placeholder={t("folder_gate.vm_path_placeholder")}
+                    value={typedPath}
+                    onChange={(e) => setTypedPath(e.target.value)}
+                  />
+                  <button type="submit" className="px-2 text-meta text-accent" disabled={!typedPath.trim()}>
+                    {t("folder_gate.open")}
+                  </button>
+                </form>
+              ) : (
+                <div className={(recents || []).some((w) => w.exists) ? "border-t border-line mt-1 pt-1" : ""}>
+                  <button
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-paper text-meta text-accent"
+                    onClick={() => void browse()}
+                  >
+                    {props.folderName ? t("setup.choose_another_folder") : t("setup.choose_a_folder")}
+                  </button>
+                </div>
+              )}
               {error && <div className="px-2.5 py-1 text-meta text-warnInk">{error}</div>}
             </div>
           )}

@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./App";
 import { initCloudAuth, shouldGate } from "./cloudAuth";
+import { initHostedWeb, isHostedWeb } from "./hostedWeb";
 import { initTheme } from "./theme";
 import { initTextSize } from "./textSize";
 import { platformOS } from "./tauri";
@@ -62,6 +63,10 @@ initI18n().finally(() => {
         </React.StrictMode>,
       ),
     );
+  } else if (isHostedWeb()) {
+    initHostedWeb().then(render, (error) => {
+      root.render(<div className="app boot-splash" role="alert">{String(error)}</div>);
+    });
   } else if (shouldGate()) {
     initCloudAuth().then(render, render);
   } else {

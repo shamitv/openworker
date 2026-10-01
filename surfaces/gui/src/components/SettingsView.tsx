@@ -57,6 +57,7 @@ import {
   type DictationStatus,
 } from "../tauri";
 import { canSignOut, cloudSignOut } from "../cloudAuth";
+import { isHostedWeb, webSignOut, webUsername, webWorkspaceRoot } from "../hostedWeb";
 import { reflectSettings, settingsMachineParam } from "../routes";
 import { useThemePref } from "../theme";
 import { useTextSize } from "../textSize";
@@ -210,10 +211,12 @@ export function SettingsView({
     tabs: g.tabs.filter(
       (tb) =>
         (personas || tb.key !== "personas") &&
+        (tb.key !== "voice" || !isHostedWeb()) &&
         (tb.key !== "slack" && tb.key !== "github" ? true : inbound.has(tb.key)),
     ),
   }));
-  const wanted = initialTab && (personas || initialTab !== "personas") ? initialTab : "appearance";
+  const wanted = initialTab && (personas || initialTab !== "personas") && (!isHostedWeb() || initialTab !== "voice")
+    ? initialTab : "appearance";
   const [tab, setTab] = useState<SetTab>(wanted);
 
   // The machine scope for the MACHINE group ("" = This Mac / the local engine).
@@ -728,13 +731,31 @@ function AccountSection() {
       <PanelHead
         title={t("settingsx.tab.account")}
         sub={
-          isCloudMode()
+          isCloudMode() || isHostedWeb()
             ? t("settingsx.account.sub_hosted")
             : t("settingsx.account.sub_desktop")
         }
       />
-      {isCloudMode() ? <HostedAccountCards /> : <DesktopCloudCard />}
+      {isHostedWeb() ? <HostedWebAccountCard /> : isCloudMode() ? <HostedAccountCards /> : <DesktopCloudCard />}
     </section>
+  );
+}
+
+function HostedWebAccountCard() {
+  const { t } = useTranslation();
+  const [error, setError] = useState("");
+  return (
+    <div className={CARD + " p-4 mt-4"} data-testid="web-account-card">
+      <div className={FIELD_LABEL}>{t("settingsx.account.signed_in_as")}</div>
+      <div className="mt-2 flex items-center gap-3">
+        <span className="text-ui text-ink min-w-0 truncate">{webUsername()}</span>
+        <button className={BTN_BORDERED + " ml-auto"} onClick={() => void webSignOut().catch((e) => setError(String(e)))}>
+          {t("sidebar.sign_out")}
+        </button>
+      </div>
+      <div className="mt-3 text-meta text-muted break-all">{t("folder_gate.vm_workspace_root")}: {webWorkspaceRoot()}</div>
+      {error && <p className="mt-2 text-meta text-warnInk" role="alert">{error}</p>}
+    </div>
   );
 }
 

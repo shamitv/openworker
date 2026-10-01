@@ -24,6 +24,7 @@ import {
   type PersonaDetail,
 } from "../api";
 import { chooseFolder } from "../tauri";
+import { isHostedWeb, webWorkspaceRoot } from "../hostedWeb";
 import { ConnectorBadge } from "../connectors/ConnectorIcon";
 import { fullPersonaName } from "../personaScope";
 import { Icon } from "./Icon";
@@ -114,7 +115,9 @@ export function PersonaView({
   };
 
   const exportBundle = async () => {
-    const dir = await chooseFolder();
+    const dir = isHostedWeb()
+      ? window.prompt(t("folder_gate.vm_path_placeholder"), webWorkspaceRoot())
+      : await chooseFolder();
     if (!dir) return;
     const r = await exportPersona(personaId, dir);
     setMsg(r.ok ? t("persona.exported_to", { path: r.path }) : r.error || t("persona.export_failed"));

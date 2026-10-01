@@ -8,6 +8,7 @@ import {
   getRoots,
   readArtifact,
   revealArtifact,
+  downloadArtifact,
   type ArtifactContent,
   type ArtifactInfo,
   type Board,
@@ -24,6 +25,7 @@ import type { WorkerFilter } from "../teamRoster";
 import { Icon } from "./Icon";
 import type { SessionUsage } from "../types";
 import { Markdown, OPEN_ARTIFACT_EVENT } from "./Markdown";
+import { isHostedWeb } from "../hostedWeb";
 
 type Panel = "progress" | "artifacts" | "board" | "journal" | "team" | "files";
 
@@ -312,7 +314,7 @@ export function RightRail({
             onToggle={() => setOpen({ ...open, artifacts: !open.artifacts })}
             action={
               <>
-                {artifacts.length > 0 && (
+                {artifacts.length > 0 && !isHostedWeb() && (
                   <button
                     className="rail-mini-btn"
                     onClick={(e) => { e.stopPropagation(); revealArtifact(sessionId, artifacts[0].path, "reveal"); }}
@@ -633,16 +635,24 @@ function ArtifactViewer({
                   navigator.clipboard?.writeText(artifact.abs_path || artifact.path),
                 )}
                 <div className="artifact-menu-div" />
-                {isHtml &&
-                  item("artifact-open-browser", "panelOpen", t("rail.open_in_browser"), () =>
-                    revealArtifact(sessionId, artifact.path, "open"),
-                  )}
-                {isApp &&
-                  item("artifact-open-app", "panelOpen", t("rail.open_in_default"), () =>
-                    revealArtifact(sessionId, artifact.path, "open"),
-                  )}
-                {item("artifact-reveal", "folder", t("rail.reveal_in_finder"), () =>
-                  revealArtifact(sessionId, artifact.path, "reveal"),
+                {isHostedWeb() ? (
+                  content?.kind !== "folder" && item("artifact-download", "file", t("rail.download"), () =>
+                    downloadArtifact(sessionId, artifact.path),
+                  )
+                ) : (
+                  <>
+                    {isHtml &&
+                      item("artifact-open-browser", "panelOpen", t("rail.open_in_browser"), () =>
+                        revealArtifact(sessionId, artifact.path, "open"),
+                      )}
+                    {isApp &&
+                      item("artifact-open-app", "panelOpen", t("rail.open_in_default"), () =>
+                        revealArtifact(sessionId, artifact.path, "open"),
+                      )}
+                    {item("artifact-reveal", "folder", t("rail.reveal_in_finder"), () =>
+                      revealArtifact(sessionId, artifact.path, "reveal"),
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -703,8 +713,10 @@ function ArtifactViewer({
           <div className="artifact-open-prompt">
             <Icon name="panelOpen" size={28} />
             <p>{t("rail.office_no_preview", { type: /\.pptx?$/i.test(artifact.name) ? "PowerPoint" : "Word" })}</p>
-            <button className="btn sm" onClick={() => revealArtifact(sessionId, artifact.path, "open")}>
-              {t("rail.open_in_default")}
+            <button className="btn sm" onClick={() => isHostedWeb()
+              ? downloadArtifact(sessionId, artifact.path)
+              : revealArtifact(sessionId, artifact.path, "open")}>
+              {isHostedWeb() ? t("rail.download") : t("rail.open_in_default")}
             </button>
           </div>
         ) : (

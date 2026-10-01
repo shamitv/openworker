@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getRecentWorkspaces, openWorkspace, type RecentWorkspace } from "../api";
 import { chooseFolder } from "../tauri";
+import { isHostedWeb, webWorkspaceRoot } from "../hostedWeb";
 
 // The mandatory workspace picker for project-scoped personas. Deliberately no
 // "switch persona" escape hatch: if a persona needs a folder, the choice here is
@@ -15,7 +16,7 @@ interface Props {
 
 export function FolderGate({ onChoose, onCancel, create }: Props) {
   const [recents, setRecents] = useState<RecentWorkspace[]>([]);
-  const [path, setPath] = useState("");
+  const [path, setPath] = useState(() => webWorkspaceRoot());
   const [error, setError] = useState("");
   const { t } = useTranslation();
 
@@ -44,22 +45,24 @@ export function FolderGate({ onChoose, onCancel, create }: Props) {
         <div className="gate-mark">✦</div>
         <h2>{create ? t("sidebar.new_project") : t("folder_gate.choose_folder")}</h2>
         <p className="gate-sub">
-          {create
+          {isHostedWeb() ? t("folder_gate.vm_path_note") : create
             ? t("folder_gate.create_sub")
             : t("folder_gate.choose_sub")}
         </p>
 
         <div className="gate-input">
           <input
-            placeholder={t("folder_gate.path_placeholder")}
+            placeholder={t(isHostedWeb() ? "folder_gate.vm_path_placeholder" : "folder_gate.path_placeholder")}
             value={path}
             onChange={(e) => setPath(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && open(path, create)}
             autoFocus
           />
-          <button className="btn" onClick={browse} title={t("folder_gate.pick_folder")}>
-            {t("folder_gate.browse")}
-          </button>
+          {!isHostedWeb() && (
+            <button className="btn" onClick={browse} title={t("folder_gate.pick_folder")}>
+              {t("folder_gate.browse")}
+            </button>
+          )}
           <button className="btn primary" onClick={() => open(path, create)} disabled={!path.trim()}>
             {create ? t("folder_gate.create") : t("folder_gate.open")}
           </button>

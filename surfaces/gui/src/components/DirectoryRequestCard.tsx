@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Item } from "../types";
 import { chooseFolder } from "../tauri";
 import { Icon } from "./Icon";
+import { isHostedWeb, webWorkspaceRoot } from "../hostedWeb";
 
 type DirReqItem = Extract<Item, { kind: "dirreq" }>;
 
@@ -15,7 +16,7 @@ export function DirectoryRequestCard({
   item: DirReqItem;
   onRespond: (granted: boolean, path?: string, writable?: boolean) => void;
 }) {
-  const [path, setPath] = useState(item.path || "");
+  const [path, setPath] = useState(item.path || webWorkspaceRoot());
   const [writable, setWritable] = useState(!!item.writable);
   const { t } = useTranslation();
 
@@ -43,13 +44,15 @@ export function DirectoryRequestCard({
       <div className="dirreq-pathrow">
         <input
           className="dirreq-path"
-          placeholder={t("dirreq.path_placeholder")}
+          placeholder={isHostedWeb() ? t("folder_gate.vm_path_placeholder") : t("dirreq.path_placeholder")}
           value={path}
           onChange={(e) => setPath(e.target.value)}
         />
-        <button className="btn icon-only" onClick={browse} title={t("dirreq.choose_location")} aria-label={t("dirreq.choose_location")}>
-          <Icon name="folder" size={15} />
-        </button>
+        {!isHostedWeb() && (
+          <button className="btn icon-only" onClick={browse} title={t("dirreq.choose_location")} aria-label={t("dirreq.choose_location")}>
+            <Icon name="folder" size={15} />
+          </button>
+        )}
       </div>
       <div className="dirreq-actions">
         {!item.primary && (
