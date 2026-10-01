@@ -22,7 +22,9 @@ Each phase has `plan.md`, `todo.md`, and `status.md`. A phase is complete only a
 
 ## Current progress
 
-Implementation for phases 1–4 is present. [`tests/test_hosted_web.py`](../../../tests/test_hosted_web.py) contains four backend tests covering account/session revocation, mocked supervisor recovery and sandbox failure, OAuth callback and join URL handling, and gateway HTTP/WebSocket isolation. The tests are present; execution results are not recorded here. Phase 5 deployment and operations guidance is present in [`docs/headless-vm-ui.md`](../../headless-vm-ui.md). No phase is recorded as complete: browser, VM, real-sandbox, unattended-work, and desktop regression verification remains outstanding. See each phase's `status.md` for implementation evidence, test coverage, and remaining checks.
+[Phase 1 is complete](phase-01-accounts/status.md): transactional schema upgrades, browser account/session behavior, CLI administration, and cookie-to-home ownership are verified locally. On 2026-10-01, `tests/test_hosted_accounts.py` and `tests/test_hosted_web.py` passed together: **63 tests passed** on Windows 11 with Python 3.14.2 and SQLite 3.50.4. The account session cookie uses `SameSite=Strict`.
+
+Implementation for phases 2?4 and phase 5 guidance in [`docs/headless-vm-ui.md`](../../headless-vm-ui.md) are present. Phases 2?5 remain in progress: real-browser, target-VM HTTPS, sandbox, unattended-work, full product isolation, and desktop regression verification is outstanding. See each phase's `status.md` for evidence and remaining checks.
 
 ## Public interfaces
 

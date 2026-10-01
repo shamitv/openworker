@@ -29,6 +29,8 @@ Choose a private data directory on persistent storage. The operator running the 
 
 The admin-supplied password must be changed at the first login and after a reset. Disabling an account revokes its browser sessions and stops its engine during the next supervisor reconciliation. Homes are assigned by the database under `/var/lib/openworker-web/homes/<id>`; the browser session endpoint tells each user the path of their own `workspace` directory for VM path entry. Do not edit the ownership mapping by hand.
 
+The account database upgrades automatically on gateway or account-command startup. Schema version 1 adopts existing compatible unversioned hosted databases without changing accounts, sessions, or home files. An incompatible schema or one written by a newer application is rejected; restore a compatible backup or use the matching application version rather than editing the version marker.
+
 Start the gateway on loopback:
 
 ```sh
@@ -74,7 +76,9 @@ server {
 }
 ```
 
-The gateway compares `Origin` with the exact `--public-origin` on every state-changing browser request and WebSocket. Keep the reverse proxy from rewriting an unrelated origin into the expected one. Cookies use `Secure`, `HttpOnly`, `SameSite=Lax`, and the `__Host-` prefix. `/web/health` reports gateway liveness; engine launch failures are visible in the gateway log and each home’s `state/engine.log`.
+The gateway compares `Origin` with the exact `--public-origin` on every state-changing browser request and WebSocket. Keep the reverse proxy from rewriting an unrelated origin into the expected one. Cookies use `Secure`, `HttpOnly`, `SameSite=Strict`, and the `__Host-` prefix. `/web/health` reports gateway liveness; engine launch failures are visible in the gateway log and each home’s `state/engine.log`.
+
+With `SameSite=Strict`, a navigation arriving from another site may omit the session cookie and initially show the login page. Navigate directly to the configured public origin to resume an existing session. Account-scoped OAuth callbacks validate engine-side flow state without relying on the browser session cookie.
 
 ## OAuth and machine joins
 
