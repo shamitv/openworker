@@ -1,14 +1,14 @@
 import { defineConfig } from "@playwright/test";
 
-// Explicitly invoked gate: real HTTPS proxy, two browsers and private engines.
-// No Vite server, request mocks, model fallback, skips or automatic retries.
+// Real HTTPS, built SPA, private engines and an external CLI joiner.
 export default defineConfig({
   testDir: "./e2e-hosted",
-  testMatch: "gateway.spec.ts",
+  testMatch: "flows.spec.ts",
+  outputDir: "./test-results-hosted-flows",
   workers: 1,
   fullyParallel: false,
   retries: 0,
-  timeout: 480_000,
+  timeout: 600_000,
   expect: { timeout: 30_000 },
   reporter: [["list"]],
 });

@@ -13,6 +13,7 @@
     "e2e:ui": "playwright test --ui",
     "e2e:live": "playwright test -c playwright.live.config.ts",
     "tauri": "tauri",
+    "e2e:hosted:flows": "playwright test -c playwright.hosted-flows.config.ts",
     "e2e:hosted": "playwright test -c playwright.hosted.config.ts",
     "e2e:hosted:llm": "HOSTED_TEST_LLM=1 playwright test -c playwright.hosted.config.ts"
   },

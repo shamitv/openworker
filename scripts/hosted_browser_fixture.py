@@ -80,8 +80,16 @@ def prepare(args):
         (state / 'config.toml').write_text(f'model = "openai:{model}"\nsandbox_network_profile = "allowlist"\n')
         SecretStore(state / 'secrets.json').put('provider:openai', {'api_key': 'local-acceptance', 'base_url': base})
         accounts.append({'username': name, 'password': password, 'home': user['home'], 'id': user['id']})
+    if args.flows:
+        for user in accounts:
+            workspace = Path(user['home']) / 'workspace'
+            (workspace / 'phase4-project').mkdir(parents=True)
+            (workspace / 'file.txt').write_text('not a directory')
+            peer = next(account for account in accounts if account['id'] != user['id'])
+            (workspace / 'escape').symlink_to(Path(peer['home']) / 'workspace', target_is_directory=True)
     manifest = {'origin': args.origin, 'mode': args.mode, 'model': f'openai:{model}', 'llm_base_url': base,
-                'accounts': accounts, 'root': str(root), 'source': str(Path(__file__).resolve().parents[1]), 'engine_tokens': []}
+                'accounts': accounts, 'root': str(root), 'source': str(Path(__file__).resolve().parents[1]),
+                'flows': args.flows, 'engine_tokens': []}
     path = root / 'manifest.json'
     path.write_text(json.dumps(manifest))
     path.chmod(0o600)
@@ -193,6 +201,7 @@ def main():
     parser.add_argument('--port', type=int, default=18766)
     parser.add_argument('--model-port', type=int, default=18767)
     parser.add_argument('--mode', choices=['fixture', 'llm'], default='fixture')
+    parser.add_argument('--flows', action='store_true', help='prepare workspace fixtures for the Phase 4 product gate')
     parser.add_argument('--llm-base-url', default='http://10.42.0.202:8090/v1')
     parser.add_argument('--llm-model', default='Ornith-1.5-35B-Uncensored-Q6_K')
     parser.add_argument('--request', help='base64-encoded test control request; never exposed by the gateway')
