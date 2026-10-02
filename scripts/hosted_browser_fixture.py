@@ -58,7 +58,7 @@ def deterministic_model():
     return app
 
 
-def prepare(args):
+def prepare(args, *, account_names=('alice', 'bob'), model_config=''):
     root = args.root.resolve()
     root.mkdir(mode=0o700, parents=True, exist_ok=False)
     store = AccountStore(root / 'data')
@@ -70,14 +70,16 @@ def prepare(args):
         if model not in {item['id'] for item in response.json()['data']}:
             raise RuntimeError('requested live model is not available')
     accounts = []
-    for name in ('alice', 'bob'):
+    if len(account_names) != 2 or len(set(account_names)) != 2:
+        raise ValueError('the fixture requires two distinct accounts')
+    for name in account_names:
         initial, password = secrets.token_urlsafe(24), secrets.token_urlsafe(24)
         user = store.create(name, initial)
         token, _, _ = store.authenticate(name, initial, 'fixture')
         assert store.change_password(token, initial, password)
         state = Path(user['home']) / 'state'
         state.mkdir(exist_ok=True)
-        (state / 'config.toml').write_text(f'model = "openai:{model}"\nsandbox_network_profile = "allowlist"\n')
+        (state / 'config.toml').write_text(f'model = "openai:{model}"\nsandbox_network_profile = "allowlist"\n' + model_config)
         SecretStore(state / 'secrets.json').put('provider:openai', {'api_key': 'local-acceptance', 'base_url': base})
         accounts.append({'username': name, 'password': password, 'home': user['home'], 'id': user['id']})
     if args.flows:
@@ -115,6 +117,7 @@ def serve(args):
                 raise RuntimeError('both real private engines must start')
             manifest['engine_tokens'] = [engine.endpoint.token for engine in app.state.supervisor._engines.values()]
             manifest['engine_ports'] = [engine.endpoint.port for engine in app.state.supervisor._engines.values()]
+            manifest['engine_pids'] = [engine.process.pid for engine in app.state.supervisor._engines.values()]
             (args.root / 'manifest.json').write_text(json.dumps(manifest))
             yield
     app.router.lifespan_context = lifespan
@@ -140,7 +143,7 @@ def control(args):
     else: raise ValueError('invalid fixture action')
 
 
-def proxy(args):
+def proxy(args, *, listen_host=None):
     manifest = json.loads((args.root / 'manifest.json').read_text())
     origin = urlsplit(manifest['origin'])
     directory = args.root.resolve() / 'proxy'
@@ -163,7 +166,7 @@ http {{
     proxy_temp_path {directory}/proxy_temp;
     map $http_upgrade $upgrade_connection {{ default upgrade; '' close; }}
     server {{
-        listen {origin.port or 443} ssl;
+        listen {str(ipaddress.ip_address(listen_host)) + ':' if listen_host else ''}{origin.port or 443} ssl;
         ssl_certificate {directory}/cert.pem;
         ssl_certificate_key {directory}/key.pem;
         location / {{
