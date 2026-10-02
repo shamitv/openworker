@@ -45,6 +45,49 @@ using [Cloudflare's downloads](https://developers.cloudflare.com/tunnel/download
 and record `cloudflared --version` when verifying the deployment. Keep the
 built SPA, accounts and enforcing sandbox ready before starting exposure.
 
+### One-command launcher on Linux
+
+[`scripts/hosted_quick_tunnel.py`](../scripts/hosted_quick_tunnel.py) starts
+`cloudflared`, reads its generated HTTPS URL, and starts the gateway with that
+exact public origin. It waits for loopback gateway health, prints the URL, and
+saves it as `public-url.txt` beside private `cloudflared.log` and `gateway.log`
+files in a new run directory under `<data-dir>/quick-tunnel/`. It stops its
+children on Ctrl+C, SIGTERM, terminal hangup or either child's exit. Existing
+account data and the operator's OpenShell gateway are retained.
+
+For the existing Ubuntu checkout and the accounts created under
+`/home/ubuntu/.local/share/openworker-web`, run:
+
+```sh
+cd /home/ubuntu/openworker-phase2-20261002
+.venv/bin/python scripts/hosted_quick_tunnel.py
+```
+
+The defaults are the current user's `~/.local/share/openworker-web`, the
+checkout's `surfaces/gui/dist`, its `.venv/bin/python` when present, OpenShell,
+and port 8766 on `127.0.0.1`. Account creation, SPA building and installation of
+`cloudflared` are prerequisites. The launcher refuses a missing account database,
+an occupied port or another launcher using the same data directory. It reports
+startup failures with the private log location.
+
+For an installation using the data directory and Python environment from the
+account commands above, run from the repository:
+
+```sh
+python3 scripts/hosted_quick_tunnel.py \
+  --python /opt/openworker/venv/bin/python \
+  --data-dir /var/lib/openworker-web
+```
+
+Use `--spa`, `--port` or `--cloudflared` for different paths/ports; `--help`
+lists the discovery, startup and shutdown timeouts. Stop with Ctrl+C and rerun
+the same command to restart. The launcher discovers the new URL automatically;
+sign in at the new hostname and update external machine connections as below.
+It runs in the foreground; unattended boot and restart services remain outside
+this plan. Loopback health alone does not complete the public Phase 5 gate.
+
+### Manual startup
+
 In a supervised terminal on the VM, start the tunnel:
 
 ```sh
@@ -76,8 +119,9 @@ On startup the gateway launches all enabled engines, even if nobody is signed
 in. It refuses a public bind and does not terminate TLS itself. Child engines
 bind only to `127.0.0.1` on ephemeral ports and receive launch tokens in their
 process environment. Restrict local shell and filesystem access to the service
-operator. Supervise the gateway and tunnel for this temporary session; automatic
-tunnel lifecycle management is outside this plan.
+operator. Supervise the gateway and tunnel for this temporary session using the
+launcher or the manual procedure; unattended boot/restart services are outside
+this plan.
 
 The gateway compares `Origin` with the exact `--public-origin` on state-changing
 browser requests and WebSockets. Preserve the browser's original Origin and
@@ -120,6 +164,9 @@ separate concurrent-request limit.
    The client uses its existing identity keys and saves the new controller URL
    after the signed handshake. Verify its machine ID is unchanged; stop it and
    run `openworker up` with the same `COWORKER_STATE_DIR` to verify reconnect.
+
+With the launcher, Ctrl+C and rerunning its command automate the tunnel and
+gateway steps above. The sign-in and external machine steps still apply.
 
 A gateway restart while the tunnel process stays alive retains the public
 hostname. A tunnel restart requires the manual origin and machine steps above;

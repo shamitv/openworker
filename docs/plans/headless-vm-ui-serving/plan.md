@@ -12,6 +12,8 @@ The gateway binds to loopback, checks the configured public origin on state-chan
 
 Start `cloudflared tunnel --url http://127.0.0.1:8766`, obtain its generated HTTPS hostname, then start the gateway with that exact `--public-origin`. Cloudflare supplies public TLS; no custom domain or VM TLS certificate is required for this path. After a tunnel restart, manually update the gateway origin, sign in at the new hostname, and reconnect machines using fresh join URLs and their existing state. Nginx remains the local HTTPS fixture for completed phases 3 and 4.
 
+The supervised Linux launcher [`scripts/hosted_quick_tunnel.py`](../../../scripts/hosted_quick_tunnel.py) automates tunnel startup, URL discovery, gateway launch and child shutdown while retaining account data. Stop it with Ctrl+C and rerun it to obtain a new origin. Sign-in and external machine recovery still require the operator steps in the guide; unattended boot/restart services are outside scope.
+
 ## Phase order
 
 1. [Accounts and browser sessions](phase-01-accounts/plan.md)
@@ -56,5 +58,5 @@ Two users can run concurrent sessions from different browsers without reading or
 - One VM supports up to 20 enabled accounts in the first release. Engines remain resident for unattended work.
 - No migration of existing desktop state in this feature.
 - External OAuth consent, callback configuration and token exchange are outside this plan. Existing implementation and historical compatibility tests remain; no new authentication API or database migration is required.
-- Quick Tunnel hostnames change on restart, have no uptime guarantee, allow up to 200 in-flight requests, and do not support SSE. This plan verifies temporary exposure; automatic tunnel lifecycle management and stable production hosting are outside scope. See [Cloudflare's Quick Tunnel documentation](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+- Quick Tunnel hostnames change on restart, have no uptime guarantee, allow up to 200 in-flight requests, and do not support SSE. This plan verifies temporary exposure with a supervised launcher; unattended boot/restart services and stable production hosting are outside scope. See [Cloudflare's Quick Tunnel documentation](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
 - A backend code-execution compromise could cross homes because engine processes share an OS identity. Supported API paths and agent tools are constrained in code and by the required sandbox; this is not process-level isolation.
