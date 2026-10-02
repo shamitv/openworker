@@ -10,6 +10,7 @@ proxy round trip all cross an actual socket.
 from __future__ import annotations
 
 import asyncio
+import time
 import json
 from pathlib import Path
 
@@ -136,6 +137,31 @@ def test_in_memory_ephemera_semantics():
     assert not eph.acquire_lease("pk")  # clone trap
     eph.release_lease("pk")
     assert eph.acquire_lease("pk")
+
+
+@pytest.mark.asyncio
+async def test_expired_enrollment_token_is_rejected_over_socket(tmp_path, monkeypatch):
+    from coworker.remote.acceptor import TOKEN_TTL_SECONDS
+    from coworker.remote import stores
+
+    clock = [time.time()]
+    monkeypatch.setattr(stores.time, "time", lambda: clock[0])
+    async with _Server(_controller(tmp_path)) as server:
+        controller, token = parse_join_url(await _arm(server.base))
+        clock[0] += TOKEN_TTL_SECONDS + 1
+        with pytest.raises(JoinRejected) as error:
+            await run_joined(
+                state=tmp_path / "expired-box",
+                controller=controller,
+                name="expired-box",
+                token=token,
+                app=_box_app(tmp_path, "expired-data"),
+                once=True,
+                log=lambda *_: None,
+            )
+        assert error.value.reason == "not-enrolled"
+        async with httpx.AsyncClient() as client:
+            assert (await client.get(server.base + "/v1/machines")).json()["machines"] == []
 
 
 # -- registry ------------------------------------------------------------------
