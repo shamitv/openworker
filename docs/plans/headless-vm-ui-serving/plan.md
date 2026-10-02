@@ -26,6 +26,8 @@ Each phase has `plan.md`, `todo.md`, and `status.md`. A phase is complete only a
 
 Implementation for phases 2?4 and phase 5 guidance in [`docs/headless-vm-ui.md`](../../headless-vm-ui.md) are present. Phases 2?5 remain in progress: real-browser, target-VM HTTPS, sandbox, unattended-work, full product isolation, and desktop regression verification is outstanding. See each phase's `status.md` for evidence and remaining checks.
 
+Phase 2 code and automated coverage now include native Windows restricted-logon tool runners, protected homes, sanitized environments, persisted-path validation, and scheduled-failure reporting. Live acceptance remains blocked by canceled sandbox setup and window-station permissions on the selected PC; see [Phase 2 status](phase-02-private-engines/status.md) for the explicit gate and remaining checks.
+
 ## Public interfaces
 
 - `openworker-web serve --spa DIR --data-dir DIR --public-origin https://HOST --sandbox-provider NAME` starts the gateway on loopback; `--host` and `--port` configure its local listener. Supported providers are `openshell`, `seatbelt`, and `windows`.

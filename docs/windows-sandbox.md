@@ -59,6 +59,24 @@ A few things are true by design:
 
 ## Turn it on
 
+### Hosted accounts
+
+The headless web gateway's hosted mode has an additional isolation path. Each tool
+sandbox gets a unique restricted logon token, even when concurrent sandboxes use the
+same network account. Grants name that logon, and home/credential/cache/temp folders
+are private to that sandbox. The controller protects its managed account homes and
+confines bootstrap process/thread/token/desktop objects before starting tool work.
+The runner and its descendants use read and write restrictions in a kill-on-close job.
+Windows files available to ordinary local users remain available.
+
+This path still requires the one-time machine setup and permission to create a window
+station. Its live acceptance is pending on the selected Windows PC; canceled setup and
+window-station access denial are recorded in [Phase 2 status](plans/headless-vm-ui-serving/phase-02-private-engines/status.md).
+Automated controller tests do not establish native enforcement. The status page contains
+the explicit gate to run after the host prerequisites are met.
+
+### Desktop settings
+
 Settings ▸ Sandbox has one switch, "Run agents in a sandbox". Turning it on shows the
 sandbox types this PC can use. Until the one-time setup has run, "Windows sandbox" looks
 disabled with a **Set up** button, which shows what setup changes and runs it on one

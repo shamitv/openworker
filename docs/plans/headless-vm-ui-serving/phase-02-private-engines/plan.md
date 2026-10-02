@@ -9,3 +9,9 @@ The gateway resolves the authenticated user's home from the account database and
 ## Acceptance
 
 User A's API path, session ID, or WebSocket path cannot select user B's engine or files. No engine port accepts non-loopback traffic. A crashed engine recovers and its scheduled work resumes; an unavailable sandbox prevents agent tool work.
+
+## Native Windows completion work
+
+The selected target is native Windows. Keep the existing two sandbox OS accounts for network profiles, and give every hosted sandbox its own restricted logon token and private runtime directories. Grants must not accumulate on the shared account SID. Protect managed homes, process/thread/token/desktop/pipe DACLs, and file ownership; keep credentials and temp/cache/home separate. Failures must refuse tool work.
+
+Use automated lifecycle/path/controller tests for implementation coverage, then run the opt-in native acceptance gate with real engines, real providers, and a local deterministic model. Mark the phase complete only after the live gate passes. If machine setup or host permissions block the gate, finish the code and record the blockers and unverified checks in `status.md`.

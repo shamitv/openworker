@@ -16,6 +16,12 @@ npm run build
 
 The SPA is `surfaces/gui/dist`. Serve it through `openworker-web`; do not run Vite's development server on the public VM. Install and prove one enforcing sandbox provider before provisioning users. Linux deployments normally use OpenShell; follow [OpenShell setup](openshell.md), including its gateway and image. `direct` and `runner_local` are not accepted for this deployment. The gateway checks sandbox availability and declines to start a private engine when it is unavailable.
 
+### Native Windows verification
+
+Hosted Windows tools use a unique restricted logon under one of the two existing network accounts, with private credential/home/cache/temp folders. Managed homes receive Windows ACLs, and runtime/root/pipe grants name the logon rather than the shared account. Public Windows files accessible to ordinary local users remain accessible. Engine launch environments exclude operator provider secrets and plugin paths.
+
+This implementation has automated coverage; live enforcement and recovery are still pending. On the selected PC, sandbox setup reached a canceled UAC prompt, and the execution context denied window-station creation. See [Phase 2 status and its live-gate command](plans/headless-vm-ui-serving/phase-02-private-engines/status.md) before treating this Windows deployment as verified. Hosted mode refuses direct execution and alternate provider overrides. Configured base-directory artifact previews/downloads and hosted credential copying refuse hard links whose ownership cannot be established from their path.
+
 ## Provision accounts and start
 
 Choose a private data directory on persistent storage. The operator running the gateway owns this directory and its backups. Account passwords are prompted without echo; do not put them in shell arguments or automation logs.
