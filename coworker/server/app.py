@@ -719,6 +719,8 @@ def create_app(manager: SessionManager) -> FastAPI:
 
     @app.post("/v1/skills/{name}/reveal")
     def reveal_skill(name: str, body: dict) -> dict[str, Any]:
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            return {"ok": False, "error": "Skill folders are on the hosted VM."}
         # §6 "Show folder": open the skill's folder in the OS file manager (local machine).
         return manager.reveal_skill(name, str((body or {}).get("workspace", "")) or None)
 
@@ -1314,6 +1316,8 @@ def create_app(manager: SessionManager) -> FastAPI:
 
     @app.post("/v1/mcp/config/reveal")
     def mcp_config_reveal() -> dict[str, Any]:
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            return {"ok": False, "error": "MCP configuration is on the hosted VM."}
         return manager.reveal_mcp_config()
 
     @app.get("/v1/mcp/{name}/tools")
