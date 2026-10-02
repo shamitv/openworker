@@ -1,0 +1,4325 @@
+{
+  "schema_version": 1,
+  "protocol": "hosted-memory-personas-v1",
+  "synthetic": true,
+  "shared_instruction": "Answer in chat. Do not browse, write files, or use tools other than memory.",
+  "personas": [
+    {
+      "id": "P01",
+      "name": "Mira",
+      "topic": "school revision",
+      "context_subject": "current school grade and curriculum",
+      "facts": {
+        "original": {
+          "value": "I am in Grade 8 following CBSE",
+          "groups": [
+            [
+              "grade 8",
+              "class 8",
+              "eighth grade"
+            ],
+            [
+              "cbse",
+              "central board of secondary education"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I am in Grade 9 following CBSE",
+          "groups": [
+            [
+              "grade 9",
+              "class 9",
+              "ninth grade"
+            ],
+            [
+              "cbse",
+              "central board of secondary education"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "numbered worked examples",
+          "groups": [
+            [
+              "numbered",
+              "step by step"
+            ],
+            [
+              "example",
+              "examples"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "I review each step",
+          "groups": [
+            [
+              "review",
+              "check"
+            ],
+            [
+              "step",
+              "steps"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P01",
+          "groups": [
+            [
+              "Anchor-P01"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P01",
+          "groups": [
+            [
+              "Harbor-P01"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P01",
+          "groups": [
+            [
+              "Solace-P01"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P01",
+          "groups": [
+            [
+              "Spark-P01"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I am in Grade 8 following CBSE. I prefer numbered worked examples because I review each step. Explain why a metal spoon can feel colder than a wooden spoon in the same room.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I am in Grade 8 following CBSE. Explain the difference between mass and weight.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P01 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [current school grade and curriculum]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I am in Grade 8 following CBSE and that I prefer numbered worked examples because I review each step. Remember globally that my personal planning notebook label is Solace-P01. For this workspace only, remember that the heading for future reports is Anchor-P01.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [current school grade and curriculum]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P01.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [current school grade and curriculum]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I am in Grade 9 following CBSE replaces I am in Grade 8 following CBSE. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [current school grade and curriculum]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [current school grade and curriculum]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "name": "Dev",
+      "topic": "stationery comparisons",
+      "context_subject": "notebook paper weight I compare",
+      "facts": {
+        "original": {
+          "value": "I compare 90 gsm notebook paper",
+          "groups": [
+            [
+              "90 gsm"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I compare 100 gsm notebook paper",
+          "groups": [
+            [
+              "100 gsm"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "compact comparison tables",
+          "groups": [
+            [
+              "table",
+              "tables",
+              "tabular"
+            ],
+            [
+              "comparison",
+              "compare"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "paper properties are easier to compare",
+          "groups": [
+            [
+              "paper"
+            ],
+            [
+              "compare",
+              "comparison",
+              "easier"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P02",
+          "groups": [
+            [
+              "Anchor-P02"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P02",
+          "groups": [
+            [
+              "Harbor-P02"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P02",
+          "groups": [
+            [
+              "Solace-P02"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P02",
+          "groups": [
+            [
+              "Spark-P02"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I compare 90 gsm notebook paper. I prefer compact comparison tables because paper properties are easier to compare. Suggest three properties I should record when comparing notebook paper.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I compare 90 gsm notebook paper. Give me a simple way to compare ink bleed-through using pens and notebooks I already have.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P02 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [notebook paper weight I compare]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I compare 90 gsm notebook paper and that I prefer compact comparison tables because paper properties are easier to compare. Remember globally that my personal planning notebook label is Solace-P02. For this workspace only, remember that the heading for future reports is Anchor-P02.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [notebook paper weight I compare]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P02.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [notebook paper weight I compare]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I compare 100 gsm notebook paper replaces I compare 90 gsm notebook paper. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [notebook paper weight I compare]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [notebook paper weight I compare]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P03",
+      "name": "Noor",
+      "topic": "badminton",
+      "context_subject": "badminton match category I track",
+      "facts": {
+        "original": {
+          "value": "I track doubles badminton matches",
+          "groups": [
+            [
+              "doubles",
+              "double"
+            ],
+            [
+              "badminton"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I track singles badminton matches",
+          "groups": [
+            [
+              "singles",
+              "single"
+            ],
+            [
+              "badminton"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "summaries by set",
+          "groups": [
+            [
+              "set",
+              "sets"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "that matches my score sheet",
+          "groups": [
+            [
+              "score",
+              "scores"
+            ],
+            [
+              "sheet",
+              "sheets",
+              "log"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P03",
+          "groups": [
+            [
+              "Anchor-P03"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P03",
+          "groups": [
+            [
+              "Harbor-P03"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P03",
+          "groups": [
+            [
+              "Solace-P03"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P03",
+          "groups": [
+            [
+              "Spark-P03"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I track doubles badminton matches. I prefer summaries by set because that matches my score sheet. Suggest a simple match-log layout with set scores and two observations.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I track doubles badminton matches. Suggest three questions I can use when reviewing a badminton practice session.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P03 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [badminton match category I track]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I track doubles badminton matches and that I prefer summaries by set because that matches my score sheet. Remember globally that my personal planning notebook label is Solace-P03. For this workspace only, remember that the heading for future reports is Anchor-P03.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [badminton match category I track]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P03.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [badminton match category I track]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I track singles badminton matches replaces I track doubles badminton matches. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [badminton match category I track]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [badminton match category I track]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "name": "Ria",
+      "topic": "reading notes",
+      "context_subject": "fiction genre I mostly read",
+      "facts": {
+        "original": {
+          "value": "I mostly read science fiction",
+          "groups": [
+            [
+              "science fiction",
+              "sci fi"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I mostly read historical fiction",
+          "groups": [
+            [
+              "historical fiction"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "spoiler-free bullet summaries",
+          "groups": [
+            [
+              "spoiler",
+              "spoilers"
+            ],
+            [
+              "bullet",
+              "bullets"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "I ask before finishing books",
+          "groups": [
+            [
+              "finishing",
+              "finish",
+              "finished",
+              "ending",
+              "end"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P04",
+          "groups": [
+            [
+              "Anchor-P04"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P04",
+          "groups": [
+            [
+              "Harbor-P04"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P04",
+          "groups": [
+            [
+              "Solace-P04"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P04",
+          "groups": [
+            [
+              "Spark-P04"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I mostly read science fiction. I prefer spoiler-free bullet summaries because I ask before finishing books. Give me two spoiler-free discussion questions for an imaginary novel about a robot narrator.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I mostly read science fiction. Suggest headings for a reading-note entry that records themes without revealing the ending.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P04 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [fiction genre I mostly read]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I mostly read science fiction and that I prefer spoiler-free bullet summaries because I ask before finishing books. Remember globally that my personal planning notebook label is Solace-P04. For this workspace only, remember that the heading for future reports is Anchor-P04.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [fiction genre I mostly read]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P04.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [fiction genre I mostly read]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I mostly read historical fiction replaces I mostly read science fiction. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [fiction genre I mostly read]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [fiction genre I mostly read]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "name": "Ivo",
+      "topic": "hobby baking",
+      "context_subject": "bread I usually bake",
+      "facts": {
+        "original": {
+          "value": "I usually bake sourdough",
+          "groups": [
+            [
+              "sourdough"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I usually bake focaccia",
+          "groups": [
+            [
+              "focaccia"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "ingredient quantities in grams",
+          "groups": [
+            [
+              "grams",
+              "gram"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "I use a kitchen scale",
+          "groups": [
+            [
+              "scale",
+              "scales"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P05",
+          "groups": [
+            [
+              "Anchor-P05"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P05",
+          "groups": [
+            [
+              "Harbor-P05"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P05",
+          "groups": [
+            [
+              "Solace-P05"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P05",
+          "groups": [
+            [
+              "Spark-P05"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I usually bake sourdough. I prefer ingredient quantities in grams because I use a kitchen scale. Explain why bread dough is often rested before shaping.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I usually bake sourdough. Suggest a recipe-note layout for recording ingredient changes and what happened after baking.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P05 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [bread I usually bake]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I usually bake sourdough and that I prefer ingredient quantities in grams because I use a kitchen scale. Remember globally that my personal planning notebook label is Solace-P05. For this workspace only, remember that the heading for future reports is Anchor-P05.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [bread I usually bake]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P05.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [bread I usually bake]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I usually bake focaccia replaces I usually bake sourdough. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [bread I usually bake]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [bread I usually bake]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P06",
+      "name": "Sia",
+      "topic": "plant journals",
+      "context_subject": "plants I grow",
+      "facts": {
+        "original": {
+          "value": "I grow herbs",
+          "groups": [
+            [
+              "herbs",
+              "herb"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I grow succulents",
+          "groups": [
+            [
+              "succulents",
+              "succulent"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "short weekly checklists",
+          "groups": [
+            [
+              "weekly",
+              "week"
+            ],
+            [
+              "checklist",
+              "checklists"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "I review my journal weekly",
+          "groups": [
+            [
+              "review",
+              "reviews"
+            ],
+            [
+              "weekly",
+              "week"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P06",
+          "groups": [
+            [
+              "Anchor-P06"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P06",
+          "groups": [
+            [
+              "Harbor-P06"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P06",
+          "groups": [
+            [
+              "Solace-P06"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P06",
+          "groups": [
+            [
+              "Spark-P06"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I grow herbs. I prefer short weekly checklists because I review my journal weekly. Suggest a weekly plant-journal entry with observations I can record.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I grow herbs. Explain why checking the soil can be more useful than following a fixed watering calendar.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P06 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [plants I grow]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I grow herbs and that I prefer short weekly checklists because I review my journal weekly. Remember globally that my personal planning notebook label is Solace-P06. For this workspace only, remember that the heading for future reports is Anchor-P06.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [plants I grow]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P06.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [plants I grow]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I grow succulents replaces I grow herbs. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [plants I grow]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [plants I grow]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P07",
+      "name": "Kian",
+      "topic": "photography",
+      "context_subject": "photography category I focus on",
+      "facts": {
+        "original": {
+          "value": "I focus on street photography",
+          "groups": [
+            [
+              "street"
+            ],
+            [
+              "photography",
+              "photos"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I focus on landscape photography",
+          "groups": [
+            [
+              "landscape"
+            ],
+            [
+              "photography",
+              "photos"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "camera settings before commentary",
+          "groups": [
+            [
+              "settings",
+              "setting"
+            ],
+            [
+              "before",
+              "first"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "I record settings first",
+          "groups": [
+            [
+              "record",
+              "records",
+              "recorded",
+              "note",
+              "notes"
+            ],
+            [
+              "settings",
+              "setting"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P07",
+          "groups": [
+            [
+              "Anchor-P07"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P07",
+          "groups": [
+            [
+              "Harbor-P07"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P07",
+          "groups": [
+            [
+              "Solace-P07"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P07",
+          "groups": [
+            [
+              "Spark-P07"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I focus on street photography. I prefer camera settings before commentary because I record settings first. Give me three composition questions to consider when photographing a busy street scene.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I focus on street photography. Suggest a short photo-review checklist covering framing, light, and distractions.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P07 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [photography category I focus on]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I focus on street photography and that I prefer camera settings before commentary because I record settings first. Remember globally that my personal planning notebook label is Solace-P07. For this workspace only, remember that the heading for future reports is Anchor-P07.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [photography category I focus on]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P07.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [photography category I focus on]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I focus on landscape photography replaces I focus on street photography. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [photography category I focus on]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [photography category I focus on]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P08",
+      "name": "Lena",
+      "topic": "language practice",
+      "context_subject": "Spanish learning level",
+      "facts": {
+        "original": {
+          "value": "I practise Spanish at A2 level",
+          "groups": [
+            [
+              "spanish"
+            ],
+            [
+              "a2"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I practise Spanish at B1 level",
+          "groups": [
+            [
+              "spanish"
+            ],
+            [
+              "b1"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "short dialogues before explanations",
+          "groups": [
+            [
+              "dialogue",
+              "dialogues",
+              "conversation"
+            ],
+            [
+              "before",
+              "first",
+              "then"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "I learn from examples",
+          "groups": [
+            [
+              "learn",
+              "learning"
+            ],
+            [
+              "example",
+              "examples"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P08",
+          "groups": [
+            [
+              "Anchor-P08"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P08",
+          "groups": [
+            [
+              "Harbor-P08"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P08",
+          "groups": [
+            [
+              "Solace-P08"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P08",
+          "groups": [
+            [
+              "Spark-P08"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I practise Spanish at A2 level. I prefer short dialogues before explanations because I learn from examples. Write a short Spanish dialogue in which someone asks where the postcard section is.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I practise Spanish at A2 level. Give me two short Spanish practice sentences using the past tense, with explanations in English.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P08 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [Spanish learning level]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I practise Spanish at A2 level and that I prefer short dialogues before explanations because I learn from examples. Remember globally that my personal planning notebook label is Solace-P08. For this workspace only, remember that the heading for future reports is Anchor-P08.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [Spanish learning level]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P08.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [Spanish learning level]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I practise Spanish at B1 level replaces I practise Spanish at A2 level. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [Spanish learning level]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [Spanish learning level]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P09",
+      "name": "Omar",
+      "topic": "cycling notes",
+      "context_subject": "cycling route export format",
+      "facts": {
+        "original": {
+          "value": "I export cycling routes in GPX format",
+          "groups": [
+            [
+              "gpx"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I export cycling routes in FIT format",
+          "groups": [
+            [
+              "fit"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "distances in kilometres",
+          "groups": [
+            [
+              "kilometres",
+              "kilometers",
+              "kilometre",
+              "kilometer",
+              "km"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "my route notebook uses metric units",
+          "groups": [
+            [
+              "metric"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P09",
+          "groups": [
+            [
+              "Anchor-P09"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P09",
+          "groups": [
+            [
+              "Harbor-P09"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P09",
+          "groups": [
+            [
+              "Solace-P09"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P09",
+          "groups": [
+            [
+              "Spark-P09"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I export cycling routes in GPX format. I prefer distances in kilometres because my route notebook uses metric units. Suggest a route-planning checklist using distance, surface, and waypoints; do not recommend actual places.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I export cycling routes in GPX format. Explain the difference between a recorded route track and a waypoint.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P09 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [cycling route export format]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I export cycling routes in GPX format and that I prefer distances in kilometres because my route notebook uses metric units. Remember globally that my personal planning notebook label is Solace-P09. For this workspace only, remember that the heading for future reports is Anchor-P09.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [cycling route export format]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P09.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [cycling route export format]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I export cycling routes in FIT format replaces I export cycling routes in GPX format. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [cycling route export format]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [cycling route export format]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P10",
+      "name": "Tavi",
+      "topic": "tabletop game design",
+      "context_subject": "tabletop game category I design",
+      "facts": {
+        "original": {
+          "value": "I design cooperative tabletop games",
+          "groups": [
+            [
+              "cooperative",
+              "co op"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I design deduction tabletop games",
+          "groups": [
+            [
+              "deduction"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "numbered setup instructions",
+          "groups": [
+            [
+              "numbered"
+            ],
+            [
+              "setup",
+              "set up",
+              "instructions",
+              "steps"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "playtesters follow them in order",
+          "groups": [
+            [
+              "playtesters",
+              "players"
+            ],
+            [
+              "order",
+              "follow"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P10",
+          "groups": [
+            [
+              "Anchor-P10"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P10",
+          "groups": [
+            [
+              "Harbor-P10"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P10",
+          "groups": [
+            [
+              "Solace-P10"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P10",
+          "groups": [
+            [
+              "Spark-P10"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I design cooperative tabletop games. I prefer numbered setup instructions because playtesters follow them in order. Suggest three simple constraints for designing a cooperative tabletop game prototype.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I design cooperative tabletop games. Suggest headings for recording a playtest’s setup, confusing rules, and proposed changes.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P10 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [tabletop game category I design]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I design cooperative tabletop games and that I prefer numbered setup instructions because playtesters follow them in order. Remember globally that my personal planning notebook label is Solace-P10. For this workspace only, remember that the heading for future reports is Anchor-P10.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [tabletop game category I design]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P10.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [tabletop game category I design]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I design deduction tabletop games replaces I design cooperative tabletop games. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [tabletop game category I design]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [tabletop game category I design]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P11",
+      "name": "June",
+      "topic": "crochet",
+      "context_subject": "crochet terminology convention",
+      "facts": {
+        "original": {
+          "value": "I use UK crochet terminology",
+          "groups": [
+            [
+              "uk",
+              "british"
+            ],
+            [
+              "crochet"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I use US crochet terminology",
+          "groups": [
+            [
+              "us",
+              "american"
+            ],
+            [
+              "crochet"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "abbreviations expanded on first use",
+          "groups": [
+            [
+              "abbreviation",
+              "abbreviations"
+            ],
+            [
+              "expanded",
+              "expand",
+              "full",
+              "define",
+              "spell"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "my notes are for beginners",
+          "groups": [
+            [
+              "beginner",
+              "beginners"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P11",
+          "groups": [
+            [
+              "Anchor-P11"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P11",
+          "groups": [
+            [
+              "Harbor-P11"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P11",
+          "groups": [
+            [
+              "Solace-P11"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P11",
+          "groups": [
+            [
+              "Spark-P11"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I use UK crochet terminology. I prefer abbreviations expanded on first use because my notes are for beginners. Explain the difference between a chain stitch and a slip stitch.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I use UK crochet terminology. Suggest a note layout for recording a crochet test swatch and adjustments.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P11 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [crochet terminology convention]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I use UK crochet terminology and that I prefer abbreviations expanded on first use because my notes are for beginners. Remember globally that my personal planning notebook label is Solace-P11. For this workspace only, remember that the heading for future reports is Anchor-P11.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [crochet terminology convention]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P11.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [crochet terminology convention]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I use US crochet terminology replaces I use UK crochet terminology. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [crochet terminology convention]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [crochet terminology convention]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P12",
+      "name": "Rohan",
+      "topic": "astronomy",
+      "context_subject": "astronomy objects I observe",
+      "facts": {
+        "original": {
+          "value": "I observe lunar craters",
+          "groups": [
+            [
+              "lunar",
+              "moon"
+            ],
+            [
+              "crater",
+              "craters"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I observe double stars",
+          "groups": [
+            [
+              "double stars",
+              "double star"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "cardinal directions",
+          "groups": [
+            [
+              "cardinal",
+              "north",
+              "south",
+              "east",
+              "west"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "I compare observations with charts",
+          "groups": [
+            [
+              "chart",
+              "charts"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P12",
+          "groups": [
+            [
+              "Anchor-P12"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P12",
+          "groups": [
+            [
+              "Harbor-P12"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P12",
+          "groups": [
+            [
+              "Solace-P12"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P12",
+          "groups": [
+            [
+              "Spark-P12"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I observe lunar craters. I prefer cardinal directions because I compare observations with charts. Suggest a simple observation-log layout for lunar crater sketches.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I observe lunar craters. Explain why the same lunar crater can look different under different lighting angles.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P12 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [astronomy objects I observe]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I observe lunar craters and that I prefer cardinal directions because I compare observations with charts. Remember globally that my personal planning notebook label is Solace-P12. For this workspace only, remember that the heading for future reports is Anchor-P12.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [astronomy objects I observe]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P12.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [astronomy objects I observe]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I observe double stars replaces I observe lunar craters. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [astronomy objects I observe]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [astronomy objects I observe]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P13",
+      "name": "Edda",
+      "topic": "podcast editing",
+      "context_subject": "podcast audio sample rate",
+      "facts": {
+        "original": {
+          "value": "I edit podcast audio at 44.1 kHz",
+          "groups": [
+            [
+              "44.1 khz",
+              "44100 hz"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I edit podcast audio at 48 kHz",
+          "groups": [
+            [
+              "48 khz",
+              "48000 hz"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "recording, editing, then exporting",
+          "groups": [
+            [
+              "recording",
+              "record"
+            ],
+            [
+              "editing",
+              "edit"
+            ],
+            [
+              "exporting",
+              "export"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "that matches my workflow",
+          "groups": [
+            [
+              "workflow",
+              "order",
+              "sequence"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P13",
+          "groups": [
+            [
+              "Anchor-P13"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P13",
+          "groups": [
+            [
+              "Harbor-P13"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P13",
+          "groups": [
+            [
+              "Solace-P13"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P13",
+          "groups": [
+            [
+              "Spark-P13"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I edit podcast audio at 44.1 kHz. I prefer recording, editing, then exporting because that matches my workflow. Explain the difference between cutting an audio clip and fading its end.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I edit podcast audio at 44.1 kHz. Suggest a short podcast editing checklist ending with export settings.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P13 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [podcast audio sample rate]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I edit podcast audio at 44.1 kHz and that I prefer recording, editing, then exporting because that matches my workflow. Remember globally that my personal planning notebook label is Solace-P13. For this workspace only, remember that the heading for future reports is Anchor-P13.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [podcast audio sample rate]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P13.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [podcast audio sample rate]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I edit podcast audio at 48 kHz replaces I edit podcast audio at 44.1 kHz. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [podcast audio sample rate]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [podcast audio sample rate]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P14",
+      "name": "Niko",
+      "topic": "exhibition notes",
+      "context_subject": "exhibition medium I focus on",
+      "facts": {
+        "original": {
+          "value": "I focus my exhibition notes on ceramics",
+          "groups": [
+            [
+              "ceramics",
+              "ceramic"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I focus my exhibition notes on textiles",
+          "groups": [
+            [
+              "textiles",
+              "textile"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "period, medium, then technique",
+          "groups": [
+            [
+              "period"
+            ],
+            [
+              "medium"
+            ],
+            [
+              "technique"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "that matches my notebook",
+          "groups": [
+            [
+              "notebook",
+              "notes"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P14",
+          "groups": [
+            [
+              "Anchor-P14"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P14",
+          "groups": [
+            [
+              "Harbor-P14"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P14",
+          "groups": [
+            [
+              "Solace-P14"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P14",
+          "groups": [
+            [
+              "Spark-P14"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I focus my exhibition notes on ceramics. I prefer period, medium, then technique because that matches my notebook. Suggest an exhibition-note layout for an imaginary ceramic vessel.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I focus my exhibition notes on ceramics. Give me three questions for comparing the surface texture and decoration of two imaginary ceramic objects.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P14 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [exhibition medium I focus on]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I focus my exhibition notes on ceramics and that I prefer period, medium, then technique because that matches my notebook. Remember globally that my personal planning notebook label is Solace-P14. For this workspace only, remember that the heading for future reports is Anchor-P14.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [exhibition medium I focus on]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P14.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [exhibition medium I focus on]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I focus my exhibition notes on textiles replaces I focus my exhibition notes on ceramics. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [exhibition medium I focus on]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [exhibition medium I focus on]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    },
+    {
+      "id": "P15",
+      "name": "Uma",
+      "topic": "programming",
+      "context_subject": "programming language I am learning",
+      "facts": {
+        "original": {
+          "value": "I am learning Python",
+          "groups": [
+            [
+              "python"
+            ]
+          ],
+          "scope": "global"
+        },
+        "corrected": {
+          "value": "I am learning TypeScript",
+          "groups": [
+            [
+              "typescript"
+            ]
+          ],
+          "scope": "global"
+        },
+        "style": {
+          "value": "small runnable examples",
+          "groups": [
+            [
+              "small",
+              "short",
+              "minimal"
+            ],
+            [
+              "runnable",
+              "run",
+              "executable"
+            ],
+            [
+              "example",
+              "examples"
+            ]
+          ],
+          "scope": "global"
+        },
+        "reason": {
+          "value": "I modify them to learn",
+          "groups": [
+            [
+              "modify",
+              "modifying",
+              "change",
+              "changing",
+              "adapt"
+            ]
+          ],
+          "scope": "global"
+        },
+        "A": {
+          "value": "Anchor-P15",
+          "groups": [
+            [
+              "Anchor-P15"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "B": {
+          "value": "Harbor-P15",
+          "groups": [
+            [
+              "Harbor-P15"
+            ]
+          ],
+          "scope": "workspace"
+        },
+        "notebook": {
+          "value": "Solace-P15",
+          "groups": [
+            [
+              "Solace-P15"
+            ]
+          ],
+          "scope": "global"
+        },
+        "temporary": {
+          "value": "Spark-P15",
+          "groups": [
+            [
+              "Spark-P15"
+            ]
+          ],
+          "scope": "none"
+        }
+      },
+      "conversations": [
+        {
+          "id": "C1",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I am learning Python. I prefer small runnable examples because I modify them to learn. Explain Python lists and dictionaries using a small example written directly in chat.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "What is one common mistake to watch for when using that?\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C2",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "I am learning Python. Write a small Python function in chat that counts words in a string, then explain how it works.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For today only, use Spark-P15 as the heading for one short follow-up note about your answer. This label is only for this draft.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C3",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [programming language I am learning]\nstyle: [my preferred answer format and its reason]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C4",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Remember for all my future chats that I am learning Python and that I prefer small runnable examples because I modify them to learn. Remember globally that my personal planning notebook label is Solace-P15. For this workspace only, remember that the heading for future reports is Anchor-P15.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "original",
+            "style",
+            "reason",
+            "notebook",
+            "A"
+          ],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C5",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [programming language I am learning]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory.",
+            "For this workspace only, remember that the heading for future reports is Harbor-P15.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "UNKNOWN"
+          },
+          "expected_saves": [
+            "B"
+          ],
+          "expected_absent": [
+            "A"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C6",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [programming language I am learning]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "original",
+            "style": "style",
+            "notebook": "notebook",
+            "heading": "A"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C7",
+          "actor": "peer",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [the main recurring context I have discussed]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "PEER",
+            "style": "PEER",
+            "notebook": "PEER",
+            "heading": "PEER"
+          },
+          "expected_saves": [],
+          "expected_absent": [],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C8",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Update my remembered context for all future chats: I am learning TypeScript replaces I am learning Python. Also forget my personal planning notebook label; do not retain its value.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {},
+          "expected_saves": [
+            "corrected"
+          ],
+          "expected_absent": [],
+          "prerequisites": [
+            "original",
+            "notebook"
+          ],
+          "restart_before": false
+        },
+        {
+          "id": "C9",
+          "actor": "owner",
+          "workspace": "B",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [programming language I am learning]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "B",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": false
+        },
+        {
+          "id": "C10",
+          "actor": "owner",
+          "workspace": "A",
+          "messages": [
+            "Using only retained memory for the signed-in account and current workspace, give these labelled fields, one per line:\ncontext: [programming language I am learning]\nstyle: [my preferred answer format and its reason]\nnotebook: [my personal planning notebook label]\nheading: [the heading for reports in this current workspace]\ntemporary_label: [the temporary label from a previous draft]\nUse UNKNOWN for any unavailable field. Do not guess.\n\nAnswer in chat. Do not browse, write files, or use tools other than memory."
+          ],
+          "probe_expected": {
+            "context": "corrected",
+            "style": "style",
+            "notebook": "UNKNOWN",
+            "heading": "A",
+            "temporary_label": "UNKNOWN"
+          },
+          "expected_saves": [],
+          "expected_absent": [
+            "B",
+            "notebook",
+            "temporary"
+          ],
+          "prerequisites": [],
+          "restart_before": true
+        }
+      ]
+    }
+  ]
+}
