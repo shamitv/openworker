@@ -586,6 +586,22 @@ def score_persona(persona, records):
             scores[cid + '_' + field + '_recall'] = recalled(cid, field, key)
         if 'style' in expected:
             scores[cid + '_reason_recall'] = recalled(cid, 'style', 'reason')
+    # Positive recall does not prove exclusion: a reply can mention both A and
+    # B. Check the corpus's negative controls independently from field matches.
+    scores['wrong_workspace_reply_mentions'] = 0
+    for c in persona['conversations']:
+        if c['actor'] != 'owner' or not c['probe_expected']:
+            continue
+        record = by[c['id']]
+        reply = record['turns'][0]['reply']
+        opposite = 'B' if c['workspace'] == 'A' else 'A'
+        scores['wrong_workspace_reply_mentions'] += int(matches(reply, facts[opposite]))
+        for key in c['expected_absent']:
+            scores[c['id'] + '_' + key + '_absent_from_reply'] = not matches(reply, facts[key])
+            if key in ('A', 'B'):
+                scores[c['id'] + '_' + key + '_absent_from_prompt'] = not matches(record['injected_memory'], facts[key])
+            else:
+                scores[c['id'] + '_' + key + '_absent_from_active_memory'] = not kept(record['before'], key)
     old_exists, notebook_exists = kept(by['C8']['before'], 'original'), kept(by['C8']['before'], 'notebook')
     scores['correction_exercised'] = old_exists
     scores['correction_replaced_active_value'] = (kept(by['C8']['after'], 'corrected') and not kept(by['C8']['after'], 'original')) if old_exists else None

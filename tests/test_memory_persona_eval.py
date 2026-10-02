@@ -107,7 +107,8 @@ def records_for(p):
                   'after':copy.deepcopy(rows), 'events':[], 'messages':[], 'errors':[], 'permission_requests':0,
                   'visible_permission_request':False, 'unrelated_approvals':0} for _ in c['messages']]
         records.append({'chat':c['id'],'actor':c['actor'],'workspace_path':'/A' if c['workspace']=='A' else '/B',
-                        'before':before,'after':copy.deepcopy(rows),'turns':turns,'infrastructure':{'cross_account':True}})
+                        'before':before,'after':copy.deepcopy(rows),'turns':turns,'injected_memory':'',
+                        'infrastructure':{'cross_account':True}})
     return records
 
 
@@ -328,3 +329,24 @@ def test_free_port_guard_matches_server_reuse_semantics(monkeypatch):
             assert self.reusable, 'TIME_WAIT must not be confused with a listener'
     monkeypatch.setattr(ev.socket,'socket',Socket)
     ev.port_free(18867)
+
+
+def test_correct_heading_does_not_hide_wrong_workspace_mentions(corpus):
+    p=corpus['personas'][0]
+    records=records_for(p)
+    records[5]['turns'][0]['reply']+='\nAlso known: Harbor-P01'
+    records[5]['injected_memory']='Anchor-P01 and Harbor-P01'
+    scores=ev.score_persona(p,records)
+    assert scores['C6_heading_recall'] is True
+    assert scores['C6_B_absent_from_reply'] is False
+    assert scores['C6_B_absent_from_prompt'] is False
+    assert scores['wrong_workspace_reply_mentions']==1
+
+
+def test_unknown_reply_does_not_prove_temporary_memory_was_removed(corpus):
+    p=corpus['personas'][0]
+    records=records_for(p)
+    records[9]['before'].append({'id':99,'scope':'workspace','workspace':'/A','content':'Spark-P01'})
+    scores=ev.score_persona(p,records)
+    assert scores['C10_temporary_label_recall'] is True
+    assert scores['C10_temporary_absent_from_active_memory'] is False
