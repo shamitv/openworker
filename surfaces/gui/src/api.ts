@@ -10,7 +10,7 @@ import {
   toolResponseMessage,
 } from "./cardPayloads";
 import type { GroupedQuestion, QuestionOption, SessionInfo, WsEvent } from "./types";
-import { isHostedWeb, redirectToWebLogin, webCsrfToken } from "./hostedWeb";
+import { isHostedWeb, redirectToWebLogin, revalidateHostedWeb, webCsrfToken } from "./hostedWeb";
 
 declare const __COWORKER_DEV_TOKEN__: string;
 
@@ -83,13 +83,13 @@ const fetch = (
     const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url, location.href);
     if (url.origin === location.origin) headers.set("X-CSRF-Token", webCsrfToken());
   }
-  return globalThis.fetch(input, { ...init, headers }).then((res) => {
-    // Only the local sidecar's own 401 means "this window is signed out". A machine or
-    // cloud call (/m/… proxies, cloud routes) returning 401 is that machine's problem
-    // and is handled where the call is made.
+  return globalThis.fetch(input, { ...init, headers }).then(async (res) => {
+    // Hosted transport failures recheck the gateway cookie, including machine/cloud
+    // routes. Desktop machine/cloud failures keep their existing local handling.
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    if (res.status === 401 && url.startsWith(httpBase()) && !url.includes("/v1/machines/") && !url.includes("/v1/cloud/")) {
-      announceUnauthorized();
+    if (res.status === 401 && new URL(url, location.href).origin === new URL(httpBase()).origin) {
+      if (isHostedWeb()) await revalidateHostedWeb();
+      else if (!url.includes("/v1/machines/") && !url.includes("/v1/cloud/")) announceUnauthorized();
     }
     return res;
   });
@@ -2641,7 +2641,9 @@ export function connectEvents(
       }
     };
     ws.onclose = () => {
-      if (!closed) timer = window.setTimeout(open, 5000);
+      const retry = () => { if (!closed) timer = window.setTimeout(open, 5000); };
+      if (isHostedWeb()) void revalidateHostedWeb().then(valid => { if (valid) retry(); });
+      else retry();
     };
   };
   open();
@@ -3043,14 +3045,19 @@ export class Session {
     ws.onclose = (ev) => {
       this.handlers.onClose?.();
       if (this.closed) return;
-      if (ev.code === WS_CLOSE_SESSION_REFUSED) {
-        this.closed = true; // final: the server said this session cannot be built as configured
-        this.handlers.onRefused?.();
-        return;
-      }
-      const delay = SESSION_RECONNECT_MS[Math.min(this.attempts, SESSION_RECONNECT_MS.length - 1)];
-      this.attempts += 1;
-      this.timer = window.setTimeout(() => this.connect(), delay);
+      const retry = () => {
+        if (this.closed) return;
+        if (ev.code === WS_CLOSE_SESSION_REFUSED) {
+          this.closed = true; // final: the server said this session cannot be built as configured
+          this.handlers.onRefused?.();
+          return;
+        }
+        const delay = SESSION_RECONNECT_MS[Math.min(this.attempts, SESSION_RECONNECT_MS.length - 1)];
+        this.attempts += 1;
+        this.timer = window.setTimeout(() => this.connect(), delay);
+      };
+      if (isHostedWeb()) void revalidateHostedWeb().then(valid => { if (valid) retry(); });
+      else retry();
     };
   }
 
@@ -3423,6 +3430,7 @@ export function setCloudBase(base: string): void {
 
 export async function getCapabilities(): Promise<{
   mode: AppMode;
+  headless_web?: boolean;
   wallet: boolean;
   auth?: CloudAuthConfig;
   cloud?: { base: string };
@@ -3433,6 +3441,7 @@ export async function getCapabilities(): Promise<{
     if (d.cloud?.base) setCloudBase(String(d.cloud.base));
     return {
       mode: d.mode === "cloud" ? "cloud" : "desktop",
+      ...(d.headless_web === true ? { headless_web: true } : {}),
       wallet: d.wallet !== false, // absent (desktop sidecar) → has a wallet
       ...(d.auth ? { auth: d.auth as CloudAuthConfig } : {}),
       ...(d.cloud?.base ? { cloud: { base: String(d.cloud.base) } } : {}),
