@@ -346,6 +346,7 @@ test("remote send-folder dialog: typed path on the machine, no local picker", as
   await page.getByText("Security Coworker").click();
   await page.getByTestId("runson-chip").click();
   await page.getByText("⌂ hetzner-box").click();
+  await expect(page.getByRole("button", { name: /qwen3-coder:30b/ })).toBeVisible();
 
   await page.getByPlaceholder(/Ask the coworker/).fill("scan the repo");
   await page.keyboard.press("Enter");

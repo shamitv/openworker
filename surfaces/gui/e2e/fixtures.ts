@@ -5,6 +5,7 @@ import { statePayload, type CardId } from "../src/gallery/states";
 
 // The app-wide /ws/events socket each page opened (UX-026 toast et al.) — specs
 // push server events through it via sendAppEvent below.
+const hostedPages = new WeakSet<Page>();
 const eventSockets = new WeakMap<Page, { send: (data: string) => void }>();
 const sessionSockets = new WeakMap<Page, { send: (data: string) => void }>();
 
@@ -392,7 +393,20 @@ const PROVIDERS = [
 ];
 
 /** Install the API + WebSocket mocks on a page. Returns handles for assertions/seed data. */
-export async function mockApi(page: import("@playwright/test").Page) {
+export const HOSTED_WORKSPACE = "/srv/openworker/alice/workspace";
+
+export async function mockApi(page: import("@playwright/test").Page, hosted = false) {
+  const hostedRecents: { path: string; name: string; exists: boolean }[] = [];
+  let enrollmentCount = 0;
+  if (hosted) {
+    hostedPages.add(page);
+    await page.addInitScript(() => { (window as any).__COWORKER_WEB__ = true; });
+    await page.route("**/web/auth/session", route => route.fulfill({ json: {
+      user: "alice", csrf: "hosted-test-csrf", workspace_root: HOSTED_WORKSPACE,
+    } }));
+    await page.route("**/web/auth/logout", route => route.fulfill({ json: { ok: true } }));
+    await page.route("**/web/login", route => route.fulfill({ contentType: "text/html", body: "<h1>Sign in</h1>" }));
+  }
   // The rail defaults to HIDDEN (UX-038 follow-up). Existing specs were written
   // against a visible rail, so run them in the "user opened it" state; the
   // default + persistence themselves are pinned by rail-default.spec.ts.
@@ -1100,7 +1114,7 @@ export async function mockApi(page: import("@playwright/test").Page) {
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ mode: "desktop" }),
+      body: JSON.stringify({ mode: "desktop", ...(hosted ? { headless_web: true } : {}) }),
     }),
   );
   await page.route("**/v1/**", async (route) => {
@@ -1147,7 +1161,9 @@ export async function mockApi(page: import("@playwright/test").Page) {
     }
     if (p === "/v1/remote/arm" && m === "POST") {
       enrollment.armed = true;
-      enrollment.join_url = "http://127.0.0.1:9787/j/e2e-token";
+      enrollment.join_url = hosted
+        ? `${new URL(req.url()).origin}/h/${"a".repeat(32)}/j/hosted-enrollment-token-${++enrollmentCount}`
+        : "http://127.0.0.1:9787/j/e2e-token";
       enrollment.expires_at = Date.now() / 1000 + 600;
       return json({ join_url: enrollment.join_url, expires_at: enrollment.expires_at, ttl_seconds: 600 });
     }
@@ -1476,12 +1492,21 @@ export async function mockApi(page: import("@playwright/test").Page) {
       const match = /%%pages=(\d+)/.exec(atob(data.split(",")[1] || "") || "");
       return json({ ok: true, pages: match ? Number(match[1]) : 1, bytes: data.length });
     }
-    if (p.endsWith("/v1/workspaces/recent")) return json({ workspaces: [] });
+    if (p.endsWith("/v1/workspaces/recent")) return json({ workspaces: hosted ? hostedRecents : [] });
     if (p.endsWith("/v1/workspaces/pick") && m === "POST") {
+      if (hosted) return json({ ok: false, error: "Enter a VM workspace path instead." });
       return json({ ok: true, path: "/tmp/picked-folder" });
     }
     if (p.endsWith("/v1/workspaces/open") && m === "POST") {
       const b = req.postDataJSON();
+      if (hosted) {
+        if (b.path !== HOSTED_WORKSPACE && !b.path.startsWith(HOSTED_WORKSPACE + "/"))
+          return json({ ok: false, error: "this machine only works under /srv/openworker/alice" });
+        if (b.path.endsWith("/missing")) return json({ ok: false, error: "folder does not exist" });
+        if (b.path.endsWith("/file.txt")) return json({ ok: false, error: "not a directory" });
+        if (!hostedRecents.some(w => w.path === b.path))
+          hostedRecents.unshift({ path: b.path, name: b.path.split("/").pop()!, exists: true });
+      }
       return json({ ok: true, path: b.path, git_branch: "main" });
     }
     if (p.endsWith("/v1/workspaces/temp") && m === "POST") {
@@ -2376,7 +2401,7 @@ export async function seedMachines(
     }
     enrollment.armed = true;
     return json(route, {
-      join_url: "http://127.0.0.1:9787/j/e2e-token",
+      join_url: hostedPages.has(page) ? `${new URL(route.request().url()).origin}/h/${"a".repeat(32)}/j/hosted-enrollment-token-seeded` : "http://127.0.0.1:9787/j/e2e-token",
       expires_at: Date.now() / 1000 + 600,
       ttl_seconds: 600,
     });
@@ -2460,9 +2485,10 @@ export async function seedMachines(
 }
 
 // A `test` whose page has the API mocked before navigation.
-export const test = base.extend({
-  page: async ({ page }, use) => {
-    await mockApi(page);
+export const test = base.extend<{ hosted: boolean }>({
+  hosted: [false, { option: true }],
+  page: async ({ page, hosted }, use) => {
+    await mockApi(page, hosted);
     await use(page);
   },
 });
