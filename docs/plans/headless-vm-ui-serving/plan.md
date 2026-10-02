@@ -8,7 +8,7 @@ Serve the full OpenWorker UI from a headless VM to up to 20 admin-provisioned us
 
 Browser → Cloudflare HTTPS edge → `cloudflared` on the VM → authenticated loopback web gateway → user's loopback-only `openworker-server` → OpenShell tools on Linux. The gateway serves the built React SPA, owns account sessions, checks the user-to-home mapping, and proxies HTTP and WebSockets to the correct engine. The browser never receives an engine launch token. Engines stay running after logout so automations continue.
 
-The gateway binds to loopback, checks the configured public origin on state-changing browser requests and browser WebSockets, and reads forwarded client addresses only from its loopback peer. The public API is cookie-authenticated with CSRF protection. Engine processes use separate state and workspace roots. Disable `direct` tool execution in this deployment and fail closed if the configured sandbox cannot start.
+The gateway defaults to loopback, checks the configured public origin on state-changing browser requests and browser WebSockets, and reads forwarded client addresses only from its loopback peer. An explicit `--host 0.0.0.0` binds the gateway to all IPv4 interfaces; the Quick Tunnel still connects via loopback and private engines remain on loopback. The public API is cookie-authenticated with CSRF protection. Engine processes use separate state and workspace roots. Disable `direct` tool execution in this deployment and fail closed if the configured sandbox cannot start.
 
 Start `cloudflared tunnel --url http://127.0.0.1:8766`, obtain its generated HTTPS hostname, then start the gateway with that exact `--public-origin`. Cloudflare supplies public TLS; no custom domain or VM TLS certificate is required for this path. After a tunnel restart, manually update the gateway origin, sign in at the new hostname, and reconnect machines using fresh join URLs and their existing state. Nginx remains the local HTTPS fixture for completed phases 3 and 4.
 
@@ -42,7 +42,7 @@ The final related VM regression suite passed **359 tests with 40 platform/opt-in
 
 ## Public interfaces
 
-- `openworker-web serve --spa DIR --data-dir DIR --public-origin https://HOST --sandbox-provider NAME` starts the gateway on loopback; `--host` and `--port` configure its local listener. Supported providers are `openshell`, `seatbelt`, and `windows`.
+- `openworker-web serve --spa DIR --data-dir DIR --public-origin https://HOST --sandbox-provider NAME` starts the gateway on loopback by default; `--host` accepts `127.0.0.1`, `localhost`, `::1` and `0.0.0.0`, and `--port` configures its listener port. Supported providers are `openshell`, `seatbelt`, and `windows`.
 - `openworker-web user create|list|disable|reset-password USERNAME` administers accounts without putting passwords in command-line arguments.
 - `/web/auth/login`, `/web/auth/session`, `/web/auth/logout`, and `/web/auth/password` manage cookie sessions. The gateway proxies `/v1/*` and `/ws/*` to the signed-in account's engine; the engine reports `{"mode":"desktop","headless_web":true}` from `/v1/capabilities`.
 - `GET /web/artifacts/download?session=ID&path=PATH` streams an authenticated account-scoped artifact. Account join links use `/h/{account-id}/j/{token}`; joined machines use `/h/{account-id}/ws/machine`. Existing account-scoped OAuth callback routes remain compatibility interfaces outside this plan's acceptance scope.

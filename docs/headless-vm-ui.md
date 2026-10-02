@@ -86,6 +86,21 @@ sign in at the new hostname and update external machine connections as below.
 It runs in the foreground; unattended boot and restart services remain outside
 this plan. Loopback health alone does not complete the public Phase 5 gate.
 
+Use `--host` to select the gateway's listener: `127.0.0.1` (default),
+`localhost`, `::1` or `0.0.0.0`. For all IPv4 interfaces:
+
+```sh
+.venv/bin/python scripts/hosted_quick_tunnel.py --host 0.0.0.0
+```
+
+This exposes the HTTP gateway port on the VM's network interfaces when network
+and firewall rules allow it. The tunnel and health probe still use loopback
+(`::1` for the IPv6 option). Browser sign-in continues to use the generated
+HTTPS tunnel URL: selecting a bind address does not add TLS or change the
+configured public origin, secure cookies or CSRF checks. Private account engines
+continue listening only on loopback. The gateway CLI also accepts
+`openworker-web serve --host 0.0.0.0` with its other required arguments.
+
 ### Manual startup
 
 In a supervised terminal on the VM, start the tunnel:
@@ -116,7 +131,8 @@ Use normal browser and CLI certificate verification. Authenticate users with
 the application's administrator-provisioned username/password accounts.
 
 On startup the gateway launches all enabled engines, even if nobody is signed
-in. It refuses a public bind and does not terminate TLS itself. Child engines
+in. It defaults to loopback and accepts an explicit `--host 0.0.0.0` bind;
+it does not terminate TLS itself. Child engines
 bind only to `127.0.0.1` on ephemeral ports and receive launch tokens in their
 process environment. Restrict local shell and filesystem access to the service
 operator. Supervise the gateway and tunnel for this temporary session using the

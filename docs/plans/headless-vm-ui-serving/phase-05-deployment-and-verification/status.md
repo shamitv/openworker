@@ -14,4 +14,6 @@ The later launcher request adds [`scripts/hosted_quick_tunnel.py`](../../../../s
 
 No Quick Tunnel deployment or public acceptance result has been recorded yet. Update this status with actual commands, versions, hostname, results and cleanup only after execution; documentation changes alone do not complete Phase 5. The separate Windows sandbox live gate remains pending.
 
+The requested `--host` option now supports `127.0.0.1`, `localhost`, `::1` and `0.0.0.0` in the launcher and gateway CLI. The default stays on loopback; `0.0.0.0` explicitly exposes the HTTP gateway listener on all IPv4 interfaces. Tunnel routing and health checks use loopback, private engines stay on loopback, and browser authentication retains the HTTPS public origin. Runtime verification of this option remains pending.
+
 Known limitations: Quick Tunnel hostnames change on restart, have no uptime guarantee, allow at most 200 in-flight requests and do not support SSE; see [Cloudflare's documentation](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/). This plan establishes temporary exposure, not stable production hosting. Capacity depends on sandbox, models and workload; no fixed VM sizing or 20-user capacity has been validated. Engines share the service OS identity.
