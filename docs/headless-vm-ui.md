@@ -1,6 +1,6 @@
 # Host the full OpenWorker UI on one VM
 
-This deployment serves the built GUI over HTTPS to at most 20 administrator-provisioned accounts. One loopback engine per enabled account retains its own state, keys, sessions, and workspaces. Browser logout revokes the browser session; scheduled work continues in that account's engine. The gateway and engines run under one OS identity, so a code-execution compromise of the backend can still cross homes. Place the gateway and the user homes on a dedicated VM.
+This deployment serves the built GUI over HTTPS to at most 20 administrator-provisioned accounts, using supervised temporary internet access through Cloudflare Quick Tunnel. One loopback engine per enabled account retains its own state, keys, sessions, and workspaces. Browser logout revokes the browser session; scheduled work continues in that account's engine. The gateway and engines run under one OS identity, so a code-execution compromise of the backend can still cross homes. Place the gateway and the user homes on a dedicated VM.
 
 ## Build and install
 
@@ -37,62 +37,118 @@ The admin-supplied password must be changed at the first login and after a reset
 
 The account database upgrades automatically on gateway or account-command startup. Schema version 1 adopts existing compatible unversioned hosted databases without changing accounts, sessions, or home files. An incompatible schema or one written by a newer application is rejected; restore a compatible backup or use the matching application version rather than editing the version marker.
 
-Start the gateway on loopback:
+## Temporary internet access with Cloudflare Quick Tunnel
+
+The default public path is browser → Cloudflare HTTPS edge → `cloudflared` on
+this VM → loopback gateway → private engines → OpenShell. Install `cloudflared`
+using [Cloudflare's downloads](https://developers.cloudflare.com/tunnel/downloads/)
+and record `cloudflared --version` when verifying the deployment. Keep the
+built SPA, accounts and enforcing sandbox ready before starting exposure.
+
+In a supervised terminal on the VM, start the tunnel:
 
 ```sh
+cloudflared tunnel --url http://127.0.0.1:8766
+```
+
+Keep that process running and copy its generated `https://<random>.trycloudflare.com`
+URL. Requests can fail until the gateway starts. In another terminal, set that
+exact origin and start the gateway on loopback:
+
+```sh
+OPENWORKER_TUNNEL_ORIGIN='https://<random>.trycloudflare.com'
 /opt/openworker/venv/bin/openworker-web serve \
   --spa /path/to/openworker/surfaces/gui/dist \
   --data-dir /var/lib/openworker-web \
-  --public-origin https://worker.example.com \
+  --public-origin "$OPENWORKER_TUNNEL_ORIGIN" \
   --sandbox-provider openshell \
   --host 127.0.0.1 --port 8766
 ```
 
-Use a service manager such as systemd to restart the gateway. On startup it launches all enabled engines, even if nobody is signed in. The gateway refuses a public bind; it does not terminate TLS itself. The child engines bind only to `127.0.0.1` on ephemeral ports and receive launch tokens only in their process environment. Restrict local shell and filesystem access to the service operator. Keep the HTTPS proxy and gateway on the same VM.
+Replace the placeholder with the URL printed by the running tunnel, with no
+path, query or fragment. Cloudflare provides the public HTTPS certificate;
+`cloudflared` reaches the gateway over HTTP on loopback. This path requires no
+custom domain, public Nginx listener, VM certificate or inbound web port.
+Use normal browser and CLI certificate verification. Authenticate users with
+the application's administrator-provisioned username/password accounts.
 
-## HTTPS reverse proxy
+On startup the gateway launches all enabled engines, even if nobody is signed
+in. It refuses a public bind and does not terminate TLS itself. Child engines
+bind only to `127.0.0.1` on ephemeral ports and receive launch tokens in their
+process environment. Restrict local shell and filesystem access to the service
+operator. Supervise the gateway and tunnel for this temporary session; automatic
+tunnel lifecycle management is outside this plan.
 
-The following Nginx example preserves browser `Origin`, WebSocket upgrades, and the request path. Configure a real certificate and replace the domain. Restrict direct access to port 8766 with the host firewall.
+The gateway compares `Origin` with the exact `--public-origin` on state-changing
+browser requests and WebSockets. Preserve the browser's original Origin and
+verify forwarded client identity when testing login throttling through Cloudflare.
+Cookies use `Secure`, `HttpOnly`, `SameSite=Strict`, and the `__Host-` prefix.
+`/web/health` reports gateway liveness; engine failures appear in the gateway log
+and each home's `state/engine.log`.
 
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name worker.example.com;
-    ssl_certificate /etc/letsencrypt/live/worker.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/worker.example.com/privkey.pem;
+With `SameSite=Strict`, navigation from another site may omit the session cookie
+and initially show login. Navigate directly to the current tunnel origin to
+resume an existing session on that hostname.
 
-    location / {
-        proxy_pass http://127.0.0.1:8766;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Origin $http_origin;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_read_timeout 3600s;
-        client_max_body_size 32m;
-    }
-}
+Quick Tunnels create a new hostname on restart, have no uptime guarantee,
+permit at most 200 in-flight requests and do not support SSE. The hosted UI uses
+WebSockets; verify session and machine sockets through the tunnel. Treat this
+as temporary exposure, without a stable production availability claim. See
+[Cloudflare's Quick Tunnel documentation](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+The 20-account target remains subject to VM resource measurements and the tunnel's
+separate concurrent-request limit.
 
-server {
-    listen 80;
-    server_name worker.example.com;
-    return 301 https://$host$request_uri;
-}
-```
+### Tunnel restart and hostname changes
 
-The gateway compares `Origin` with the exact `--public-origin` on every state-changing browser request and WebSocket. Keep the reverse proxy from rewriting an unrelated origin into the expected one. Cookies use `Secure`, `HttpOnly`, `SameSite=Strict`, and the `__Host-` prefix. `/web/health` reports gateway liveness; engine launch failures are visible in the gateway log and each home’s `state/engine.log`.
+1. Stop the external joiner processes and gateway normally; stop the old tunnel
+   if it is still running. Preserve the account data directory and each machine's
+   existing state and identity keys.
+2. Start a new Quick Tunnel with the same loopback target and obtain its new
+   HTTPS hostname.
+3. Restart the gateway with the new `--public-origin` and the same `--data-dir`.
+   Enabled engines now generate account join URLs on the new hostname.
+4. Open the new URL and sign in again. Browser cookies for the old hostname are
+   not usable at the new hostname. Verify existing workspaces, sessions and files.
+5. In the owning account's Machines settings, generate a fresh join URL. Run the
+   copied command on the external workstation using the same state directory:
 
-With `SameSite=Strict`, a navigation arriving from another site may omit the session cookie and initially show the login page. Navigate directly to the configured public origin to resume an existing session. Account-scoped OAuth callbacks validate engine-side flow state without relying on the browser session cookie.
+   ```sh
+   COWORKER_STATE_DIR=/path/to/existing/machine-state \
+     openworker join 'https://<new-host>.trycloudflare.com/h/<account-id>/j/<fresh-token>' --name=my-box
+   ```
 
-## OAuth and machine joins
+   The client uses its existing identity keys and saves the new controller URL
+   after the signed handshake. Verify its machine ID is unchanged; stop it and
+   run `openworker up` with the same `COWORKER_STATE_DIR` to verify reconnect.
 
-Hosted app sign-in uses administrator-provisioned username/password accounts. External OAuth is optional for service connections; API-key providers and local models do not require it. Phase 4 acceptance covers this password-based hosted experience. Real external provider consent and callback verification is an explicit [Phase 5 gate](plans/headless-vm-ui-serving/phase-05-deployment-and-verification/todo.md).
+A gateway restart while the tunnel process stays alive retains the public
+hostname. A tunnel restart requires the manual origin and machine steps above;
+existing joiners cannot discover the new hostname automatically.
 
-MCP OAuth registers callbacks at `https://worker.example.com/h/<account-id>/mcp/oauth/callback`; the provider must allow the public HTTPS redirect. Managed connector OAuth uses the same account route for `/oauth/callback`. Cloud sign-in requires an Auth0 application configured to allow each hosted account’s `https://worker.example.com/h/<account-id>/auth/callback` redirect; set its `cloud_auth_domain`, `cloud_client_id`, and `cloud_audience` in that home’s `state/config.toml`. The default desktop Auth0 client may not allow a new VM domain. The browser launches consent pages, and the engine checks one-time flow state before accepting callbacks. OpenAI Codex subscription sign-in currently requires its fixed localhost callback and is unavailable in hosted mode; use an API key provider there.
+### Local Nginx HTTPS fixtures
 
-Machine join links generated by an account’s engine use `/h/<account-id>/j/<token>` on the public origin. The joined machine connects to `/h/<account-id>/ws/machine`; enrollment tokens and signed machine identity are validated by the account’s engine. Keep an account enabled while its joined machines or automations should run.
+The completed Phase 3 and Phase 4 gates below retain their disposable Nginx
+proxy, temporary self-signed certificate, WebSocket forwarding and cleanup
+commands. Their `scripts/hosted_browser_fixture.py proxy` and `stop-proxy`
+commands provide the local HTTPS setup. These remain useful local regressions;
+public Quick Tunnel acceptance requires ordinary certificate verification.
+
+## Machine joins and authentication scope
+
+Machine join links generated by an account's engine use `/h/<account-id>/j/<token>`
+on the current public origin. The joined machine connects to
+`/h/<account-id>/ws/machine`; the account's engine validates enrollment tokens
+and signed machine identity. Keep the account enabled while its joined machines
+or automations should run. Use the UI-generated HTTPS join URL directly on the
+external workstation.
+
+This multi-phase plan uses username/password app authentication. External OAuth
+consent, callback configuration and token exchange are outside its scope,
+superseding their earlier deferral to Phase 5. Existing OAuth implementation and
+historical tests remain; use API-key providers or local models for this acceptance.
+Hosted OpenAI Codex subscription sign-in remains unavailable because its fixed
+localhost callback is unsupported. No new authentication API or database
+migration is required for this revision.
 
 ## Operations and backup
 
@@ -152,8 +208,8 @@ PHASE3_ROOT="$HOME/.cache/openworker-phase3-fixture"
 private engines or fail. The fixture generates a temporary self-signed
 certificate; certificate exceptions apply only to the test browser contexts.
 The standalone Nginx configuration uses private temporary directories and
-forwards the original browser Origin and WebSocket upgrades. Production TLS
-trust and public-domain deployment retain their separate verification gate.
+forwards the original browser Origin and WebSocket upgrades. Public HTTPS
+certificate verification through Quick Tunnel remains a separate Phase 5 gate.
 
 The private `manifest.json` contains disposable passwords and launch tokens
 used only by the test runner's non-disclosure assertions. Do not commit,
@@ -262,7 +318,7 @@ native picker/reveal routes are not invoked and engine tokens are not disclosed.
 The ordinary hermetic browser suite additionally tests enrollment errors,
 retry, countdown expiry and renewal; the backend suite proves token expiry
 through a real WebSocket with a controlled clock. These checks retain the
-production enrollment TTL. External OAuth consent remains a Phase 5 gate.
+production enrollment TTL. External OAuth acceptance is outside this multi-phase plan.
 
 The live runner removes its isolated external machine state and stops its child
 processes in cleanup. Browser traces and sanitized CLI logs are written to
@@ -272,3 +328,42 @@ links. Stop `serve` normally, stop the fixture's proxy with `stop-proxy`, confir
 the engines/sandboxes/listeners stopped, and remove the fixture roots and copied
 manifests after retaining needed evidence. Leave the existing OpenShell gateway
 running.
+
+## Phase 5 public Quick Tunnel acceptance
+
+Phase 5 remains pending. Follow the setup above on a fresh Linux VM with a
+new disposable acceptance data directory and two private OpenShell engines.
+Keep the tunnel hostname fixed for each run and record the generated URL,
+`cloudflared`, OS, Python, Node, OpenShell and browser versions.
+
+Add a public-tunnel variant of the existing hosted browser gate. The current
+Phase 3/4 runners allow the fixture's self-signed certificate in browser contexts,
+and the Phase 4 CLI uses `HOSTED_TEST_CA`; those settings do not establish public
+TLS acceptance. The public variant must use `ignoreHTTPSErrors: false`, normal
+CLI certificate verification and the ordinary system CA trust store, without a
+fixture CA or certificate-verification bypass. No public acceptance command or
+passing result is claimed until that variant is implemented and run.
+
+Require independent Chromium/Alice and Firefox/Bob sessions and a real external
+workstation joiner. Verify password login/logout/expiry, approved work, confined
+typed/recent workspaces, previews, exact downloaded bytes, persistence and
+cross-account isolation. Extend checks to secrets, inbox, approvals, files,
+revocation, session/machine WebSockets, CSRF/origin rejection, login throttling
+and forwarded client identity. Verify sandbox failure, crash recovery, unattended
+scheduled work, backup/restore and idle/active resource measurements. Complete
+existing desktop authentication and Tauri regressions.
+
+Exercise the manual hostname-change procedure with the same acceptance data
+and external machine state. Verify the account data and machine ID persist,
+fresh URLs target the new hostname, and `openworker up` reconnects after the
+controller URL has been updated. The public gate must have no skipped scenarios
+or automatic retries. External OAuth acceptance is outside this plan; the
+separate Windows sandbox live gate remains pending.
+
+Retain sanitized gateway/engine/tunnel logs, events and browser traces privately;
+traces may contain disposable passwords and join URLs. After recording results,
+stop the joiners, gateway and tunnel, confirm disposable engines/sandboxes and
+listeners stopped, then remove the disposable account roots, copied manifests
+and external joiner state. Keep operational account data and the existing
+OpenShell gateway. Record evidence and cleanup in the [Phase 5 status](plans/headless-vm-ui-serving/phase-05-deployment-and-verification/status.md)
+before marking it complete.
