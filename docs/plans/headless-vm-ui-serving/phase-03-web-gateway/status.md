@@ -28,4 +28,4 @@ Cleanup completed: disposable gateway/proxy services, test engines and sandbox c
 
 ## Remaining deployment scope
 
-Public-domain certificate trust, broader Phase 4–5 product/deployment flows, and the separate Windows sandbox live gate remain pending. This completion establishes Linux Phase 3 with a temporary test certificate. Engine processes still share an OS identity, as described in the [overview](../plan.md).
+Public-domain certificate trust, Phase 5 deployment/OAuth acceptance, and the separate Windows sandbox live gate remain pending. [Phase 4 password-based product acceptance](../phase-04-headless-flows/status.md) is now complete. This completion establishes Linux Phase 3 with a temporary test certificate. Engine processes still share an OS identity, as described in the [overview](../plan.md).

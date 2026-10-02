@@ -24,7 +24,7 @@ Each phase has `plan.md`, `todo.md`, and `status.md`. A phase is complete only a
 
 [Phase 1 is complete](phase-01-accounts/status.md): transactional schema upgrades, browser account/session behavior, CLI administration, and cookie-to-home ownership are verified locally. On 2026-10-01, `tests/test_hosted_accounts.py` and `tests/test_hosted_web.py` passed together: **63 tests passed** on Windows 11 with Python 3.14.2 and SQLite 3.50.4. The account session cookie uses `SameSite=Strict`.
 
-Implementation for phases 2–4 and phase 5 guidance in [`docs/headless-vm-ui.md`](../../headless-vm-ui.md) are present. Linux phases 2 and 3 have passed their live gates; broader Phase 4–5 product/deployment acceptance and the separate Windows sandbox live gate remain pending. See each phase's `status.md` for evidence and remaining checks.
+Implementation for phases 2–4 and phase 5 guidance in [`docs/headless-vm-ui.md`](../../headless-vm-ui.md) are present. Linux phases 2, 3 and password-based Phase 4 have passed their live gates; Phase 5 deployment/OAuth acceptance and the separate Windows sandbox live gate remain pending. See each phase's `status.md` for evidence and remaining checks.
 
 Phase 2 code and automated coverage now include native Windows restricted-logon tool runners, protected homes, sanitized environments, persisted-path validation, and scheduled-failure reporting. Live acceptance remains blocked by canceled sandbox setup and window-station permissions on the selected PC; see [Phase 2 status](phase-02-private-engines/status.md) for the explicit gate and remaining checks.
 
@@ -33,6 +33,8 @@ Linux/OpenShell Phase 2 acceptance is complete on the supplied Ubuntu 26.04.1/Py
 The final related VM regression suite passed **359 tests with 40 platform/opt-in skips in 45.97s**.
 
 [Phase 3 is complete on Linux](phase-03-web-gateway/status.md): the hardened gateway and built SPA passed concurrent Chromium/Firefox HTTPS acceptance with two private OpenShell engines and the supplied real local LLM. UI-approved file writes, exact authenticated artifacts and VM contents, reload persistence, cross-account isolation, expiry redirects, continued peer work and browser token non-disclosure passed on 2026-10-02. Backend regressions passed (126 hosted and 129 compatibility tests), GUI units passed (489), the production build passed, and all 327 hermetic browser cases passed across runs. Temporary test deployment cleanup completed; public-domain certificate trust remains separate.
+
+[Phase 4 is complete for password-based hosting on Linux](phase-04-headless-flows/status.md): Hosted VM controls, typed/recent workspaces, exact UI downloads, external workstation machine enrollment/reconnect, account isolation and independent password-session expiry passed the fresh Chromium/Alice and Firefox/Bob HTTPS gate in **approximately 1.2 minutes**, with no skips or automatic retries. Affected backend suites passed **302 tests**, GUI units **489**, the production build passed, and the clean full hermetic browser run passed **335 cases**. Private evidence is retained and disposable deployment/joiner cleanup completed. External OAuth consent and callback acceptance explicitly moves to [Phase 5](phase-05-deployment-and-verification/todo.md); public certificate trust remains pending.
 
 ## Public interfaces
 

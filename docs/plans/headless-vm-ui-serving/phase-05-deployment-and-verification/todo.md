@@ -5,5 +5,6 @@
 - [ ] Follow the guide on a fresh VM and verify the supported public deployment end to end.
 - [ ] Run two-browser, two-account scenarios for sessions, secrets, inbox, approvals, artifacts, files, WebSockets, and account revocation.
 - [ ] Exercise real CSRF/origin, login-throttling, sandbox-down, crash-restart, OAuth callback, and scheduled-task behavior.
+- [ ] Complete external OAuth provider consent and account-scoped callback/token exchange acceptance deferred from password-based Phase 4; verify state isolation, expiry and replay rejection.
 - [ ] Run existing desktop authentication and Tauri regression checks.
 - [ ] Record executed results and completion evidence after verification.
