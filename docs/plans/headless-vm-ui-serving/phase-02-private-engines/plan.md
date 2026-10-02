@@ -15,3 +15,9 @@ User A's API path, session ID, or WebSocket path cannot select user B's engine o
 The selected target is native Windows. Keep the existing two sandbox OS accounts for network profiles, and give every hosted sandbox its own restricted logon token and private runtime directories. Grants must not accumulate on the shared account SID. Protect managed homes, process/thread/token/desktop/pipe DACLs, and file ownership; keep credentials and temp/cache/home separate. Failures must refuse tool work.
 
 Use automated lifecycle/path/controller tests for implementation coverage, then run the opt-in native acceptance gate with real engines, real providers, and a local deterministic model. Mark the phase complete only after the live gate passes. If machine setup or host permissions block the gate, finish the code and record the blockers and unverified checks in `status.md`.
+
+## Linux support
+
+Linux uses the enforcing OpenShell provider (pinned to 0.0.116), with per-sandbox containers, Landlock, seccomp, and isolated bind mounts. Keep operator gateway certificates accessible only to the trusted engines through their private configuration tree. Set each engine's `TMPDIR` and `XDG_RUNTIME_DIR` to private directories in its managed home; sandbox runners receive only their own mounts and explicitly copied credentials.
+
+Run `tests/test_hosted_linux_live.py` with `OPENWORKER_TEST_HOSTED_LINUX=1` and a dedicated `--basetemp` under the VM operator's home. Missing dependencies, gateway, or image must fail an opted-in run. Verify shell/file/git/search execution, peer workspace/state/credential denial, read-only roots, distinct PID namespaces, per-registry cleanup, two real engines, loopback/token enforcement, cross-account API/WebSocket/artifact probes, scheduled work before login and after logout, crash recovery/token rotation/catch-up, and disable/shutdown cleanup. Windows and Linux share the engine lifecycle scenario and deterministic model fixture.

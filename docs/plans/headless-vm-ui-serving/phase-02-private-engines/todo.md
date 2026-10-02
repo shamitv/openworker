@@ -13,6 +13,12 @@
 - [x] Add lifecycle, path-boundary, controller/API-ordering, and model-fixture automated coverage.
 - [x] Add an opt-in live Windows gate using real engines/providers and a local fake model.
 - [x] Document canceled setup, window-station denial, test boundaries, and the remaining live gate.
-- [ ] Verify real sandbox enforcement and non-loopback isolation on a target host.
-- [ ] Verify scheduled work continues without a browser and resumes after a real engine crash/restart.
+- [x] Add private Linux temporary/runtime directories and OpenShell engine configuration boundary tests.
+- [x] Add an opt-in Linux gate and share the deterministic model/engine lifecycle scenario with Windows.
+- [x] Prepare a private Python test environment and run the related regression suite on the supplied Ubuntu VM.
+- [x] Verify real Linux gateway refusal with an unavailable provider and correct secure-cookie WebSocket acceptance probes.
+- [x] Prepare the supplied Ubuntu VM's Docker/OpenShell prerequisites with explicit setup approval.
+- [x] Run the Linux gate on the supplied VM and record real sandbox and engine acceptance evidence.
+- [x] Verify real sandbox enforcement and non-loopback isolation on the Linux target VM.
+- [x] Verify Linux scheduled work continues without a browser and resumes after a real engine crash/restart.
 - [ ] Verify real simultaneous account isolation, peer pipe/process denial, private credentials, read-only roots, logout, disable, and cleanup on Windows.

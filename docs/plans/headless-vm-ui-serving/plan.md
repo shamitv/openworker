@@ -28,6 +28,10 @@ Implementation for phases 2?4 and phase 5 guidance in [`docs/headless-vm-ui.md`]
 
 Phase 2 code and automated coverage now include native Windows restricted-logon tool runners, protected homes, sanitized environments, persisted-path validation, and scheduled-failure reporting. Live acceptance remains blocked by canceled sandbox setup and window-station permissions on the selected PC; see [Phase 2 status](phase-02-private-engines/status.md) for the explicit gate and remaining checks.
 
+Linux/OpenShell Phase 2 acceptance is complete on the supplied Ubuntu 26.04.1/Python 3.14.4 VM. With Docker 29.1.3 and OpenShell 0.0.116 installed, its real-sandbox/engine gate passed **2 tests in 43.50s** on 2026-10-02, proving concurrent tool isolation, loopback authentication, unattended scheduling, crash recovery, and disable/cleanup. Changes add private temporary/runtime directories, create read-only output mount sources before startup, and reject hosted artifact requests for unknown sessions. Linux uses the supported default `allowlist` network profile; unrestricted OpenShell networking remains unsupported. See [Phase 2 status](phase-02-private-engines/status.md) for evidence and the separate remaining Windows gate.
+
+The final related VM regression suite passed **359 tests with 40 platform/opt-in skips in 45.97s**.
+
 ## Public interfaces
 
 - `openworker-web serve --spa DIR --data-dir DIR --public-origin https://HOST --sandbox-provider NAME` starts the gateway on loopback; `--host` and `--port` configure its local listener. Supported providers are `openshell`, `seatbelt`, and `windows`.
