@@ -3347,7 +3347,10 @@ export async function getMachines(): Promise<{ machines: Machine[]; armed: boole
  * token with a 10-minute window and returns the join URL to show the user. */
 export async function armEnrollment(): Promise<{ join_url: string; expires_at: number }> {
   const r = await fetch(`${httpBase()}/v1/remote/arm`, { method: "POST" });
-  return r.json();
+  const result = await r.json();
+  if (!r.ok || typeof result.join_url !== "string" || !result.join_url || !Number.isFinite(result.expires_at))
+    throw new Error(result.error || i18n.t("machines.add.failed"));
+  return result;
 }
 
 export async function disarmEnrollment(): Promise<void> {

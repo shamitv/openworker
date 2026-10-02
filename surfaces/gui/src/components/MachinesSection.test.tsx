@@ -49,6 +49,7 @@ beforeEach(() => {
         }
         armCalls += 1;
         return {
+          ok: true,
           json: async () => ({
             join_url: "http://127.0.0.1:9787/j/tok123",
             expires_at: Date.now() / 1000 + 600,

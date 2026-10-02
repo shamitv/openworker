@@ -1,3 +1,4 @@
+import { isHostedWeb } from "../hostedWeb";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TFunction } from "i18next";
 import { Trans, useTranslation } from "react-i18next";
@@ -352,7 +353,7 @@ export function MachinesSection() {
             💻
           </div>
           <div>
-            <div className="text-ui font-medium text-ink">{t("machines.this_mac")}</div>
+            <div className="text-ui font-medium text-ink">{t(isHostedWeb() ? "machines.hosted_vm" : "machines.this_mac")}</div>
             <div className={META}>{t("machines.always_available")}</div>
           </div>
         </div>
@@ -619,6 +620,7 @@ function AddMachineCard({
 }) {
   const { t } = useTranslation();
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
+  const [armError, setArmError] = useState(false);
   const [expiresAt, setExpiresAt] = useState(0);
   const [now, setNow] = useState(() => Date.now() / 1000);
   const [reach, setReach] = useState<"ssh" | "vpn">("ssh");
@@ -643,12 +645,15 @@ function AddMachineCard({
   const known = useRef(new Set(knownIds));
 
   const arm = useCallback(async () => {
+    setArmError(false);
+    setJoinUrl(null);
     try {
       const d = await armEnrollment();
       setJoinUrl(d.join_url);
       setExpiresAt(d.expires_at);
     } catch {
       setJoinUrl(null);
+      setArmError(true);
     }
   }, []);
 
@@ -735,7 +740,7 @@ function AddMachineCard({
           {provisioned !== null && (
             <div className="mt-1.5 text-meta text-muted" data-testid="provisioned-note">
               {provisioned.length
-                ? t("machines.add.provisioned", { count: provisioned.length })
+                ? t(isHostedWeb() ? "machines.add.provisioned_hosted" : "machines.add.provisioned", { count: provisioned.length })
                 : t("machines.add.provision_failed")}
             </div>
           )}
@@ -750,7 +755,7 @@ function AddMachineCard({
       ) : (
         <>
           {/* Cloud: machines dial the public URL directly — no reach step. */}
-          {!isCloudMode() && (
+          {!isCloudMode() && !isHostedWeb() && (
             <>
               <div className="mt-3 text-meta text-muted">
                 <Trans
@@ -795,7 +800,7 @@ function AddMachineCard({
           )}
 
           <div className="mt-3.5 text-meta text-muted">
-            {isCloudMode() ? (
+            {isCloudMode() || isHostedWeb() ? (
               <>{t("machines.add.run_this")}</>
             ) : (
               <Trans
@@ -806,7 +811,7 @@ function AddMachineCard({
           </div>
           <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-line bg-paper px-3 py-2.5 font-mono text-label text-ink">
             <span className="truncate" data-testid="join-command">{command}</span>
-            <button className="text-accent text-label font-sans shrink-0" onClick={copy}>
+            <button className="text-accent text-label font-sans shrink-0 disabled:opacity-40" onClick={copy} disabled={!joinUrl}>
               {copied ? t("transcript.copied") : t("machines.add.copy")}
             </button>
           </div>
@@ -827,7 +832,14 @@ function AddMachineCard({
           )}
 
           <div className="mt-3.5 pt-3 border-t border-line flex items-center gap-2.5 text-meta text-muted">
-            {expired ? (
+            {armError ? (
+              <>
+                <span role="alert">{t("machines.add.failed")}</span>
+                <button className="ml-auto text-accent" onClick={() => void arm()}>
+                  {t("machines.add.rearm")}
+                </button>
+              </>
+            ) : expired ? (
               <>
                 <span>{t("machines.add.expired")}</span>
                 <button className="ml-auto text-accent" onClick={() => void arm()}>
