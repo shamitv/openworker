@@ -118,6 +118,48 @@ def test_manual_and_scheduled_workspaces_fail_before_directory_creation(confined
     assert not outside.exists()
 
 
+@pytest.mark.parametrize("provider", ["openshell", "direct"])
+def test_openshell_output_mount_exists_before_first_tool_result(tmp_path, monkeypatch, provider):
+    from coworker import agent as module
+    from coworker.sandbox.selection import Selection
+
+    home = tmp_path / "alice"
+    project = home / "workspace"
+    project.mkdir(parents=True)
+    spill = home / "cache" / "tool-output"
+    monkeypatch.setenv("OPENWORKER_HOSTED_WEB", "1" if provider == "openshell" else "0")
+    monkeypatch.setenv("OPENWORKER_BASE_DIR", str(home))
+    monkeypatch.setenv("COWORKER_STATE_DIR", str(home / "state"))
+    monkeypatch.setattr(module, "select_sandbox", lambda _: Selection(provider, explicit=True))
+
+    def capture_mounts(**options):
+        output = next(root for root in options["roots"] if root.label == "tool-output")
+        assert output.path == spill and not output.writable
+        assert spill.is_dir() == (provider == "openshell")
+        raise RuntimeError("mounts checked")
+
+    monkeypatch.setattr(module, "open_workspace", capture_mounts)
+    with pytest.raises(RuntimeError, match="mounts checked"):
+        module.build_engine(agent=module.code_agent(), workspace=project, tool_result_spill_dir=spill)
+
+
+def test_hosted_openshell_refuses_foreign_output_mount_before_creation(tmp_path, monkeypatch):
+    from coworker import agent as module
+    from coworker.sandbox.selection import Selection
+
+    home = tmp_path / "alice"
+    project = home / "workspace"
+    project.mkdir(parents=True)
+    spill = tmp_path / "bob" / "tool-output"
+    monkeypatch.setenv("OPENWORKER_HOSTED_WEB", "1")
+    monkeypatch.setenv("OPENWORKER_BASE_DIR", str(home))
+    monkeypatch.setenv("COWORKER_STATE_DIR", str(home / "state"))
+    monkeypatch.setattr(module, "select_sandbox", lambda _: Selection("openshell", explicit=True))
+    with pytest.raises(OutsideBaseDir):
+        module.build_engine(agent=module.code_agent(), workspace=project, tool_result_spill_dir=spill)
+    assert not spill.parent.exists()
+
+
 @pytest.mark.parametrize("failure", ["construction", "sandbox_event"])
 async def test_scheduled_failure_finishes_the_original_run_as_error(confined, monkeypatch, failure):
     manager, home, _ = confined

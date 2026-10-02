@@ -7,6 +7,7 @@ the skill catalog (progressive disclosure) + load_skill into a TurnEngine.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -317,18 +318,28 @@ def build_engine(
         if scratch is not None:
             spill_dir = Path(scratch) / "tool-output"
         else:
-            import os
             import tempfile
 
             spill_dir = (
                 Path(tempfile.gettempdir()) / "openworker" / f"tool-output-{os.getpid()}"
             ).resolve()
-    # Registered, not created: the folder appears on disk only when something is spilled.
-    if root_list and not any(_is_within(spill_dir, r.path) for r in root_list):
+    # Direct execution creates the folder only when something is spilled.
+    spill_root_needed = bool(root_list and not any(_is_within(spill_dir, r.path) for r in root_list))
+    if spill_root_needed:
         root_list.append(RootDir(path=spill_dir, writable=False, label="tool-output"))
 
     workspace_trusted = bool(ws and WorkspaceTrustStore().is_trusted(ws))
     config = load_config(ws, workspace_trusted=workspace_trusted)
+    sandbox_provider = select_sandbox(config.sandbox_provider).provider if ws is not None else None
+    if sandbox_provider == "openshell" and spill_root_needed:
+        # OpenShell bind mounts must exist before sandbox creation, even when
+        # no tool result has needed to spill yet. Grant only this read-only
+        # output directory, and validate hosted ownership before creating it.
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            from .basedir import ensure_under_base
+
+            ensure_under_base(spill_dir, "tool output")
+        spill_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
     # OPE-177: the configured per-reply output ceiling rides `model_settings`, which
     # the engine spreads into every provider call (and explorer subagents inherit).
     # An explicit `max_tokens` from the caller wins over the config value.
@@ -342,7 +353,7 @@ def build_engine(
     sandbox_workspace = (
         open_workspace(
             cwd=ws,
-            provider=select_sandbox(config.sandbox_provider).provider,
+            provider=sandbox_provider,
             roots=root_list or None,
             session_id=session_id or "",
             agent=agent.name,
