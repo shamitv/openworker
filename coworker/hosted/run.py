@@ -1,4 +1,4 @@
-"""`openworker-web`: local browser gateway and account administration."""
+"""`openworker-web`: browser gateway and account administration."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def main(argv: list[str] | None = None) -> None:
     serve.add_argument("--spa", required=True, type=Path)
     serve.add_argument("--public-origin", required=True)
     serve.add_argument("--sandbox-provider", choices=["openshell", "seatbelt", "windows"], required=True)
-    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--host", default="127.0.0.1", help="bind address; 0.0.0.0 listens on all IPv4 interfaces (default: %(default)s)")
     serve.add_argument("--port", type=int, default=8766)
     users = actions.add_parser("user", help="manage password-only accounts")
     users.add_argument("--data-dir", type=Path)
@@ -59,8 +59,8 @@ def main(argv: list[str] | None = None) -> None:
             parser.error(str(exc))
         return
 
-    if args.host not in ("127.0.0.1", "::1", "localhost"):
-        parser.error("the gateway must bind to loopback; put an HTTPS reverse proxy in front")
+    if args.host not in ("127.0.0.1", "::1", "localhost", "0.0.0.0"):
+        parser.error("--host must be 127.0.0.1, localhost, ::1 or 0.0.0.0")
     from .app import create_app
 
     try:

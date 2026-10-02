@@ -98,11 +98,12 @@ def run(args: argparse.Namespace) -> int:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise LaunchError(f"A launcher already uses {data}. Stop it before restarting.") from None
-        with socket.socket() as probe:
+        family = socket.AF_INET6 if args.host == "::1" else socket.AF_INET
+        with socket.socket(family) as probe:
             try:
-                probe.bind(("127.0.0.1", args.port))
+                probe.bind((args.host, args.port))
             except OSError as error:
-                raise LaunchError(f"Loopback port {args.port} is unavailable: {error}") from None
+                raise LaunchError(f"Gateway address {args.host}:{args.port} is unavailable: {error}") from None
         directory = Path(tempfile.mkdtemp(prefix="run-", dir=logs))
         print(f"Logs: {directory}", flush=True)
         return supervise(args, python, cloudflared, data, spa, directory)
@@ -129,7 +130,9 @@ def supervise(args, python: str, cloudflared: str, data: Path, spa: Path, direct
 
     signals = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
     previous = {sig: signal.signal(sig, request_stop) for sig in signals}
-    local_origin = f"http://127.0.0.1:{args.port}"
+    # A wildcard listener is reached via loopback by the tunnel and health probe.
+    local_host = "[::1]" if args.host == "::1" else "127.0.0.1"
+    local_origin = f"http://{local_host}:{args.port}"
     try:
         with private_file(directory / "cloudflared.log") as tunnel_log, private_file(directory / "gateway.log") as gateway_log:
             check()
@@ -160,7 +163,7 @@ def supervise(args, python: str, cloudflared: str, data: Path, spa: Path, direct
             gateway = subprocess.Popen(
                 [python, "-u", "-m", "coworker.hosted.run", "serve", "--spa", str(spa),
                  "--data-dir", str(data), "--public-origin", origin, "--sandbox-provider", "openshell",
-                 "--host", "127.0.0.1", "--port", str(args.port)],
+                 "--host", args.host, "--port", str(args.port)],
                 cwd=ROOT, stdin=subprocess.DEVNULL, stdout=gateway_log, stderr=subprocess.STDOUT,
                 start_new_session=True,
             )
@@ -182,7 +185,7 @@ def supervise(args, python: str, cloudflared: str, data: Path, spa: Path, direct
                 if time.monotonic() >= deadline:
                     raise LaunchError(f"Timed out waiting for OpenWorker; see {directory / 'gateway.log'}.")
                 stopped.wait(.2)
-            print(f"OpenWorker is listening. Open {origin}\nURL file: {directory / 'public-url.txt'}\nPress Ctrl+C to stop. Rerun this command to restart.", flush=True)
+            print(f"OpenWorker is listening on {args.host}:{args.port}. Open {origin}\nURL file: {directory / 'public-url.txt'}\nPress Ctrl+C to stop. Rerun this command to restart.", flush=True)
             while True:
                 check()
                 stopped.wait(.5)
@@ -209,7 +212,8 @@ def main() -> int:
     default_python = ROOT / ".venv/bin/python"
     parser.add_argument("--python", default=str(default_python) if default_python.exists() else sys.executable, help="installed OpenWorker Python interpreter")
     parser.add_argument("--cloudflared", default="cloudflared", help="cloudflared executable name or path")
-    parser.add_argument("--port", type=int, default=8766, help="loopback gateway port (default: %(default)s)")
+    parser.add_argument("--host", choices=("127.0.0.1", "localhost", "::1", "0.0.0.0"), default="127.0.0.1", help="gateway bind address; 0.0.0.0 listens on all IPv4 interfaces (default: %(default)s)")
+    parser.add_argument("--port", type=int, default=8766, help="gateway port (default: %(default)s)")
     parser.add_argument("--tunnel-timeout", type=positive_seconds, default=60, help="seconds to discover the URL (default: %(default)s)")
     parser.add_argument("--startup-timeout", type=positive_seconds, default=600, help="seconds for gateway startup (default: %(default)s)")
     parser.add_argument("--shutdown-timeout", type=positive_seconds, default=30, help="seconds for each child to stop normally (default: %(default)s)")
