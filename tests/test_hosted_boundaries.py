@@ -77,6 +77,21 @@ def test_hardlinked_artifact_cannot_expose_foreign_state(confined):
     assert manager.read_artifact("linked", ".")["entries"] == []
 
 
+def test_hosted_unknown_session_cannot_use_default_workspace_or_scratch(confined, monkeypatch):
+    manager, home, _ = confined
+    monkeypatch.setenv("OPENWORKER_HOSTED_WEB", "1")
+    workspace = home / "workspace"
+    (workspace / "marker.txt").write_text("alice workspace")
+    scratch = Path(manager._provision_scratch("unknown"))
+    (scratch / "scratch.txt").write_text("alice scratch")
+    assert manager.list_artifacts("unknown") == []
+    for path in ("marker.txt", "scratch.txt", "."):
+        assert not manager.read_artifact("unknown", path)["ok"]
+        assert manager._artifact_target("unknown", path)[0] is None
+    manager.session_store.save(SessionRecord("known", str(workspace), "unused", "interactive"))
+    assert manager.read_artifact("known", "marker.txt")["content"] == "alice workspace"
+
+
 def test_skill_scope_junction_cannot_escape_account_home(confined):
     manager, home, outside = confined
     (outside / "skills").mkdir(parents=True)

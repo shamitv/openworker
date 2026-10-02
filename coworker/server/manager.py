@@ -3761,6 +3761,8 @@ class SessionManager:
         itself; for folder-gated sessions it's the side scratch root — never the user's
         repo, which would list the whole codebase as 'artifacts'."""
         record = self.session_store.load(session_id)
+        if record is None and os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            return None
         workspace = record.workspace if record else self.default_workspace
         if workspace and self.is_temp_workspace(workspace):
             return ensure_under_base(workspace, "artifact folder")
@@ -3863,6 +3865,8 @@ class SessionManager:
         gated session's artifacts live BESIDE its workspace, so single-root resolution
         would orphan every transcript chip pointing at scratch."""
         record = self.session_store.load(session_id)
+        if record is None and os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            return None, "session not found"
         workspace = record.workspace if record else self.default_workspace
         candidates: list[Path] = []
         if workspace:
