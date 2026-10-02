@@ -136,6 +136,24 @@ def test_missing_controls_never_vacuously_pass(corpus):
     assert s['forgetting_survives_restart'] is None
 
 
+def test_tool_failures_and_unrelated_calls_are_separate_from_turn_errors(corpus):
+    p = corpus['personas'][0]
+    records = records_for(p)
+    records[0]['turns'][0]['events'] = [
+        {'type': 'tool_started', 'data': {'name': 'todo_write'}},
+        {'type': 'tool_started', 'data': {'name': 'remember'}},
+        {'type': 'tool_finished', 'data': {'status': 'error', 'reason': 'output truncated'}},
+        {'type': 'tool_finished', 'data': {'status': 'ok', 'result_preview': '{"updated":false,"error":"missing id"}'}},
+        {'type': 'tool_finished', 'data': {'status': 'ok', 'result_preview': '{"error":null}'}},
+        {'type': 'tool_finished', 'data': {'status': 'ok', 'result_preview': 'not JSON'}},
+    ]
+    scores = ev.score_persona(p, records)
+    assert scores['tool_errors'] == 2
+    assert scores['non_memory_tool_calls'] == 1
+    assert scores['turn_errors'] == 0
+    assert scores['unrelated_approvals'] == 0
+
+
 def test_questions_are_not_automatic_saves_and_missing_fields_fail(corpus):
     p=corpus['personas'][0]
     records=records_for(p)

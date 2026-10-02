@@ -616,6 +616,22 @@ def score_persona(persona, records):
     scores['duplicate_active_facts'] = sum(max(0, len(matching_rows(by['C10']['before'], facts[key])) - 1) for key in ('corrected', 'style', 'A', 'B'))
     scores['permission_requests'] = sum(t['permission_requests'] + int(t['visible_permission_request']) for r in records for t in r['turns'])
     scores['unrelated_approvals'] = sum(t['unrelated_approvals'] for r in records for t in r['turns'])
+    events = [e for r in records for t in r['turns'] for e in t['events']]
+    memory_tools = {'remember', 'memory_read', 'memory_update', 'memory_forget'}
+    scores['non_memory_tool_calls'] = sum(e['type'] == 'tool_started' and
+        e['data'].get('name') not in memory_tools for e in events)
+    def tool_failed(event):
+        if event['type'] != 'tool_finished':
+            return False
+        data = event['data']
+        if data.get('status') == 'error':
+            return True
+        try:
+            result = json.loads(data.get('result_preview') or '{}')
+        except (ValueError, TypeError):
+            return False
+        return isinstance(result, dict) and bool(result.get('error'))
+    scores['tool_errors'] = sum(tool_failed(e) for e in events)
     scores['turn_errors'] = sum(len(t['errors']) for r in records for t in r['turns'])
     scores['format_errors'] = sum(int(any(f not in by[c['id']]['turns'][0]['fields'] for f in c['probe_expected'])) for c in persona['conversations'] if c['probe_expected'])
     tool_messages = [m for r in records for t in r['turns'] for m in t['messages'] if m['role'] == 'tool']
