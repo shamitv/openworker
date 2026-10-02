@@ -10,7 +10,7 @@ The smoke gate passed on Ubuntu 26.04.1, Python 3.14.4, OpenShell 0.0.116, and t
 | 02 | All ten conversations / thirteen turns executed; final cleanup guard failed | Match server socket reuse semantics so TCP TIME_WAIT is not mistaken for a live listener; preserve reports on cleanup failure |
 | 03 | Complete: ten conversations / thirteen turns; restart, isolation and cleanup passed | Retain sanitized evidence; proceed to commit/push |
 
-These were explicit fresh-state attempts, not automatic retries. The successful smoke's collector/source and corpus hashes are in `smoke-results.json`. Its fixed expected facts were unchanged. The final scorer was replayed against saved synthetic events without additional inference: `tool_proposed` contains arguments whereas `tool_started` does not. The temporary-save attempt count now correctly records one. The scoring-source hash and replay flag record that provenance.
+These were explicit fresh-state attempts, not automatic retries. The successful smoke's collector/source and corpus hashes are in `smoke-results.json`. Its fixed expected facts were unchanged. The final scorer was replayed against saved synthetic events without additional inference: `tool_proposed` contains arguments whereas `tool_started` does not. The temporary-save attempt count now correctly records one. Independent negative-control, non-memory-call and tool-failure counters were subsequently added and replayed. The scoring revision, source hash and replay flag record that provenance.
 
 Offline regression result before push: **117 passed**. A sandbox restriction caused the initial TestClient processes to hang; they were stopped and the same offline suites ran with normal local-server permissions.
 
@@ -22,6 +22,7 @@ Offline regression result before push: **117 passed**. A sandbox restriction cau
 - The notebook was deleted and remained forgotten after restart.
 - The temporary `Spark-P01` label was saved and recalled in A after restart: an unnecessary save.
 - No permission requests, turn/API errors, malformed tool results, or cross-account control leaks were observed. The sentinel recalled its own control and could not open P01's workspace.
+- The model made two `todo_write` calls despite the memory-only instruction. They needed no approval; tool failures were zero. These are model instruction violations, separate from harness routing and storage checks.
 
 The gate establishes harness correctness, not perfect model memory behavior. Matching uses fixed phrase/concept groups; paraphrases can be undercounted. A save claim without a row change is a diagnostic heuristic, not an independent semantic judgment.
 

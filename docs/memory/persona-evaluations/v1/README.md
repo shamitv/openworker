@@ -45,6 +45,8 @@ Workspace scope selects **injected context**; an account's memory listing and `m
 
 Correction and forgetting need earlier stored controls. Missing prerequisites produce `null`/unexercised outcomes, never a successful deletion. Correction requires the new context and absence of the original active value. Unexpected rows, duplicates, temporary saves/attempts, malformed arguments, false save claims, permission requests, and errors are reported. Save claims without row changes are a heuristic, and fixed concept matching can undercount paraphrases.
 
+Tool failures include framework failures and error-valued memory results, even when the turn completes. Non-memory tool calls are counted separately from approval requests: an automatic `todo_write` call violates the prompt but requests no approval. These diagnostics do not change the existing memory guidance or expected fact matching.
+
 Structured questions receive “No additional consent is granted. Follow the instructions already in my message.” Grouped answers use the supplied headers. Unrelated tool approvals are denied.
 
 ## Prerequisites and portable setup
@@ -126,3 +128,7 @@ Cleanup requires the runner ownership marker, tracks process identity, and selec
 Before committing evidence, inspect it for passwords, cookies, CSRF/engine tokens, private keys, and operator credentials. Never commit private manifests, raw logs, or certificates. Retain raw diagnostics in the private output directory. Sanitized JSON contains only synthetic content and metadata.
 
 A complete run executes every scheduled conversation with no automatic reruns, validates fresh-session routing/scope/isolation, performs restart, and finishes cleanup. Model misses remain results. Infrastructure failures cannot be marked complete. One repetition is descriptive; do not combine percentages with the earlier four-scenario model comparison. If scorer-only corrections are replayed against captured evidence, retain the collection revision/hash and record the scoring revision/hash separately; do not rerun inference or silently alter expected facts.
+
+## Recorded execution
+
+See the [full local-model report](report.md), [sanitized full results](results.json), [P01 smoke findings](smoke.md), and [execution checklist](checklist.md). The earlier model comparison remains separate in [model evaluations](../../model-evaluations/2026-10-02.md).

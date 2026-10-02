@@ -22,8 +22,9 @@
     "main_temperature": null,
     "started_utc": "2026-10-02T16:32:08.667207+00:00",
     "finished_utc": "2026-10-02T16:38:13.950020+00:00",
-    "scoring_source_sha256": "abed20ccc68dc6f5056eb96eeb4e0bf76bc4813cb078c07c18fae9e85e9cfdaf",
-    "scoring_replayed_without_inference": true
+    "scoring_source_sha256": "ff1c1ee46f6e9d1f642fbad87b20da6f5f4964d30d192bff810c1c1259ac6069",
+    "scoring_replayed_without_inference": true,
+    "scoring_revision": "3410716cb12e401bac2ede4a171e02b93b5a4839"
   },
   "evaluations": [
     {
@@ -82,6 +83,21 @@
         "C10_heading_recall": true,
         "C10_temporary_label_recall": false,
         "C10_reason_recall": true,
+        "wrong_workspace_reply_mentions": 0,
+        "C5_A_absent_from_reply": true,
+        "C5_A_absent_from_prompt": true,
+        "C6_B_absent_from_reply": true,
+        "C6_B_absent_from_prompt": true,
+        "C9_notebook_absent_from_reply": true,
+        "C9_notebook_absent_from_active_memory": true,
+        "C9_temporary_absent_from_reply": true,
+        "C9_temporary_absent_from_active_memory": false,
+        "C10_B_absent_from_reply": true,
+        "C10_B_absent_from_prompt": true,
+        "C10_notebook_absent_from_reply": true,
+        "C10_notebook_absent_from_active_memory": true,
+        "C10_temporary_absent_from_reply": false,
+        "C10_temporary_absent_from_active_memory": false,
         "correction_exercised": true,
         "correction_replaced_active_value": false,
         "forgetting_exercised": true,
@@ -94,6 +110,8 @@
         "duplicate_active_facts": 0,
         "permission_requests": 0,
         "unrelated_approvals": 0,
+        "non_memory_tool_calls": 2,
+        "tool_errors": 0,
         "turn_errors": 0,
         "format_errors": 0,
         "malformed_tool_results": 0,
@@ -5465,12 +5483,32 @@
     }
   ],
   "aggregate": {
+    "C10_B_absent_from_prompt": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
+    "C10_B_absent_from_reply": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
     "C10_context_recall": {
       "passed": 1,
       "exercised": 1,
       "total": 1
     },
     "C10_heading_recall": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
+    "C10_notebook_absent_from_active_memory": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
+    "C10_notebook_absent_from_reply": {
       "passed": 1,
       "exercised": 1,
       "total": 1
@@ -5487,6 +5525,16 @@
     },
     "C10_style_recall": {
       "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
+    "C10_temporary_absent_from_active_memory": {
+      "passed": 0,
+      "exercised": 1,
+      "total": 1
+    },
+    "C10_temporary_absent_from_reply": {
+      "passed": 0,
       "exercised": 1,
       "total": 1
     },
@@ -5515,6 +5563,16 @@
       "exercised": 1,
       "total": 1
     },
+    "C5_A_absent_from_prompt": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
+    "C5_A_absent_from_reply": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
     "C5_context_recall": {
       "passed": 1,
       "exercised": 1,
@@ -5536,6 +5594,16 @@
       "total": 1
     },
     "C5_style_recall": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
+    "C6_B_absent_from_prompt": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
+    "C6_B_absent_from_reply": {
       "passed": 1,
       "exercised": 1,
       "total": 1
@@ -5575,6 +5643,16 @@
       "exercised": 1,
       "total": 1
     },
+    "C9_notebook_absent_from_active_memory": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
+    "C9_notebook_absent_from_reply": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
     "C9_notebook_recall": {
       "passed": 1,
       "exercised": 1,
@@ -5586,6 +5664,16 @@
       "total": 1
     },
     "C9_style_recall": {
+      "passed": 1,
+      "exercised": 1,
+      "total": 1
+    },
+    "C9_temporary_absent_from_active_memory": {
+      "passed": 0,
+      "exercised": 1,
+      "total": 1
+    },
+    "C9_temporary_absent_from_reply": {
       "passed": 1,
       "exercised": 1,
       "total": 1
@@ -5754,6 +5842,7 @@
     },
     "format_errors": 0,
     "malformed_tool_results": 0,
+    "non_memory_tool_calls": 2,
     "peer_own_control_recalled": {
       "passed": 1,
       "exercised": 1,
@@ -5762,9 +5851,11 @@
     "permission_requests": 0,
     "temporary_save_attempts": 1,
     "temporary_saved_rows": 1,
+    "tool_errors": 0,
     "turn_errors": 0,
     "unexpected_saved_rows": 0,
-    "unrelated_approvals": 0
+    "unrelated_approvals": 0,
+    "wrong_workspace_reply_mentions": 0
   },
   "conversations": 10,
   "scripted_turns": 13,
