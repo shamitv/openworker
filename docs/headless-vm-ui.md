@@ -116,3 +116,95 @@ OPENWORKER_TEST_HOSTED_LINUX=1 .venv/bin/python -m pytest \
 ```
 
 Use that dedicated test directory rather than pytest's default `/tmp`: the gateway service may use `PrivateTmp=true`, which hides host `/tmp` bind-mount sources. Pytest clears the dedicated directory between runs. Opting in makes missing prerequisites fail the gate. The scenarios create real sandbox containers and real private engines; a deterministic local model exercises scheduled tools without a paid API key. They cover concurrent sandbox boundaries, private credentials, read-only mounts, engine authentication/listeners, cross-account requests, unattended work, crash recovery, and cleanup. Passing this gate establishes Phase 2 Linux evidence; public HTTPS, real-browser product flows, and the Windows live gate retain their separate verification requirements.
+
+## Phase 3 HTTPS browser acceptance
+
+The explicit browser gates use the **built SPA**, Nginx, two real private engines,
+OpenShell, and independent Chromium/Alice and Firefox/Bob sessions. The regular
+GUI `e2e` suite remains hermetic. Install the GUI dependencies and browsers on
+whichever machine runs Playwright:
+
+```bash
+cd surfaces/gui
+npm ci
+npx playwright install chromium firefox
+npm run build
+```
+
+On the sandbox-ready fixture host, install Nginx and OpenSSL. Run from the
+repository root using its Python environment with development/OpenShell
+extras. Keep the disposable data under the operator's home, outside `/tmp`, so
+OpenShell can bind-mount it. Choose an unused HTTPS port and loopback gateway
+port; the defaults below are 18443 and 18766.
+
+```bash
+PHASE3_ROOT="$HOME/.cache/openworker-phase3-fixture"
+.venv/bin/python scripts/hosted_browser_fixture.py prepare \
+  --root "$PHASE3_ROOT" --origin https://10.42.0.248:18443 --mode fixture
+.venv/bin/python scripts/hosted_browser_fixture.py proxy --root "$PHASE3_ROOT"
+.venv/bin/python scripts/hosted_browser_fixture.py serve \
+  --root "$PHASE3_ROOT" --spa surfaces/gui/dist
+```
+
+`prepare` refuses to reuse an existing data directory. `serve` must start both
+private engines or fail. The fixture generates a temporary self-signed
+certificate; certificate exceptions apply only to the test browser contexts.
+The standalone Nginx configuration uses private temporary directories and
+forwards the original browser Origin and WebSocket upgrades. Production TLS
+trust and public-domain deployment retain their separate verification gate.
+
+The private `manifest.json` contains disposable passwords and launch tokens
+used only by the test runner's non-disclosure assertions. Do not commit,
+publish, or print it. After gateway startup completes, pass its path to the
+runner. When browsers run on another machine, copy the manifest privately and
+provide `HOSTED_TEST_SSH_RUNNER`, an executable accepting one remote command
+argument, plus the fixture host's Python interpreter path. The SSH runner
+must preserve that command as one argument and use the operator's existing
+SSH authentication. Do not place credentials in arguments.
+
+```bash
+cd surfaces/gui
+HOSTED_TEST_MANIFEST=/private/path/manifest.json \
+HOSTED_TEST_PYTHON=/path/on/fixture/host/.venv/bin/python \
+HOSTED_TEST_SSH_RUNNER=/path/to/operator-ssh-wrapper \
+npm run e2e:hosted
+```
+
+Omit `HOSTED_TEST_SSH_RUNNER` when the test runner and fixture share a host.
+The control helper checks account-owned files directly and expires only the
+disposable Alice account; it is never exposed through the gateway.
+
+For the required real LLM gate, stop the deterministic gateway and proxy,
+then prepare a **new** directory with `--mode llm`:
+
+```bash
+.venv/bin/python scripts/hosted_browser_fixture.py prepare \
+  --root "$HOME/.cache/openworker-phase3-llm" --mode llm \
+  --llm-base-url http://10.42.0.202:8090/v1 \
+  --llm-model Ornith-1.5-35B-Uncensored-Q6_K
+```
+
+Start `proxy` and `serve` with that new root, retrieve its updated private
+manifest after startup, and invoke `npm run e2e:hosted:llm` with the same runner
+variables. Each account uses its own OpenAI-compatible provider profile with
+a harmless placeholder API key and an explicitly selected local model.
+Model calls occur in the private engine; file tools remain inside OpenShell,
+so no additional sandbox network grant is necessary.
+
+Both gates require approval through the UI, successful file-tool execution,
+full sandbox enforcement, exact account-specific artifact bytes, transcript
+and artifact persistence after reload, peer-account rejection, expiry redirect,
+and a subsequent successful Bob turn. The live gate has no model fallback,
+unavailable-model skip, or automatic retry. Model turns have a 180-second
+bound. Test results retain per-browser traces and WebSocket events; retain
+gateway/engine logs when diagnosing failures.
+
+After each run, stop `serve` normally and stop its isolated proxy:
+
+```bash
+.venv/bin/python scripts/hosted_browser_fixture.py stop-proxy --root "$PHASE3_ROOT"
+```
+
+Confirm the fixture's engines and sandbox containers have stopped. Preserve
+needed evidence privately, then remove the disposable roots and copied
+manifests. The operator's existing OpenShell gateway is left running.

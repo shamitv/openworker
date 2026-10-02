@@ -9,3 +9,5 @@ Serve assets with correct cache headers and guard the SPA document behind login.
 ## Acceptance
 
 The SPA loads via HTTPS, starts a session over WebSocket, and survives reload. Engine tokens do not appear in HTML, JavaScript, URLs, or browser storage. Expired sessions, forged actors, cross-origin requests, and unauthorized WebSockets fail.
+
+The required live LLM gate uses the existing OpenAI-compatible provider at the supplied local endpoint, without mocks or fallback. In concurrent Chromium and Firefox sessions, approve uniquely named file writes through the UI and compare account-specific random markers exactly through authenticated downloads and the VM filesystem. Require full OpenShell enforcement, successful tools, an assistant response, turn completion, persistence after reload, cross-account rejection, expiry redirects and continued peer work. Bound each turn to 180 seconds and retain traces, events and logs on failure; missing prerequisites fail the gate.

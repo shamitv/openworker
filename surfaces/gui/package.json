@@ -12,7 +12,9 @@
     "gallery:contract": "UPDATE_CONTRACT=1 vitest run --config vitest.contract.config.ts",
     "e2e:ui": "playwright test --ui",
     "e2e:live": "playwright test -c playwright.live.config.ts",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "e2e:hosted": "playwright test -c playwright.hosted.config.ts",
+    "e2e:hosted:llm": "HOSTED_TEST_LLM=1 playwright test -c playwright.hosted.config.ts"
   },
   "dependencies": {
     "@auth0/auth0-spa-js": "^2.24.1",
