@@ -60,6 +60,8 @@ def select(configured: Optional[str] = None, *, headless: Optional[bool] = None)
     """Raises `OpenShellUnavailable` or `SeatbeltUnavailable` when that sandbox was chosen
     explicitly and is not usable: a silent fallback would hide the loss of protection."""
     chosen = (os.environ.get(PROVIDER_ENV) or configured or "").strip().lower()
+    if os.environ.get("OPENWORKER_HOSTED_WEB") == "1" and chosen not in (OPENSHELL, SEATBELT, WINDOWS):
+        raise ValueError("hosted engines require an explicitly configured enforcing sandbox")
     if chosen:
         if chosen not in KNOWN:
             raise ValueError(f"unknown sandbox provider {chosen!r} (known: {', '.join(KNOWN)})")

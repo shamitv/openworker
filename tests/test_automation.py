@@ -91,6 +91,25 @@ def test_compute_next_run_once_local_is_dst_aware(monkeypatch):
     offset in effect at compute time (the old bug) misfired by the DST delta."""
     import time as _time
 
+    if not hasattr(_time, "tzset"):
+        # Exercise the local naive timestamp branch with a portable local-zone
+        # clock; Windows has no tzset and its global timezone must not change.
+        from zoneinfo import ZoneInfo
+        from coworker.automation import store as store_module
+
+        zone = ZoneInfo("America/New_York")
+
+        class LocalDateTime(datetime):
+            def timestamp(self):
+                value = self.replace(tzinfo=zone) if self.tzinfo is None else self
+                return datetime.timestamp(value)
+
+        monkeypatch.setattr(store_module, "datetime", LocalDateTime)
+        task = _task(schedule=Schedule(kind="once", fire_at="2026-12-25T08:00:00"))
+        summer = datetime(2026, 7, 1, 12, tzinfo=zone).timestamp()
+        result = compute_next_run(task, after=summer)
+        assert result == datetime(2026, 12, 25, 8, tzinfo=zone).timestamp()
+        return
     monkeypatch.setenv("TZ", "America/New_York")
     _time.tzset()
     try:

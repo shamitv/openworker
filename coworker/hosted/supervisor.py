@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from ..basedir import is_reparse_point
 
 
 log = logging.getLogger(__name__)
@@ -28,6 +29,20 @@ _MAX_ENGINES = 20
 _READY_TIMEOUT_SECONDS = 30.0
 _RECONCILE_SECONDS = 2.0
 _STABLE_UPTIME_SECONDS = 120.0
+
+
+def _is_link(path: Path) -> bool:
+    return is_reparse_point(path)
+
+
+def _engine_environment() -> dict[str, str]:
+    """Only runtime settings cross from the operator into a private engine."""
+    allowed = {
+        "PATH", "PATHEXT", "SYSTEMROOT", "WINDIR", "COMSPEC", "SYSTEMDRIVE",
+        "PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMDATA", "LANG", "LC_ALL",
+        "SSL_CERT_FILE", "SSL_CERT_DIR", "VIRTUAL_ENV",
+    }
+    return {key: value for key, value in os.environ.items() if key.upper() in allowed}
 
 
 @dataclass(frozen=True)
@@ -69,7 +84,7 @@ class EngineSupervisor:
             )
         self.data_dir = Path(data_dir).expanduser().resolve()
         self.homes_dir = self.data_dir / "homes"
-        if self.homes_dir.is_symlink():
+        if _is_link(self.homes_dir):
             raise ValueError("hosted homes directory cannot be a symlink")
         self.store = store
         self.sandbox_provider = provider
@@ -89,6 +104,10 @@ class EngineSupervisor:
             return
         self.data_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
         self.homes_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        if os.name == "nt":
+            from ..sandbox.winsec import protect_directory
+
+            protect_directory(str(self.homes_dir))
         self._stopping = False
         await self.reconcile()
         self._monitor = asyncio.create_task(self._monitor_loop(), name="openworker-engines")
@@ -166,26 +185,28 @@ class EngineSupervisor:
                 raise ValueError("two hosted accounts cannot share a home")
 
     def _home(self, user: dict[str, Any]) -> Path:
+        if _is_link(self.homes_dir):
+            raise ValueError("hosted homes directory cannot be a reparse point")
         user_id = str(user["id"])
         if not user_id or Path(user_id).name != user_id or user_id in (".", ".."):
             raise ValueError("invalid hosted account id")
         raw_home = Path(str(user["home"])).expanduser()
         expected = self.homes_dir / user_id
-        if raw_home.is_symlink() or raw_home.absolute() != expected.absolute():
+        if _is_link(raw_home) or raw_home.absolute() != expected.absolute():
             raise ValueError(f"account {user_id} has an unexpected home path")
         home = raw_home.resolve()
         root = self.homes_dir.resolve()
-        if home == root or not home.is_relative_to(root):
+        if home == root or not home.is_relative_to(root) or home != expected.absolute():
             raise ValueError(f"account {user_id} has a home outside {root}")
         return home
 
     @staticmethod
     def _child_dir(home: Path, name: str) -> Path:
         raw_child = home / name
-        if raw_child.is_symlink():
+        if _is_link(raw_child):
             raise ValueError(f"private {name} directory cannot be a symlink")
         child = raw_child.resolve()
-        if child.parent != home:
+        if child.parent != home or child != raw_child.absolute():
             raise ValueError(f"private {name} directory must stay inside the account home")
         child.mkdir(mode=0o700, parents=True, exist_ok=True)
         child.chmod(0o700)
@@ -266,6 +287,10 @@ class EngineSupervisor:
     async def _launch(self, user_id: str, home: Path) -> _Engine:
         home.mkdir(mode=0o700, parents=True, exist_ok=True)
         home.chmod(0o700)
+        if os.name == "nt":
+            from ..sandbox.winsec import protect_directory
+
+            protect_directory(str(home))
         state = self._child_dir(home, "state")
         workspace = self._child_dir(home, "workspace")
         self._child_dir(home, "cache")
@@ -293,7 +318,7 @@ class EngineSupervisor:
         token = secrets.token_hex(32)
         port = self._free_port()
         endpoint = EngineEndpoint(port=port, token=token)
-        env = os.environ.copy()
+        env = _engine_environment()
         env.update(
             {
                 "COWORKER_API_TOKEN": token,
@@ -308,6 +333,11 @@ class EngineSupervisor:
                 "OPENWORKER_PUBLIC_ORIGIN": self.public_origin,
                 "OPENWORKER_HOSTED_USER_ID": user_id,
                 "HOME": str(home),
+                "USERPROFILE": str(home),
+                "APPDATA": str(home / "config"),
+                "LOCALAPPDATA": str(home / "cache"),
+                "TEMP": str(home / "cache"),
+                "TMP": str(home / "cache"),
                 "XDG_CONFIG_HOME": str(home / "config"),
                 "XDG_DATA_HOME": str(home / "data"),
                 "XDG_CACHE_HOME": str(home / "cache"),
@@ -326,9 +356,13 @@ class EngineSupervisor:
             str(workspace),
         ]
         log_path = state / "engine.log"
+        if _is_link(log_path):
+            raise ValueError("private engine log cannot be a reparse point")
         flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND | getattr(os, "O_NOFOLLOW", 0)
         fd = os.open(log_path, flags, 0o600)
         try:
+            if os.fstat(fd).st_nlink != 1:
+                raise ValueError("private engine log cannot be a hard link")
             if os.name != "nt":
                 os.fchmod(fd, 0o600)
             with os.fdopen(fd, "ab", buffering=0) as output:

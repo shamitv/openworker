@@ -18,6 +18,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="openworker tool-runner", description="OpenWorker tool runner")
     parser.add_argument("--version", action="version", version=RUNNER_VERSION)
     sub = parser.add_subparsers(dest="command", required=True)
+    restricted = sub.add_parser("restricted-serve", help=argparse.SUPPRESS)
+    restricted.add_argument("--config", required=True)
+    restricted.add_argument("--log", default=None)
     serve = sub.add_parser("serve", help="run the daemon (the sandbox's main process)")
     serve.add_argument("--socket", required=True, help="path of the Unix socket file to listen on (Windows: a \\\\.\\pipe\\ name)")
     serve.add_argument("--cwd", default=None, help="folder new shells start in (default: current folder)")
@@ -35,6 +38,10 @@ def main(argv: list[str] | None = None) -> int:
     connect.add_argument("host")
     connect.add_argument("port", type=int)
     args = parser.parse_args(argv)
+    if args.command == "restricted-serve":
+        from .winrestrict import run
+
+        return run(args.config, args.log)
     if args.command == "connect":
         from .connect import run as run_connect
 

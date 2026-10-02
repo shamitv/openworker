@@ -260,6 +260,14 @@ def _copy_private(src: str, dst: str) -> None:
     """Copy a file or a folder, owner-only. Only regular files and folders are copied:
     sockets (an ssh agent keeps one under `.ssh`), pipes and devices are skipped, and a
     symlink is copied as the file it points to when that file is a regular file."""
+    if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+        from ..basedir import ensure_under_base
+
+        # The controller performs the copy as the operator. Validate EVERY
+        # descendant before reading, including nested junctions and hard links.
+        ensure_under_base(src, "credential")
+        if os.path.isfile(src) and os.stat(src).st_nlink != 1:
+            raise ValueError("linked credentials cannot be copied into hosted sandboxes")
     if os.path.isdir(src):
         os.makedirs(dst, mode=stat.S_IRWXU, exist_ok=True)
         os.chmod(dst, stat.S_IRWXU)

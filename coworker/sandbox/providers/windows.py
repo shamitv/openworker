@@ -38,6 +38,7 @@ import time
 import uuid
 from pathlib import Path
 from typing import Any, Optional, Sequence
+from ...basedir import is_reparse_point
 
 from .. import credentials as creds
 from .. import netproxy, network_profiles
@@ -94,6 +95,7 @@ class WindowsProvider:
         `tool_dirs`: developer tool folders under the profile the account may read.
         `extra_hosts`: the machine's own additions to the network list ("host:port")."""
         self.extra_hosts = list(extra_hosts)
+        self.hosted = os.environ.get("OPENWORKER_HOSTED_WEB") == "1"
         self.roots = _clean_roots(roots)
         self.grants = list(credentials)
         self.tool_dirs = [os.path.realpath(p) for p in tool_dirs]
@@ -117,11 +119,31 @@ class WindowsProvider:
         windows_setup.SANDBOXES.mkdir(parents=True, exist_ok=True)
         windows_setup.reap_private_folders()  # what a server killed hard left behind
         self._dir = tempfile.mkdtemp(prefix="owr-", dir=str(windows_setup.SANDBOXES))
-        self.socket_path = winpipe.pipe_name(os.path.basename(self._dir))
         self._daemon: Any = None
         self._proxy: Optional[netproxy.AllowListProxy] = None
         self._desktop: Any = None
-        self._granted: list[tuple[str, str]] = []  # (folder, "write" | "read") entries that exist right now
+        self._granted: list[tuple[str, str]] = []
+        self._lease = None
+        # Held before the pipe exists, so another engine's stale-folder reaper
+        # cannot delete a sandbox that is still starting.
+        import msvcrt
+
+        try:
+            self._lease = open(Path(self._dir, ".lease"), "w+b")
+            self._lease.write(b"1")
+            self._lease.flush()
+            self._lease.seek(0)
+            msvcrt.locking(self._lease.fileno(), msvcrt.LK_NBLCK, 1)
+            if self.hosted:
+                from .. import winsec
+
+                winsec.protect_directory(self._dir)
+                for name in ("home", "temp", "cache", "config", "data"):
+                    Path(self._dir, name).mkdir()
+        except BaseException:
+            self.destroy()
+            raise
+        self.socket_path = winpipe.pipe_name(os.path.basename(self._dir))
         self._runner_inside: Path = self._runner  # where the sandbox sees the runner file
         self.notes: list[str] = []  # what the agent must be told beyond the credentials list
 
@@ -138,7 +160,7 @@ class WindowsProvider:
             "sandbox": self.sandbox,
             "enforcement": FULL,
             "account": self._account[0],
-            "reason": f"{_FULL_REASON}. Network: {network}",
+            "reason": f"{_FULL_REASON}. " + ("Hosted roots and runtime are granted only to this sandbox's restricted logon. " if self.hosted else "") + f"Network: {network}",
             "credentials": self.copied.describe() if self.copied is not None else [],
             "notes": list(self.notes),
         }
@@ -158,9 +180,10 @@ class WindowsProvider:
         hosts = sorted({*self.extra_hosts, *(h for g in self.grants for h in g.hosts)})
         if self.network and not self.open_network:
             self._proxy = netproxy.AllowListProxy(self.profile, extra_hosts=hosts) if hosts else netproxy.shared(self.profile)
-        for entry in self._wanted_entries():
-            self._grant(*entry)
-        self._desktop = winsec.Desktop(self.session_sid)
+        if not self.hosted:
+            for entry in self._wanted_entries():
+                self._grant(*entry)
+        self._desktop = winsec.Desktop(self._account[1] if self.hosted else self.session_sid)
         log = os.path.join(self._dir, "daemon.log")
         name, sid, password = self._account
         # The runner file lives in the user's state folder, which the account cannot see.
@@ -170,6 +193,35 @@ class WindowsProvider:
         # CreateProcessWithLogonW allows 1024 characters of command line, and PATH alone can
         # be longer than that.
         import json
+
+        if self.hosted:
+            config_path = str(Path(self._dir, "launch.json"))
+
+            def prepare(session: str) -> None:
+                self.session_sid = session
+                for entry in self._wanted_entries():
+                    self._grant(*entry)
+                serve = serve_arguments(self.socket_path, self._dir, also_sids=[session])
+                command = [*runner_command(self._runner_inside), "serve", *serve, "--cwd", self.cwd]
+                Path(config_path).write_text(json.dumps({
+                    "operator": winsec.current_user_sid(), "sid": session,
+                    "desktop": self._desktop.name, "cwd": self.cwd,
+                    "argv": command, "env": self._environment(),
+                }), encoding="utf-8")
+
+            command = [*runner_command(self._runner_inside), "restricted-serve", "--config", config_path]
+            command += ["--log", log]
+            self._daemon = winsec.spawn_as_account(
+                command, account=name, password=password, desktop=self._desktop,
+                cwd=os.environ["SystemRoot"],
+                environment=self._environment(), before_resume=prepare,
+            )
+            try:
+                wait_for_runner(self.socket_path, self._daemon)
+            except RuntimeError as exc:
+                said = Path(log).read_text(errors="replace") if Path(log).exists() else ""
+                raise WindowsUnavailable(f"restricted runner refused startup: {exc} {said[-800:]}") from None
+            return
 
         env_file = os.path.join(self._dir, "env.json")
         Path(env_file).write_text(json.dumps(self._environment()), encoding="utf-8")
@@ -187,6 +239,23 @@ class WindowsProvider:
         knows nothing of their tools) and the proxy. The account has a profile, temp and
         caches of its own."""
         env: dict[str, str] = {"PATH": os.environ.get("PATH", "")}
+        if self.hosted:
+            for name in ("SystemRoot", "WINDIR", "ComSpec", "PATHEXT"):
+                if name in os.environ:
+                    env[name] = os.environ[name]
+            env.update({
+                "USERNAME": self._account[0],
+                "USERDOMAIN": os.environ.get("COMPUTERNAME", "."),
+                "HOME": str(Path(self._dir, "home")),
+                "USERPROFILE": str(Path(self._dir, "home")),
+                "APPDATA": str(Path(self._dir, "config")),
+                "LOCALAPPDATA": str(Path(self._dir, "cache")),
+                "TEMP": str(Path(self._dir, "temp")), "TMP": str(Path(self._dir, "temp")),
+                "XDG_CONFIG_HOME": str(Path(self._dir, "config")),
+                "XDG_CACHE_HOME": str(Path(self._dir, "cache")),
+                "XDG_DATA_HOME": str(Path(self._dir, "data")),
+                "PYTHONNOUSERSITE": "1",
+            })
         if self._proxy is not None:
             env.update(netproxy.environment(self._proxy))
         return env
@@ -199,15 +268,16 @@ class WindowsProvider:
     _CLEARED = (".ssh", ".config/gh", ".aws", ".kube", "bin")
 
     def provision(self, client: Any) -> None:
-        """The copies of granted credentials go into the ACCOUNT's own profile, written by
-        the daemon so that the account owns them (Windows OpenSSH refuses a key file owned
-        by someone else). Whatever an earlier sandbox left there is removed first; the
-        daemon removes them again when it leaves."""
+        """Copy credentials into the runner's home, written by the runner for OpenSSH
+        ownership. Hosted runners use a private home; desktop runners retain the
+        sandbox account's profile. The daemon removes the copies when it leaves."""
         from ..runner.protocol import RunnerError
 
         home_inside = str(client.hello.get("home") or "")
         if not home_inside:
             raise WindowsUnavailable("the sandboxed runner did not report its home folder")
+        if self.hosted and os.path.normcase(os.path.realpath(home_inside)) != os.path.normcase(str(Path(self._dir, "home"))):
+            raise WindowsUnavailable("restricted runner did not use its private home")
         for rel in self._CLEARED:
             try:
                 client.call("fs.remove", {"path": os.path.join(home_inside, rel), "recursive": True}, timeout=30)
@@ -217,7 +287,8 @@ class WindowsProvider:
             return
         staging = tempfile.mkdtemp(prefix="owc-")
         try:
-            self.copied = creds.copy_in(self.grants, staging, inside_home=home_inside, ssh_proxy_command=self._ssh_proxy_command(), windows=True)
+            self.copied = creds.copy_in(self.grants, staging, home=os.environ.get("OPENWORKER_BASE_DIR") if self.hosted else None,
+                                       inside_home=home_inside, ssh_proxy_command=self._ssh_proxy_command(), windows=True)
             shipped: list[str] = []
             for folder, _dirs, files in os.walk(self.copied.home):
                 rel_folder = os.path.relpath(folder, self.copied.home)
@@ -300,11 +371,24 @@ class WindowsProvider:
                 if parent.lower() == home.lower():
                     break
                 parent = os.path.dirname(parent)
+        if self.hosted:
+            # PowerShell reads ancestor attributes even with bypass-traverse
+            # privilege. Protected container folders need a logon-specific
+            # traverse grant too, without allowing directory enumeration.
+            ancestors = [str(windows_setup.SANDBOXES)]
+            base = os.environ.get("OPENWORKER_BASE_DIR")
+            if base:
+                ancestors += [os.path.realpath(base), str(Path(base).resolve().parent)]
+            for parent in ancestors:
+                if not any(os.path.normcase(folder) == os.path.normcase(parent) for folder, _ in wanted):
+                    wanted.append((parent, "traverse"))
         return wanted
 
     def _grant(self, folder: str, kind: str) -> None:
         from .. import winsec
 
+        if self.hosted and kind != "traverse":
+            winsec.protect_owner_rights(folder)
         {"write": winsec.grant_write, "read": winsec.grant_read, "traverse": winsec.grant_traverse}[kind](folder, self.session_sid)
         self._granted.append((folder, kind))
 
@@ -318,12 +402,21 @@ class WindowsProvider:
         self._granted.remove((folder, kind))
 
     # -- changes ------------------------------------------------------------------------
+    def check_available(self) -> None:
+        if self.hosted:
+            preflight()
+
     restarts_on_regrant = False
 
     def regrant(self, roots: Sequence[dict[str, Any]]) -> None:
         """The session's folders changed. The confinement is per sandbox, not per folder,
         so the entries move and the daemon stays: a new folder is usable at once, a removed
         one is closed at once."""
+        if self.hosted:
+            from ...basedir import ensure_under_base
+
+            for root in roots:
+                ensure_under_base(root["path"], "workspace root")
         self.roots = _clean_roots(roots)
         wanted = self._wanted_entries()
         for entry in list(self._granted):
@@ -365,6 +458,12 @@ class WindowsProvider:
         if self._proxy is not None and self._proxy is not netproxy._proxies.get(self.profile):
             self._proxy.close()  # this session's own proxy; the shared one stays
         self._proxy = None
+        if self._lease is not None:
+            self._lease.close()
+            self._lease = None
+        target = Path(self._dir)
+        if is_reparse_point(target) or target.resolve().parent != windows_setup.SANDBOXES.resolve():
+            return
         # The job's last processes (cmd holding the log) may still be going; give them a moment.
         for _ in range(20):
             shutil.rmtree(self._dir, ignore_errors=True)

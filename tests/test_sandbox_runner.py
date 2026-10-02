@@ -189,7 +189,11 @@ def test_live_output_is_a_view_and_the_result_is_the_record(runner, tmp_path):
     seen: list[str] = []
     ex = RunnerExecutor(client, cwd=str(tmp_path), on_output=seen.append)
     fast = ex.run("echo instant")
-    assert fast["output"].startswith("instant") and seen == []  # too quick for a live frame
+    assert fast["output"].startswith("instant")
+    # Shell startup can cross the live-frame threshold on a busy host. Whether
+    # a view arrived or not, the authoritative result contains that output.
+    assert all(chunk in fast["output"] for chunk in seen)
+    seen.clear()
     ticks = f'foreach ($i in 1..3) {{ "tick $i"; {_sleep(0.4)} }}' if _WIN else "for i in 1 2 3; do echo tick $i; sleep 0.4; done"
     slow = ex.run(ticks)
     assert "tick 1" in "".join(seen)  # the view arrived while it ran

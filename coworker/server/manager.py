@@ -43,6 +43,7 @@ from ..audit import AuditStore
 from ..config import load_config, workspace_allowed_commands
 from ..conversations import ConversationStore, title_from
 from ..engine import ApprovalOutcome, Approver, TurnEngine
+from ..events import EventType
 from ..basedir import OutsideBaseDir, base_dir, ensure_under_base
 from ..roots import RootDir
 from ..workspace_trust import WorkspaceTrustStore
@@ -721,7 +722,7 @@ class SessionManager:
         """The workspace `get_engine` would bind — for prepping MCP tools beforehand."""
         record = self.session_store.load(session_id)
         if record:
-            return record.workspace or None
+            return str(ensure_under_base(record.workspace, "saved workspace")) if record.workspace else None
         return self.resolve_workspace(workspace)
 
     def _wanted_sandbox_provider(self) -> str:
@@ -812,6 +813,10 @@ class SessionManager:
 
         if record:
             ws = record.workspace or None
+            if ws:
+                ws = str(ensure_under_base(ws, "saved workspace"))
+            for root in record.extra_roots or []:
+                ensure_under_base(str(root.get("path", "")), "saved workspace root")
             model, mode, messages = record.model, Mode(record.mode), record.messages
         else:
             ws = self.resolve_workspace(workspace)
@@ -3758,15 +3763,18 @@ class SessionManager:
         record = self.session_store.load(session_id)
         workspace = record.workspace if record else self.default_workspace
         if workspace and self.is_temp_workspace(workspace):
-            return Path(workspace).expanduser().resolve()
+            return ensure_under_base(workspace, "artifact folder")
         if self._SESSION_ID_RE.match(session_id or "") and session_id not in {".", ".."}:
             d = (self.scratch_base() / session_id).resolve()
             if d.is_dir():
-                return d
+                try:
+                    return ensure_under_base(d, "artifact folder")
+                except OutsideBaseDir:
+                    return None
         # Legacy fallback (pre-universal-scratch sessions on a custom scratch base):
         # a workspace that is itself disposable still scans.
         if workspace and not record:
-            return Path(workspace).expanduser().resolve()
+            return ensure_under_base(workspace, "artifact folder")
         return None
 
     def list_artifacts(self, session_id: str) -> list[dict[str, Any]]:
@@ -3811,7 +3819,8 @@ class SessionManager:
 
         skip = {"node_modules", "target", "dist", "__pycache__"} | OS_DATA_DIRS
         for dirpath, dirs, files in os.walk(root):
-            dirs[:] = [d for d in dirs if not d.startswith(".") and d not in skip]
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d not in skip
+                       and (Path(dirpath) / d).resolve().is_relative_to(root)]
             for name in files:
                 if name.startswith("."):
                     continue
@@ -3819,7 +3828,11 @@ class SessionManager:
                 if path.suffix.lower() not in suffixes:
                     continue
                 try:
+                    if not path.resolve().is_relative_to(root):
+                        continue
                     st = path.stat()
+                    if base_dir() is not None and st.st_nlink != 1:
+                        continue
                     if not path.is_file():
                         continue
                     out.append(
@@ -3866,6 +3879,10 @@ class SessionManager:
                     candidates.append(rp)
         if not candidates:
             return None, "no workspace"
+        try:
+            candidates = [ensure_under_base(root, "artifact folder") for root in candidates]
+        except OutsideBaseDir as exc:
+            return None, str(exc)
         found_missing = False
         for root in candidates:
             target = (root / path).expanduser().resolve()
@@ -3876,6 +3893,8 @@ class SessionManager:
             if allow_dir and target.is_dir():
                 return target, None
             if target.is_file():
+                if base_dir() is not None and target.stat().st_nlink != 1:
+                    return None, "linked artifacts cannot be opened on this machine"
                 return target, None
             found_missing = True
         if found_missing:
@@ -3901,6 +3920,10 @@ class SessionManager:
                 return {"ok": False, "error": str(exc)}
             for child in children[:500]:
                 try:
+                    if not child.resolve().is_relative_to(target):
+                        continue
+                    if base_dir() is not None and child.is_file() and child.stat().st_nlink != 1:
+                        continue
                     size = 0 if child.is_dir() else child.stat().st_size
                 except OSError:
                     continue
@@ -6051,6 +6074,7 @@ class SessionManager:
 
     def _build_task_engine(self, task, *, session_id: str) -> TurnEngine:
         ag = get_agent(task.agent)
+        task.workspace = str(ensure_under_base(task.workspace, "scheduled workspace"))
         Path(task.workspace).mkdir(parents=True, exist_ok=True)
         engine = build_engine(
             agent=ag,
@@ -6893,10 +6917,7 @@ class SessionManager:
         # Each run is a real, persisted conversation thread: it runs the instructions under its
         # own session id, then saves the transcript. The user can reopen that session and ask a
         # follow-up — the scheduled agent is no longer fire-and-forget.
-        engine = self._build_task_engine(task, session_id=run.session_id)
-        # Register the live engine up-front: a parked approval persists the session
-        # mid-run (durable suspend), and resolving from the Inbox must find this engine.
-        self._engines[run.session_id] = engine
+        engine = None
         # The first turn is the task itself. The framing matters: instructions often restate the
         # schedule ("every day at 5:32pm…"), so make explicit that the schedule already fired and
         # the job now is to execute, not to (re)schedule.
@@ -6907,8 +6928,12 @@ class SessionManager:
             f"{task.instructions}"
         )
         try:
+            engine = self._build_task_engine(task, session_id=run.session_id)
+            # A parked approval must find the live engine before the turn starts.
+            self._engines[run.session_id] = engine
             async for _event in engine.run(opening):
-                pass
+                if _event.type is EventType.ERROR:
+                    raise RuntimeError(str(_event.data.get("error") or "scheduled engine failed"))
             run.result_text = _last_assistant_text(engine.messages)
             run.artifacts = _recent_files(task.workspace, since=run.started_at)
             run.status = "ok"
@@ -6921,8 +6946,9 @@ class SessionManager:
             # Persist the run as a continuable session + keep the live engine for an immediate
             # follow-up; record the run (now carrying its session_id).
             try:
-                self.save(run.session_id, engine)
-                self._engines[run.session_id] = engine
+                if engine is not None:
+                    self.save(run.session_id, engine)
+                    self._engines[run.session_id] = engine
             except Exception:
                 pass
             self.task_store.add_run(run)
@@ -7086,6 +7112,10 @@ class SessionManager:
         task = self.task_store.get(task_id)
         if task is None:
             return {"ok": False, "error": "not found"}
+        try:
+            task.workspace = str(ensure_under_base(task.workspace, "scheduled workspace"))
+        except OutsideBaseDir as exc:
+            return {"ok": False, "error": str(exc)}
         Path(task.workspace).mkdir(parents=True, exist_ok=True)
         run = TaskRun(
             task_id=task.id, trigger="manual"

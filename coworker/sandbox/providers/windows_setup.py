@@ -30,6 +30,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -224,7 +225,8 @@ def filters_recorded() -> bool:
 def reap_private_folders() -> list[str]:
     """Remove the private folders of sandboxes whose daemon is gone: a server killed hard
     never ran destroy(), and its `owr-*` folder under SANDBOXES stayed behind. A folder
-    is alive while its named pipe exists. Best effort; returns what was removed."""
+    is alive while its controller holds the lease or its named pipe exists.
+    Best effort; returns what was removed."""
     import shutil
 
     from ..runner import winpipe
@@ -238,8 +240,27 @@ def reap_private_folders() -> list[str]:
         folder = SANDBOXES / name
         if not name.startswith("owr-") or not folder.is_dir():
             continue
-        if os.path.exists(winpipe.pipe_name(name)):
+        from ...basedir import is_reparse_point
+
+        if is_reparse_point(folder) or folder.resolve().parent != SANDBOXES.resolve():
+            continue
+        if winpipe.wait_ready(winpipe.pipe_name(name)):
             continue  # its daemon still listens
+        lease = None
+        try:
+            import msvcrt
+
+            if (folder / ".lease").exists():
+                lease = open(folder / ".lease", "r+b")
+                msvcrt.locking(lease.fileno(), msvcrt.LK_NBLCK, 1)
+            elif time.time() - folder.stat().st_mtime < 60:
+                continue  # creator has not opened the lease yet
+        except OSError:
+            if lease is not None:
+                lease.close()
+            continue  # another engine owns it, including during startup
+        if lease is not None:
+            lease.close()
         shutil.rmtree(folder, ignore_errors=True)
         if not folder.exists():
             removed.append(str(folder))
@@ -258,13 +279,26 @@ def _powershell(script: str, arguments: list[str], *, elevate: bool) -> subproce
     try:
         if not elevate:
             return subprocess.run(["powershell.exe", *inner], capture_output=True, text=True, timeout=600)
-        quoted = " ".join(f"'{a}'" for a in inner)
+        # Start-Process joins an argument array without preserving quoting. Run a
+        # wrapper file instead; it captures output inside the elevated process.
+        def literal(value):
+            return "'" + value.replace("'", "''") + "'"
+        wrapper = os.path.join(folder, "elevated.ps1")
+        quoted = ", ".join(literal(a) for a in inner)
+        Path(wrapper).write_text(
+            f"& powershell.exe @({quoted}) *> {literal(out)}\nexit $LASTEXITCODE\n",
+            encoding="utf-8-sig",
+        )
+        arguments = f'-NoProfile -ExecutionPolicy Bypass -File "{wrapper}"'
         starter = (
             f"$p = Start-Process -FilePath powershell.exe -Verb RunAs -Wait -PassThru -WindowStyle Hidden "
-            f"-ArgumentList @({quoted}, '*>', '{out}'); exit $p.ExitCode"
+            f"-ArgumentList {literal(arguments)}; exit $p.ExitCode"
         )
         done = subprocess.run(["powershell.exe", "-NoProfile", "-Command", starter], capture_output=True, text=True, timeout=900)
-        said = Path(out).read_text(encoding="utf-8", errors="replace") if os.path.exists(out) else ""
+        output = Path(out).read_bytes() if os.path.exists(out) else b""
+        # Windows PowerShell 5 redirects as UTF-16; newer hosts can emit UTF-8.
+        encoding = "utf-16" if output.startswith((b"\xff\xfe", b"\xfe\xff")) else "utf-8-sig"
+        said = output.decode(encoding, errors="replace")
         return subprocess.CompletedProcess(done.args, done.returncode, said, done.stderr)
     finally:
         import shutil

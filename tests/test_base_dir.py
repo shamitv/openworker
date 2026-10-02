@@ -33,7 +33,12 @@ def test_confined_paths_resolve_under_base_and_outsiders_are_refused(tmp_path, m
     assert str(base.resolve()) in str(exc.value) and "folder" in str(exc.value)
     # A symlink inside the base pointing out does not slip through.
     link = base / "escape"
-    link.symlink_to(outside)
+    if os.name == "nt":
+        import subprocess
+
+        subprocess.run(["cmd.exe", "/c", "mklink", "/J", str(link), str(outside)], check=True, capture_output=True)
+    else:
+        link.symlink_to(outside, target_is_directory=True)
     with pytest.raises(OutsideBaseDir):
         ensure_under_base(link)
     # `..` tricks neither.

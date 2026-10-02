@@ -93,7 +93,7 @@ class SkillStore:
     def project_dir(self, workspace: str | Path) -> Path:
         from ..basedir import ensure_under_base
 
-        return ensure_under_base(workspace, "workspace") / ".coworker" / "skills"
+        return ensure_under_base(ensure_under_base(workspace, "workspace") / ".coworker" / "skills", "skill folder")
 
     def _base(self, scope: str, workspace: Optional[str | Path]) -> Path:
         if scope == GLOBAL_SCOPE:

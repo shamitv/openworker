@@ -140,12 +140,14 @@ class Listener:
 
 class _SecurityAttributes:
     """A SECURITY_ATTRIBUTES whose descriptor grants full access to the given accounts and
-    nothing to anyone else (the creator keeps the owner's right to read and change it)."""
+    nothing to anyone else. Ownership alone grants only READ_CONTROL."""
 
     def __init__(self, sids: Sequence[str]) -> None:
         from ctypes import wintypes
 
-        sddl = "D:P" + "".join(f"(A;;GA;;;{sid})" for sid in sids)
+        # OW suppresses implicit owner WRITE_DAC. Two sandbox logons can share
+        # an account SID, so ownership must not bypass a logon-specific DACL.
+        sddl = "D:P(A;;RC;;;OW)" + "".join(f"(A;;GA;;;{sid})" for sid in sids)
         advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
         convert = advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW
         convert.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(wintypes.ULONG)]
@@ -161,6 +163,16 @@ class _SecurityAttributes:
 
         self._attributes = SECURITY_ATTRIBUTES(ctypes.sizeof(SECURITY_ATTRIBUTES), descriptor, False)
         self.pointer = ctypes.addressof(self._attributes)
+
+    def close(self) -> None:
+        if getattr(self, "_descriptor", None):
+            kernel = ctypes.WinDLL("kernel32")
+            kernel.LocalFree.argtypes = [ctypes.c_void_p]
+            kernel.LocalFree(self._descriptor)
+            self._descriptor = None
+
+    def __del__(self) -> None:
+        self.close()
 
 
 def process_is_gone(pid: int) -> bool:

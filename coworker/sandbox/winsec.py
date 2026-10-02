@@ -1,23 +1,10 @@
 """Windows security plumbing for the sandbox providers, through ctypes (no pywin32).
 
-Only the server side imports this; the runner package stays standard library and does not
-need to know who its server is beyond the SIDs it is handed.
-
-What is here, in the order a provider uses it:
-- `current_user_sid()`, `logon_sid()`: who we are (the desktop's descriptor names both).
-- `session_sid()`: a made-up SID for one sandbox. It is no account and never looked up; it is
-  what the write-restricted token and the folder entries have in common.
-- `write_restricted_token(session)`: our own token, restricted so that a WRITE is allowed only
-  where the session SID (or the logon SID, or Everyone) is allowed too. Reads are not
-  affected. The token's default DACL names the session SID as well, or the process could not
-  open its own token and children (found 2026-09-22: error 5 on every CreateProcess).
-- `Desktop`: a window station and desktop of our own, so the sandbox never touches the
-  person's windows and clipboard, and so it starts at all from a process with no desktop.
-- `spawn(...)`: CreateProcessAsUser with the token, on that desktop, inside a job object that
-  ends every descendant when the job closes. Returns a `Process` with the Popen calls the
-  providers use (`poll`, `wait`, `terminate`, `kill`, `pid`, `returncode`).
-- `grant_write(folder, sid)` / `revoke(folder, sid)`: one inheritable Modify entry for the SID
-  on a folder, and its removal.
+The controller creates a private desktop and launches a local sandbox account in a
+kill-on-close job. Hosted launches remain suspended until the controller identifies
+their unique logon SID, protects their kernel objects, and grants their roots.
+The standard-library runner's winrestrict module creates the restricted child token.
+Directory helpers protect managed homes and add or remove per-logon root grants.
 """
 
 from __future__ import annotations
@@ -27,7 +14,8 @@ import os
 import random
 import sys
 from functools import lru_cache
-from typing import Optional, Sequence
+from contextlib import contextmanager
+from typing import Callable, Optional, Sequence
 
 if sys.platform == "win32":
     from ctypes import wintypes
@@ -232,6 +220,8 @@ class Desktop:
         self.station_name = "owsb-%08x" % random.SystemRandom().getrandbits(32)
         self.station = _u32.CreateWindowStationW(self.station_name, 0, _WINSTA_ALL_ACCESS, ctypes.byref(attributes))
         if not self.station:
+            _k32.LocalFree(self._descriptor)
+            self._descriptor = None
             raise _fail("CreateWindowStation")
         previous = _u32.GetProcessWindowStation()
         _u32.SetProcessWindowStation(self.station)  # CreateDesktop works on the process's station
@@ -240,7 +230,7 @@ class Desktop:
         finally:
             _u32.SetProcessWindowStation(previous)
         if not self.desktop:
-            _u32.CloseWindowStation(self.station)
+            self.close()
             raise _fail("CreateDesktop")
         self.name = f"{self.station_name}\\default"
 
@@ -251,6 +241,21 @@ class Desktop:
         if getattr(self, "station", None):
             _u32.CloseWindowStation(self.station)
             self.station = None
+        if getattr(self, "_descriptor", None):
+            _k32.LocalFree(self._descriptor)
+            self._descriptor = None
+
+    def confine(self, session: str) -> None:
+        """Replace the shared-account grant before the suspended bootstrap runs."""
+        descriptor = _descriptor(f"D:P(A;;GA;;;{current_user_sid()})(A;;GA;;;{session})(A;;RC;;;OW)")
+        try:
+            _u32.SetUserObjectSecurity.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD), ctypes.c_void_p]
+            info = wintypes.DWORD(_DACL_SECURITY_INFORMATION)
+            for handle in (self.station, self.desktop):
+                if not _u32.SetUserObjectSecurity(handle, ctypes.byref(info), descriptor):
+                    raise _fail("SetUserObjectSecurity")
+        finally:
+            _k32.LocalFree(descriptor)
 
 
 class Process:
@@ -304,12 +309,14 @@ def spawn_as_account(
     desktop: Desktop,
     cwd: str,
     stderr_path: Optional[str] = None,
+    environment: Optional[dict[str, str]] = None,
+    before_resume: Optional[Callable[[str], None]] = None,
 ) -> Process:
     """Start `argv` logged on as another local account (CreateProcessWithLogonW, which is
     the secondary logon service: no privilege needed), on our desktop, in a job that ends
-    with the Process. The environment is the account's own; a provider passes what it
-    needs through the daemon's `--env`. stdin is closed; stdout and stderr go to
-    `stderr_path` when given."""
+    with the Process. An explicit environment replaces the account's environment.
+    Hosted callers prepare the logon while suspended; any failure kills the child.
+    Desktop mode can redirect output through cmd with `stderr_path`."""
     import subprocess
 
     _adv.CreateProcessWithLogonW.argtypes = [
@@ -322,6 +329,7 @@ def spawn_as_account(
     limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
     limits.BasicLimitInformation.LimitFlags = _JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
     if not _k32.SetInformationJobObject(job, _JobObjectExtendedLimitInformation, ctypes.byref(limits), ctypes.sizeof(limits)):
+        _k32.CloseHandle(job)
         raise _fail("SetInformationJobObject")
     startup = STARTUPINFOW()
     startup.cb = ctypes.sizeof(startup)
@@ -334,13 +342,92 @@ def spawn_as_account(
     buffer = ctypes.create_unicode_buffer(command)
     info = PROCESS_INFORMATION()
     flags = CREATE_SUSPENDED | CREATE_NEW_PROCESS_GROUP | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW
-    if not _adv.CreateProcessWithLogonW(account, ".", password, _LOGON_WITH_PROFILE, None, buffer, flags, None, cwd, ctypes.byref(startup), ctypes.byref(info)):
-        raise _fail("CreateProcessWithLogonW")
-    if not _k32.AssignProcessToJobObject(job, info.hProcess):
-        _k32.TerminateProcess(info.hProcess, 1)
-        raise _fail("AssignProcessToJobObject")
-    _k32.ResumeThread(info.hThread)
-    return Process(info, job)
+    block = None if environment is None else ctypes.create_unicode_buffer(
+        "\0".join(f"{k}={v}" for k, v in sorted(environment.items(), key=lambda item: item[0].upper())) + "\0\0"
+    )
+    try:
+        if not _adv.CreateProcessWithLogonW(account, ".", password, _LOGON_WITH_PROFILE, None, buffer, flags, block, cwd, ctypes.byref(startup), ctypes.byref(info)):
+            raise _fail("CreateProcessWithLogonW")
+        if not _k32.AssignProcessToJobObject(job, info.hProcess):
+            raise _fail("AssignProcessToJobObject")
+        if before_resume is not None:
+            token = wintypes.HANDLE()
+            descriptor = None
+            try:
+                if not _adv.OpenProcessToken(info.hProcess, _TOKEN_QUERY | 0x40000, ctypes.byref(token)):
+                    raise _fail("OpenProcessToken bootstrap")
+                groups = _token_info(token, _TokenLogonSid)
+                entry = SID_AND_ATTRIBUTES.from_buffer(groups, ctypes.sizeof(ctypes.c_void_p))
+                session = _sid_text(entry.Sid)
+                # Protect the unrestricted bootstrap before any of its code runs.
+                # Same-account ownership must not permit another logon to change
+                # the process, primary thread, or token DACL.
+                descriptor = _descriptor(f"D:P(A;;GA;;;{current_user_sid()})(A;;GA;;;{session})(A;;RC;;;OW)")
+                _adv.SetKernelObjectSecurity.argtypes = [wintypes.HANDLE, wintypes.DWORD, ctypes.c_void_p]
+                for handle in (info.hProcess, info.hThread, token):
+                    if not _adv.SetKernelObjectSecurity(handle, _DACL_SECURITY_INFORMATION, descriptor):
+                        raise _fail("SetKernelObjectSecurity bootstrap")
+            finally:
+                if token:
+                    _k32.CloseHandle(token)
+                if descriptor:
+                    _k32.LocalFree(descriptor)
+            desktop.confine(session)
+            before_resume(session)
+        if _k32.ResumeThread(info.hThread) == 0xFFFFFFFF:
+            raise _fail("ResumeThread")
+        return Process(info, job)
+    except BaseException:
+        if info.hProcess:
+            _k32.TerminateProcess(info.hProcess, 1)
+            _k32.CloseHandle(info.hProcess)
+        if info.hThread:
+            _k32.CloseHandle(info.hThread)
+        _k32.CloseHandle(job)
+        raise
+
+
+@contextmanager
+def _acl_lock():
+    """Serialize ACL read/modify/write across private engine processes."""
+    descriptor = _descriptor(f"D:P(A;;GA;;;{current_user_sid()})(A;;GA;;;SY)(A;;RC;;;OW)")
+    attributes = SECURITY_ATTRIBUTES(ctypes.sizeof(SECURITY_ATTRIBUTES), descriptor, False)
+    _k32.CreateMutexW.argtypes = [ctypes.c_void_p, wintypes.BOOL, wintypes.LPCWSTR]
+    _k32.CreateMutexW.restype = wintypes.HANDLE
+    _k32.ReleaseMutex.argtypes = [wintypes.HANDLE]
+    mutex = _k32.CreateMutexW(ctypes.byref(attributes), False, f"Local\\OpenWorkerSandboxAcl-{current_user_sid()}")
+    _k32.LocalFree(descriptor)
+    if not mutex:
+        raise _fail("CreateMutex ACL")
+    acquired = False
+    try:
+        acquired = _k32.WaitForSingleObject(mutex, 30000) in (_WAIT_OBJECT_0, 0x80)
+        if not acquired:
+            raise OSError("timed out acquiring sandbox ACL lock")
+        yield
+    finally:
+        if acquired:
+            _k32.ReleaseMutex(mutex)
+        _k32.CloseHandle(mutex)
+
+
+def protect_directory(path: str) -> None:
+    """Replace a directory's ACL, preserving child grants; never follow a reparse point."""
+    from ..basedir import is_reparse_point
+
+    if is_reparse_point(path):
+        raise ValueError("private directory cannot be a reparse point")
+    descriptor = _descriptor(f"D:P(A;OICI;FA;;;{current_user_sid()})(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)")
+    try:
+        present, defaulted, dacl = wintypes.BOOL(), wintypes.BOOL(), ctypes.c_void_p()
+        if not _adv.GetSecurityDescriptorDacl(descriptor, ctypes.byref(present), ctypes.byref(dacl), ctypes.byref(defaulted)):
+            raise _fail("GetSecurityDescriptorDacl")
+        with _acl_lock():
+            status = _adv.SetNamedSecurityInfoW(path, _SE_FILE_OBJECT, _DACL_SECURITY_INFORMATION | 0x80000000, None, None, dacl, None)
+        if status:
+            raise OSError(status, f"protect directory: {ctypes.FormatError(status)}")
+    finally:
+        _k32.LocalFree(descriptor)
 
 
 def _explicit(sid: _Sid, mode: int, permissions: int = 0, inherit: bool = True) -> "EXPLICIT_ACCESS_W":
@@ -355,6 +442,11 @@ def _explicit(sid: _Sid, mode: int, permissions: int = 0, inherit: bool = True) 
 
 
 def _change_dacl(folder: str, sid_text: str, mode: int, permissions: int = 0, inherit: bool = True) -> None:
+    with _acl_lock():
+        _change_dacl_locked(folder, sid_text, mode, permissions, inherit)
+
+
+def _change_dacl_locked(folder: str, sid_text: str, mode: int, permissions: int, inherit: bool) -> None:
     sid = _Sid(sid_text)
     old = ctypes.c_void_p()
     descriptor = ctypes.c_void_p()
@@ -396,6 +488,11 @@ def grant_traverse(folder: str, sid_text: str) -> None:
 def grant_read(folder: str, sid_text: str) -> None:
     """One inheritable Read-and-execute entry (icacls "RX") for the SID on the folder."""
     _change_dacl(folder, sid_text, _GRANT_ACCESS, _FILE_GENERIC_READ_EXECUTE)
+
+
+def protect_owner_rights(folder: str) -> None:
+    """Shared account ownership grants no WRITE_DAC on sandbox-created files."""
+    _change_dacl(folder, "S-1-3-4", _GRANT_ACCESS, 0x20000)
 
 
 def revoke(folder: str, sid_text: str) -> None:

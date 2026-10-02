@@ -15,12 +15,22 @@ mechanism, not what users see.
 from __future__ import annotations
 
 import os
+import stat
 from pathlib import Path
 from typing import Optional
 
 
 class OutsideBaseDir(ValueError):
     """A path outside OPENWORKER_BASE_DIR on a box that has one."""
+
+
+def is_reparse_point(path: str | os.PathLike) -> bool:
+    """Detect symlinks and Windows reparse points, including on Python 3.10."""
+    try:
+        info = Path(path).lstat()
+    except FileNotFoundError:
+        return False
+    return stat.S_ISLNK(info.st_mode) or bool(getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0))
 
 
 def base_dir() -> Optional[Path]:

@@ -166,10 +166,18 @@ class RunnerWorkspace(Workspace):
         started with (design ruling 15). Returns what to tell the agent, or None. Runs
         before every command, so it is also where a sandbox not yet started starts."""
         self.ensure_started()
+        check = getattr(self.provider, "check_available", None)
+        if check is not None:
+            check()
         regrant = getattr(self.provider, "regrant", None)
         if regrant is None or self._live_roots is None:
             return None
         wanted = [{"path": str(r.path), "writable": bool(r.writable)} for r in self._live_roots]
+        if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+            from ..basedir import ensure_under_base
+
+            for root in wanted:
+                ensure_under_base(root["path"], "workspace root")
         if not wanted or _same_roots(wanted, getattr(self.provider, "roots", [])):
             return None
         restarts = getattr(self.provider, "restarts_on_regrant", True)
@@ -273,6 +281,15 @@ def open_workspace(
     the only, writable, root. `session_id` and `agent` say who the sandbox is for; they go
     into the registry and onto the sandbox as a label."""
     name = provider_name(provider)
+    if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+        enforced = os.environ.get(PROVIDER_ENV, "").strip().lower()
+        if enforced not in (OPENSHELL, SEATBELT, WINDOWS) or name != enforced:
+            raise ValueError("hosted tools must use the administrator's enforcing sandbox")
+        from ..basedir import ensure_under_base
+
+        ensure_under_base(cwd, "workspace")
+        for root in roots or []:
+            ensure_under_base(root.path, "workspace root")
     if name == DIRECT:
         return DirectWorkspace(cwd=cwd)
     if name == RUNNER_LOCAL:
@@ -284,6 +301,9 @@ def open_workspace(
     from .credentials import granted
 
     grants = granted(credentials)
+    if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+        for grant in grants:
+            ensure_under_base(grant.path, "credential")
     from .network_profiles import check, clean_hosts, default_profile
 
     profile = check((network_profile or "").strip().lower() or default_profile())
@@ -291,6 +311,9 @@ def open_workspace(
     from . import toolchains as toolchain_list
 
     tool_dirs = toolchain_list.granted(toolchains)
+    if os.environ.get("OPENWORKER_HOSTED_WEB") == "1":
+        for folder in tool_dirs:
+            ensure_under_base(folder, "tool folder")
     if name == SEATBELT:
         from .providers.seatbelt import SeatbeltProvider
         from .registry import SandboxRegistry
