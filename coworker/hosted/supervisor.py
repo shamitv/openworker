@@ -104,6 +104,7 @@ class EngineSupervisor:
             return
         self.data_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
         self.homes_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.homes_dir.chmod(0o700)
         if os.name == "nt":
             from ..sandbox.winsec import protect_directory
 
@@ -294,6 +295,7 @@ class EngineSupervisor:
         state = self._child_dir(home, "state")
         workspace = self._child_dir(home, "workspace")
         self._child_dir(home, "cache")
+        runtime = self._child_dir(home, "runtime")
         config = self._child_dir(home, "config")
         self._child_dir(home, "data")
         if self.sandbox_provider == "openshell":
@@ -338,6 +340,8 @@ class EngineSupervisor:
                 "LOCALAPPDATA": str(home / "cache"),
                 "TEMP": str(home / "cache"),
                 "TMP": str(home / "cache"),
+                "TMPDIR": str(home / "cache"),
+                "XDG_RUNTIME_DIR": str(runtime),
                 "XDG_CONFIG_HOME": str(home / "config"),
                 "XDG_DATA_HOME": str(home / "data"),
                 "XDG_CACHE_HOME": str(home / "cache"),

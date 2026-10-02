@@ -206,6 +206,65 @@ async def test_launch_refuses_hardlinked_engine_log_before_process_creation(tmp_
     assert other.read_text() == "foreign"
 
 
+@pytest.mark.skipif(os.name == "nt", reason="Linux/POSIX runtime and OpenShell configuration")
+async def test_openshell_launch_has_private_runtime_and_operator_gateway_only(tmp_path, monkeypatch):
+    operator_config = tmp_path / "operator-config"
+    (operator_config / "openshell").mkdir(parents=True)
+    (operator_config / "unrelated-plugin").mkdir()
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(operator_config))
+    monkeypatch.setenv("XDG_RUNTIME_DIR", "/run/user/operator")
+    monkeypatch.setenv("TMPDIR", "/operator-temp")
+    monkeypatch.setenv("OPENAI_API_KEY", "operator-secret")
+    supervisor = module.EngineSupervisor(tmp_path / "data", None, "openshell", "https://test.example")
+    monkeypatch.setattr(supervisor, "_free_port", lambda: 12345)
+    launches = []
+
+    async def launch(*command, **options):
+        launches.append((command, options["env"]))
+        return Process()
+
+    async def ready(process, endpoint):
+        pass
+
+    monkeypatch.setattr(module.asyncio, "create_subprocess_exec", launch)
+    monkeypatch.setattr(supervisor, "_wait_ready", ready)
+    home = supervisor.homes_dir / "alice"
+    # An existing gateway link must continue to work on a crash restart.
+    for _ in range(2):
+        await supervisor._launch("alice", home)
+    assert len(launches) == 2 and launches[0][1]["COWORKER_API_TOKEN"] != launches[1][1]["COWORKER_API_TOKEN"]
+    command, environment = launches[-1]
+    assert command[command.index("--host") + 1] == "127.0.0.1"
+    assert environment["HOME"] == str(home)
+    assert environment["XDG_CONFIG_HOME"] == str(home / "config")
+    assert environment["XDG_RUNTIME_DIR"] == str(home / "runtime")
+    assert environment["TMPDIR"] == str(home / "cache")
+    assert "OPENAI_API_KEY" not in environment
+    assert (home / "runtime").stat().st_mode & 0o777 == 0o700
+    assert (home / "config" / "openshell").resolve() == operator_config / "openshell"
+    assert not (home / "config" / "unrelated-plugin").exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux/POSIX OpenShell configuration")
+@pytest.mark.parametrize("invalid_config", ["missing", "occupied", "changed_link"])
+async def test_openshell_launch_refuses_invalid_gateway_configuration(tmp_path, monkeypatch, invalid_config):
+    operator_config = tmp_path / "operator-config"
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(operator_config))
+    supervisor = module.EngineSupervisor(tmp_path / "data", None, "openshell", "https://test.example")
+    home = supervisor.homes_dir / "alice"
+    if invalid_config != "missing":
+        (operator_config / "openshell").mkdir(parents=True)
+        (home / "config").mkdir(parents=True)
+        if invalid_config == "occupied":
+            (home / "config" / "openshell").mkdir()
+        else:
+            foreign = tmp_path / "foreign-gateway"
+            foreign.mkdir()
+            (home / "config" / "openshell").symlink_to(foreign, target_is_directory=True)
+    with pytest.raises(RuntimeError, match="configuration"):
+        await supervisor._launch("alice", home)
+
+
 @pytest.mark.parametrize("provider", ["", "direct", "runner-local"])
 def test_hosted_selection_cannot_fall_back(monkeypatch, provider):
     monkeypatch.setenv("OPENWORKER_HOSTED_WEB", "1")
