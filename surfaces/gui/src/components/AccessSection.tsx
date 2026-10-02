@@ -1,3 +1,4 @@
+import { isHostedWeb } from "../hostedWeb";
 // AccessSection — the rail's "what can this session touch" section (§32; absorbs the §23
 // Session-settings drawer and retires the topbar row/glance). One collapsible rail section:
 //   · header: "Access" + a permanent summary ("Slack, GitHub · 2 folders") — the §23 trust
@@ -596,7 +597,7 @@ function ChannelsInline({
   }, [held]);
   const where = held
     ? held.holder.machine_id === "desktop" || !held.holder.machine_id
-      ? tt("onmachine.this_mac")
+      ? tt(isHostedWeb() ? "machines.hosted_vm" : "onmachine.this_mac")
       : machineNames[held.holder.machine_id] || tt("onmachine.access.another_machine")
     : "";
   return (

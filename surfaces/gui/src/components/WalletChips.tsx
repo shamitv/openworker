@@ -1,3 +1,4 @@
+import { isHostedWeb } from "../hostedWeb";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -86,7 +87,7 @@ export function WalletChips({
       <div className="text-meta font-medium text-ink mb-1.5">{t("machines.wallet.available_on")}</div>
       <div className="flex items-center gap-1.5 flex-wrap">
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-line bg-paper text-meta text-muted">
-          {t("machines.this_mac")} <span className="text-ok">✓</span>
+          {t(isHostedWeb() ? "machines.hosted_vm" : "machines.this_mac")} <span className="text-ok">✓</span>
         </span>
         {chips.map((c) => (
           <button

@@ -1,3 +1,4 @@
+import { isHostedWeb, webSignOut, webUsername } from "../hostedWeb";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getI18n, useTranslation } from "react-i18next";
 import {
@@ -392,11 +393,11 @@ export function Sidebar(props: Props) {
 
   // Display identity for the account row: the cloud profile only carries the email, so the
   // row shows the capitalized local part ("rohit@…" → "Rohit"); the menu header shows it all.
-  // On the hosted dashboard the identity comes from the Auth0 sign-in gate instead — the
-  // gateway account concept ("OpenWorker Cloud" sign-in) does not exist there.
-  const hostedActor = isCloudMode() ? (cloudMe()?.actor ?? "") : "";
+  // Hosted VM accounts use the password-session username. Cloud dashboards use
+  // the Auth0 identity; desktop accounts use the optional cloud profile.
+  const hostedActor = isHostedWeb() ? webUsername() : isCloudMode() ? (cloudMe()?.actor ?? "") : "";
   const accountEmail = hostedActor || (cloud?.signed_in ? cloud.account : "");
-  const accountName = accountEmail
+  const accountName = isHostedWeb() ? accountEmail : accountEmail
     ? accountEmail.split("@")[0].replace(/^./, (c) => c.toUpperCase())
     : "";
   const accountSignedIn = Boolean(hostedActor) || Boolean(cloud?.signed_in);
@@ -1209,7 +1210,7 @@ export function Sidebar(props: Props) {
                           {/* `k` is the stable group key; only the two built-in labels translate. */}
                           <span>
                             {k === "This Mac"
-                              ? t("onmachine.this_mac")
+                              ? t(isHostedWeb() ? "machines.hosted_vm" : "onmachine.this_mac")
                               : k === "machine"
                                 ? t("onmachine.machine_fallback")
                                 : k}
@@ -1320,10 +1321,14 @@ export function Sidebar(props: Props) {
                 )}
                 {/* No Automations here — the sidebar's top nav already carries it. */}
                 {appMenuItem("audit", t("nav.activity"), props.onOpenAudit, props.auditActive)}
-                {cloud?.signed_in && (
+                {(isHostedWeb() || cloud?.signed_in) && (
                   <>
                     <div className="h-px bg-line my-1 mx-2" />
                     {appMenuItem("signOut", t("sidebar.sign_out"), async () => {
+                      if (isHostedWeb()) {
+                        await webSignOut().catch(() => {});
+                        return;
+                      }
                       await cloudLogout().catch(() => {});
                       announceCloudChanged();
                     })}

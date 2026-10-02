@@ -1,3 +1,4 @@
+import { isHostedWeb } from "../../hostedWeb";
 import { useEffect, useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
@@ -125,7 +126,7 @@ export function ConnectorGlance({
 
   const title = TITLES[connector] ?? connector;
   const nameOf = (id: string): string => {
-    if (id === "desktop" || !id) return desktop ? t("connglance.this_mac") : t("connglance.the_desktop");
+    if (id === "desktop" || !id) return isHostedWeb() ? t("machines.hosted_vm") : desktop ? t("connglance.this_mac") : t("connglance.the_desktop");
     return machines.find((m) => brokerId(m) === id)?.name || id;
   };
   const machineOf = (id: string) => machines.find((m) => brokerId(m) === id);
@@ -259,7 +260,7 @@ export function ConnectorGlance({
         </div>
         {desktop && local && onManage && (
           <button className={PILL_LINE} data-testid={`manage-local-${connector}`} onClick={() => onManage(connector)}>
-            {t("connglance.manage_on_this_mac")}
+            {t(isHostedWeb() ? "connglance.manage_on_hosted_vm" : "connglance.manage_on_this_mac")}
           </button>
         )}
         {desktop && local && connector === "slack" && (
@@ -414,7 +415,7 @@ export function ConnectorGlance({
           <div className={ROW} key={`local-${s.session_id}-${s.channel}`} data-testid="listening-local">
             <div className="min-w-0 flex-1">
               <div className="text-ui text-ink truncate">{s.channel_name ? `#${s.channel_name}` : channelLabel(s.channel)}</div>
-              <div className="text-meta text-muted truncate">💻 {t("connglance.this_mac")} · {s.session_title || s.session_id} · {t("connglance.local_only")}</div>
+              <div className="text-meta text-muted truncate">💻 {t(isHostedWeb() ? "machines.hosted_vm" : "connglance.this_mac")} · {s.session_title || s.session_id} · {t("connglance.local_only")}</div>
             </div>
             <button className={XBTN} title={t("connector.unsubscribe_title")} onClick={() => void unsubscribeLocal(s)}>
               ×
@@ -475,7 +476,7 @@ function LocalListening({ subs, onChanged }: { subs: Subscription[]; onChanged: 
             <span className="font-medium truncate" title={s.session_id}>{s.session_title || s.session_id}</span>
             <span className="text-faint">←</span>
             <span className="text-muted truncate" title={s.channel}>{s.channel_name ? `#${s.channel_name}` : s.channel}</span>
-            <span className="text-label text-faint">{t("connglance.this_mac_only")}</span>
+            <span className="text-label text-faint">{t(isHostedWeb() ? "connglance.hosted_vm_only" : "connglance.this_mac_only")}</span>
             <button
               className={XBTN + " ml-auto"}
               title={t("connector.unsubscribe_title")}

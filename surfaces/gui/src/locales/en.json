@@ -1962,6 +1962,7 @@
     "not_connected_anywhere": "Not connected on any machine.",
     "on_machines": "on {{machines}}",
     "manage_on_this_mac": "Manage on This Mac ›",
+    "manage_on_hosted_vm": "Manage on Hosted VM ›",
     "connect_first": "Connect {{title}} on a machine first — this page then shows who answers what.",
     "mentions_go_to": "Mentions go to",
     "coworker_missing": "{{coworker}} is not on {{machine}} — its default answers until you pick one",
@@ -1977,11 +1978,13 @@
     "local_only": "local only",
     "move_foot_channel": "To move a channel, open the session that should answer it and add it there — it offers \"Move here\". A whole workspace can be subscribed instead of its channels, never both.",
     "move_foot_repo": "To move a repo, open the session that should answer it and add it there — it offers \"Move here\". A whole org can be subscribed instead of its repos, never both.",
-    "this_mac_only": "this Mac only"
+    "this_mac_only": "this Mac only",
+    "hosted_vm_only": "Hosted VM only"
   },
   "machines": {
     "title": "Machines",
     "sub": "Headless OpenWorkers that joined this app. Machines dial out to you — they never accept connections. Sessions on a machine keep running while this app is closed.",
+    "hosted_vm": "Hosted VM",
     "this_mac": "This Mac",
     "always_available": "always available",
     "never_seen": "never seen",
@@ -2022,6 +2025,9 @@
       "unknown_code": "Unknown or expired code."
     },
     "add": {
+      "failed": "Could not create a join link. Try again.",
+      "provisioned_hosted_one": "Provisioned with {{count}} model key from Hosted VM.",
+      "provisioned_hosted_other": "Provisioned with {{count}} model keys from Hosted VM.",
       "title": "Add a machine",
       "joined": "✓ {{name}} joined",
       "provisioned_one": "Provisioned with {{count}} model key from this Mac.",

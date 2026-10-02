@@ -15,6 +15,7 @@ import {
 import { useMachineData } from "../useMachineData";
 import { CachedNote, LoadingRow, UnreachableRow } from "./ScopedStatus";
 import { Icon } from "./Icon";
+import { isHostedWeb } from "../hostedWeb";
 
 // Settings ▸ Skills (SKILLS-SPEC §5/§6) — the management home: the LIST is the page; every
 // add-surface appears only when summoned from the single "Add skill" menu (the three doors:
@@ -393,10 +394,10 @@ export function SkillsTab({
                     chip with a folder icon so it READS as clickable (live drive: plain
                     text hid the affordance). */}
                 {row.files ? (
-                  machine ? (
+                  machine || isHostedWeb() ? (
                     <span
                       className="inline-flex items-center gap-1 text-label px-1.5 py-0.5 rounded-md border border-line bg-paper text-muted shrink-0"
-                      title={t("settingsx.skills.files_live_on", { name: machine.name })}
+                      title={t("settingsx.skills.files_live_on", { name: machine?.name || t("machines.hosted_vm") })}
                     >
                       <Icon name="folder" size={11} /> {t("skills.file_count", { count: row.files })}
                     </span>

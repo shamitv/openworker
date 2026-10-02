@@ -1,3 +1,4 @@
+import { isHostedWeb } from "../hostedWeb";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -216,7 +217,7 @@ function ConnectedRow({
   const tools = c.tools || [];
   const mine = brokerMachineId(machine);
   const nameOf = (id: string) =>
-    id === "desktop" ? t("machines.this_mac") : machines.find((m) => brokerMachineId(m) === id)?.name || id;
+    id === "desktop" ? t(isHostedWeb() ? "machines.hosted_vm" : "machines.this_mac") : machines.find((m) => brokerMachineId(m) === id)?.name || id;
   const others = (cloud?.holders || [])
     .map((h) => h.machine_id)
     .filter((id) => id && id !== mine)
@@ -389,7 +390,7 @@ function HeldRow({
     ? machines.find((m) => brokerMachineId(m) === sourceHolder.machine_id)
     : undefined;
   const sourceName = localConnected
-    ? t("machines.this_mac")
+    ? t(isHostedWeb() ? "machines.hosted_vm" : "machines.this_mac")
     : sourceMachine?.name || sourceHolder?.machine_id || t("machines.connectors.another_machine");
   const account = cloud?.provider_account ? `${cloud.provider_account} · ` : "";
 

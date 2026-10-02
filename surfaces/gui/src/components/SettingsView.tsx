@@ -305,7 +305,7 @@ export function SettingsView({
                   data-testid="machine-scope-picker"
                   aria-label={t("settingsx.machine_scope_aria")}
                 >
-                  {!isCloudMode() && <option value="">{t("settingsx.this_mac_option")}</option>}
+                  {!isCloudMode() && <option value="">{isHostedWeb() ? `⌂ ${t("machines.hosted_vm")}` : t("settingsx.this_mac_option")}</option>}
                   {machines
                     .filter((m) => m.origin !== "cloud")
                     .map((m) => (
