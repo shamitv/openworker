@@ -27,6 +27,6 @@ Acceptance: Provisioned users log in and change passwords; unknown, disabled, th
 
 ## Verification boundaries and limitations
 
-Gateway ownership tests use loopback test engines and independent test clients. Real browser cookie enforcement, complete product-data isolation, target-VM HTTPS, real sandbox enforcement, unattended work, OAuth consent, and desktop regressions remain acceptance work for phases 2?5.
+Gateway ownership tests use loopback test engines and independent test clients. Phase 1 alone did not establish real browser cookie enforcement, complete product-data isolation, target-VM HTTPS, real sandbox enforcement, unattended work or desktop regressions. Subsequent Linux evidence is recorded in phases 2–4. The revised Phase 5 covers temporary public Quick Tunnel deployment and remaining operational/desktop checks; external OAuth acceptance is outside this multi-phase plan. The separate Windows sandbox gate remains pending.
 
 Engines share the gateway operator's OS identity, so application-level home separation does not contain a backend compromise. Existing unversioned hosted account databases upgrade automatically; desktop-state migration remains outside this feature.

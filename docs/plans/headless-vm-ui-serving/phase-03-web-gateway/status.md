@@ -28,4 +28,4 @@ Cleanup completed: disposable gateway/proxy services, test engines and sandbox c
 
 ## Remaining deployment scope
 
-Public-domain certificate trust, Phase 5 deployment/OAuth acceptance, and the separate Windows sandbox live gate remain pending. [Phase 4 password-based product acceptance](../phase-04-headless-flows/status.md) is now complete. This completion establishes Linux Phase 3 with a temporary test certificate. Engine processes still share an OS identity, as described in the [overview](../plan.md).
+Public HTTPS certificate verification through Cloudflare Quick Tunnel, the remaining Phase 5 deployment checks, and the separate Windows sandbox live gate remain pending. External OAuth is outside the revised multi-phase plan. [Phase 4 password-based product acceptance](../phase-04-headless-flows/status.md) is complete. This completion establishes Linux Phase 3 with a temporary test certificate; its Nginx acceptance evidence remains unchanged. Engine processes still share an OS identity, as described in the [overview](../plan.md).

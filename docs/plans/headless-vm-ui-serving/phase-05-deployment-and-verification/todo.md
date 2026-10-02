@@ -1,10 +1,14 @@
 # Phase 5 todo
 
-- [x] Document package/SPA build, account administration, gateway startup, HTTPS reverse proxy, sandbox setup, backup, logs, health, capacity, and troubleshooting guidance.
+- [x] Document package/SPA build, password account administration, loopback gateway startup, supervised Quick Tunnel exposure/restart, sandbox setup, backup, logs, health, capacity, and troubleshooting guidance; retain local Nginx fixture instructions.
 - [x] Record current implementation evidence and outstanding verification/limitations in the phase status files.
-- [ ] Follow the guide on a fresh VM and verify the supported public deployment end to end.
+- [x] Remove external OAuth acceptance from this multi-phase plan, superseding its earlier Phase 5 deferral while preserving existing implementation and historical evidence.
+- [ ] Follow the guide on a fresh Linux VM and verify temporary internet deployment through Cloudflare Quick Tunnel with the generated URL as the exact gateway public origin.
+- [ ] Add and run a public-tunnel variant of the existing hosted browser gate with Chromium/Alice, Firefox/Bob and an external workstation joiner; require ordinary browser/CLI certificate verification, no fixture CA, no skipped scenarios and no automatic retries.
 - [ ] Run two-browser, two-account scenarios for sessions, secrets, inbox, approvals, artifacts, files, WebSockets, and account revocation.
-- [ ] Exercise real CSRF/origin, login-throttling, sandbox-down, crash-restart, OAuth callback, and scheduled-task behavior.
-- [ ] Complete external OAuth provider consent and account-scoped callback/token exchange acceptance deferred from password-based Phase 4; verify state isolation, expiry and replay rejection.
+- [ ] Verify approved work, confined typed/recent workspaces, previews, exact browser downloads, persistence, account isolation and external machine join/reconnect through the public tunnel.
+- [ ] Exercise real CSRF/origin rejection, login throttling/forwarded client identity, sandbox failure, crash recovery and scheduled-task behavior.
+- [ ] Restart the tunnel, update the gateway origin with the same account data, sign in at the new hostname, and reconnect the external machine using a fresh URL and existing state; verify preserved data and machine ID, then reconnect with `openworker up`.
+- [ ] Verify backup/restore, health and private logs; record idle/active resource measurements for the 20-engine target without claiming validated capacity from the two-account gate.
 - [ ] Run existing desktop authentication and Tauri regression checks.
-- [ ] Record executed results and completion evidence after verification.
+- [ ] Record versions, public hostname, commands, results and private evidence; stop and remove disposable deployment, tunnel and joiner state after verification.

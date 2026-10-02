@@ -6,7 +6,7 @@ Status: Complete — password-based Linux HTTPS acceptance passed on 2026-10-02.
 
 Administrator-provisioned username/password accounts are the Phase 4 identity. The UI displays the signed-in username, account workspace path and **Hosted VM** labels. Folder selection uses typed VM paths and recent workspaces. Hosted Add machine shows the generated account HTTPS join URL directly, reports enrollment failures and offers renewal. Skill-folder reveal is removed from the hosted UI; skill and MCP reveal endpoints refuse hosted requests before calling native code, following the existing `ok: false` error format. No authentication API or database migration was added.
 
-External provider OAuth consent and account-scoped callback/token exchange acceptance moves to [Phase 5](../phase-05-deployment-and-verification/todo.md). Existing callback generation/routing regressions still pass; they do not establish live provider acceptance. Public certificate trust and the separate Windows sandbox gate remain later requirements.
+External provider OAuth consent, callback configuration and token exchange acceptance are outside this multi-phase plan, superseding their earlier deferral to Phase 5. Existing implementation and recorded callback generation/routing regressions remain historical evidence. Phase 4 stays complete. [Phase 5](../phase-05-deployment-and-verification/todo.md) now verifies temporary internet access through Cloudflare Quick Tunnel using ordinary public certificate verification; the separate Windows sandbox gate remains pending.
 
 ## Commands and regression results
 
