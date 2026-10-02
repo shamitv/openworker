@@ -3,12 +3,34 @@ import pytest
 
 from coworker.providers.openai_provider import OpenAIProvider
 from test_hosted_web import _serve
-from test_hosted_windows_live import _model_app
+from hosted_acceptance import ORIGIN, WS_ORIGIN, model_app
+
+
+def test_acceptance_websocket_sends_secure_cookie_to_gateway_origin():
+    from fastapi import FastAPI, Response, WebSocket
+    from fastapi.testclient import TestClient
+
+    app = FastAPI()
+
+    @app.get("/login")
+    def login(response: Response):
+        response.set_cookie("__Host-test-session", "test-only-cookie", secure=True, httponly=True, path="/")
+        return {"ok": True}
+
+    @app.websocket("/ws/session/probe")
+    async def websocket(websocket: WebSocket):
+        await websocket.accept()
+        await websocket.send_json({"cookie": websocket.cookies.get("__Host-test-session")})
+
+    with TestClient(app, base_url=ORIGIN) as client:
+        client.get("/login")
+        with client.websocket_connect(f"{WS_ORIGIN}/ws/session/probe") as websocket:
+            assert websocket.receive_json() == {"cookie": "test-only-cookie"}
 
 
 @pytest.mark.parametrize("stream", [False, True])
 def test_local_acceptance_model_requests_one_write_then_finishes(stream):
-    port, server, thread = _serve(_model_app())
+    port, server, thread = _serve(model_app())
     try:
         provider = OpenAIProvider(api_key="local-test", base_url=f"http://127.0.0.1:{port}/v1")
         messages = [{"role": "user", "content": "Write marker.txt"}]
