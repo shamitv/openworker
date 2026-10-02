@@ -5,16 +5,16 @@ from __future__ import annotations
 import asyncio
 import hmac
 import ipaddress
+import json
 import mimetypes
 import re
 from contextlib import asynccontextmanager
 from pathlib import Path
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import unquote, urlencode, urlsplit
 
 import httpx
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
-from starlette.background import BackgroundTask
 
 from .accounts import AccountStore
 from .supervisor import EngineSupervisor
@@ -23,13 +23,79 @@ COOKIE = "__Host-openworker-session"
 UNSAFE = {"POST", "PUT", "PATCH", "DELETE"}
 MAX_BODY = 32 * 1024 * 1024
 HOP = {"connection", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailer", "transfer-encoding", "upgrade", "host", "content-length"}
-DROP = HOP | {"cookie", "authorization", "x-openworker-token", "x-openworker-actor", "x-ocw-org", "forwarded", "x-forwarded-for", "x-forwarded-host", "x-forwarded-proto", "x-real-ip", "origin", "referer", "sec-websocket-protocol"}
+DROP = HOP | {"cookie", "authorization", "x-openworker-token", "x-openworker-actor", "x-ocw-org", "x-csrf-token", "forwarded", "x-real-ip", "origin", "referer", "sec-websocket-protocol"}
+SESSION_CHECK_SECONDS = 15
 BLOCKED_HOSTED = {
     "/v1/workspaces/pick", "/v1/mcp/config/reveal", "/v1/settings/sandbox",
     "/v1/settings/sandbox/setup", "/v1/settings/sandbox/setup/cancel",
     "/v1/settings/sandbox/windows/setup", "/v1/settings/sandbox/windows/remove",
 }
 ASSET_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
+FINGERPRINT = re.compile(r"-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9.]+$")
+
+
+def _invalid_path(path: str) -> bool:
+    return any(part in {".", ".."} for part in unquote(path).replace("\\", "/").split("/"))
+
+
+def _safe_headers(headers, *, request: bool = False) -> dict[str, str]:
+    nominated = {name.strip().lower() for name in headers.get("connection", "").split(",")}
+    dropped = (DROP if request else HOP | {"set-cookie", "x-openworker-token", "access-control-allow-origin", "access-control-allow-credentials"}) | nominated
+    return {k: v for k, v in headers.items() if k.lower() not in dropped and not k.lower().startswith("x-forwarded-")}
+
+
+async def _bounded_body(request: Request, limit: int) -> bytes:
+    length = request.headers.get("content-length", "")
+    if length.isdecimal() and int(length) > limit:
+        raise HTTPException(413, "request too large")
+    body = bytearray()
+    async for chunk in request.stream():
+        if len(body) + len(chunk) > limit:
+            raise HTTPException(413, "request too large")
+        body.extend(chunk)
+    return bytes(body)
+
+
+def _stream_response(result: httpx.Response, headers: dict[str, str]) -> StreamingResponse:
+    async def chunks():
+        try:
+            async for chunk in result.aiter_raw():
+                yield chunk
+        finally:
+            await result.aclose()
+    class ClosingResponse(StreamingResponse):
+        async def __call__(self, scope, receive, send):
+            try:
+                await super().__call__(scope, receive, send)
+            finally:
+                # Also covers a disconnect before the body generator starts.
+                import anyio
+                with anyio.CancelScope(shield=True):
+                    await result.aclose()
+    return ClosingResponse(chunks(), status_code=result.status_code, headers=headers)
+
+
+async def _relay_tasks(*coroutines) -> int:
+    """Wait for either peer or authentication to end, consuming every task result."""
+    from websockets.exceptions import ConnectionClosed
+    tasks = [asyncio.create_task(coroutine) for coroutine in coroutines]
+    try:
+        done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        code = 1000
+        for task in done:
+            try:
+                code = task.result() or code
+            except ConnectionClosed as exc:
+                received = exc.rcvd.code if exc.rcvd else 1013
+                code = received if received in {1000, 1001, 1008, 1009, 1011, 1012, 1013, 4403} else 1013
+            except WebSocketDisconnect:
+                pass
+        return code
+    finally:
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 def _login_html() -> str:
@@ -61,7 +127,7 @@ def _no_cache(response: Response) -> Response:
 
 def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provider: str) -> FastAPI:
     spa = spa.resolve(strict=True)
-    if not (spa / "index.html").is_file():
+    if not (spa / "index.html").is_file() or not (spa / "index.html").resolve().is_relative_to(spa):
         raise ValueError(f"built SPA index.html missing in {spa}")
     parsed = urlsplit(public_origin)
     if parsed.scheme != "https" or not parsed.netloc or parsed.path not in ("", "/") or parsed.query or parsed.fragment or parsed.username:
@@ -85,15 +151,26 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
     app.state.store = store
     app.state.supervisor = supervisor
 
+    def upstream_request(method: str, url: str, endpoint, *, headers=None, content=b"", actor: str = ""):
+        safe = _safe_headers(headers or {}, request=True)
+        safe["X-OpenWorker-Token"] = endpoint.token
+        if actor:
+            safe["X-OpenWorker-Actor"] = actor
+        outgoing = app.state.client.build_request(method, url, headers=safe, content=content)
+        # HTTPX merges its cookie jar after browser-header filtering. Cookies are
+        # scoped by host, not port: never replay one engine's cookie to another.
+        outgoing.headers.pop("cookie", None)
+        return outgoing
+
     def user_for(request: Request) -> dict | None:
         return store.get_session(request.cookies.get(COOKIE, ""))
 
     def origin_ok(origin: str | None) -> bool:
-        return bool(origin and hmac.compare_digest(origin, public_origin))
+        return bool(origin and hmac.compare_digest(origin.encode(), public_origin.encode()))
 
     def csrf_ok(request: Request, user: dict) -> bool:
         token = request.headers.get("x-csrf-token", "")
-        return bool(token and hmac.compare_digest(token, user["csrf"]))
+        return bool(token and hmac.compare_digest(token.encode(), user["csrf"].encode()))
 
     def peer_ip(request: Request) -> str:
         peer = request.client.host if request.client else "unknown"
@@ -120,7 +197,7 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
         # The reverse proxy must rewrite Host; never infer security decisions from it.
-        response = await call_next(request)
+        response = Response(status_code=404) if _invalid_path(request.url.path) else await call_next(request)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "no-referrer")
         response.headers.setdefault("X-Frame-Options", "DENY")
@@ -144,7 +221,7 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
         if not origin_ok(request.headers.get("origin")):
             return JSONResponse({"error": "request verification failed"}, status_code=403)
         try:
-            body = await request.json()
+            body = json.loads(await _bounded_body(request, 16 * 1024))
             username = str(body.get("username", ""))
             password = str(body.get("password", ""))
         except (ValueError, AttributeError):
@@ -187,7 +264,7 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
         if not origin_ok(request.headers.get("origin")) or not csrf_ok(request, user):
             return JSONResponse({"error": "request verification failed"}, status_code=403)
         try:
-            body = await request.json()
+            body = json.loads(await _bounded_body(request, 16 * 1024))
             ok = store.change_password(request.cookies[COOKIE], str(body.get("current", "")), str(body.get("new", "")))
         except (ValueError, AttributeError):
             ok = False
@@ -227,19 +304,16 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
         endpoint = await supervisor.ensure(user)
         if endpoint is None:
             return JSONResponse({"error": "engine unavailable"}, status_code=503)
-        body = await request.body()
-        if len(body) > 1024 * 1024:
-            return Response(status_code=413)
+        body = await _bounded_body(request, 1024 * 1024)
         url = f"http://127.0.0.1:{endpoint.port}/{path}"
         if request.url.query:
             url += "?" + request.url.query
-        headers = {k: v for k, v in request.headers.items() if k.lower() not in DROP}
-        headers["X-OpenWorker-Token"] = endpoint.token
         try:
-            response = await app.state.client.request(request.method, url, headers=headers, content=body)
+            outgoing = upstream_request(request.method, url, endpoint, headers=request.headers, content=body)
+            response = await app.state.client.send(outgoing)
         except httpx.HTTPError:
             return JSONResponse({"error": "engine unavailable"}, status_code=503)
-        safe = {k: v for k, v in response.headers.items() if k.lower() in {"content-type", "location"}}
+        safe = {k: v for k, v in _safe_headers(response.headers).items() if k.lower() in {"content-type", "location"}}
         return Response(content=response.content, status_code=response.status_code, headers=safe)
 
     @app.websocket("/h/{user_id}/ws/machine")
@@ -257,6 +331,7 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
             return
         from websockets.asyncio.client import connect
 
+        code = 1013
         try:
             async with connect(f"ws://127.0.0.1:{endpoint.port}/ws/machine", max_size=16 * 1024 * 1024) as upstream:
                 await ws.accept()
@@ -279,14 +354,11 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
                         else:
                             await ws.send_text(message)
 
-                done, pending = await asyncio.wait([asyncio.create_task(to_engine()), asyncio.create_task(to_machine())], return_when=asyncio.FIRST_COMPLETED)
-                for task in pending:
-                    task.cancel()
-                await asyncio.gather(*pending, return_exceptions=True)
+                code = await _relay_tasks(to_engine(), to_machine())
         except Exception:
             pass
         try:
-            await ws.close()
+            await ws.close(code=code)
         except RuntimeError:
             pass
 
@@ -302,13 +374,13 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
             return JSONResponse({"error": "not found"}, status_code=404)
         url = f"http://127.0.0.1:{endpoint.port}/v1/sessions/{session}/artifacts/download?{urlencode({'path': path})}"
         try:
-            upstream = app.state.client.build_request("GET", url, headers={"X-OpenWorker-Token": endpoint.token})
+            upstream = upstream_request("GET", url, endpoint, actor=user["username"])
             result = await app.state.client.send(upstream, stream=True)
         except httpx.HTTPError:
             return JSONResponse({"error": "engine unavailable"}, status_code=503)
-        out_headers = {k: v for k, v in result.headers.items() if k.lower() in {"content-type", "content-disposition", "content-length"}}
+        out_headers = {k: v for k, v in _safe_headers(result.headers).items() if k.lower() in {"content-type", "content-disposition", "content-encoding"}}
         out_headers["X-Content-Type-Options"] = "nosniff"
-        return StreamingResponse(result.aiter_raw(), status_code=result.status_code, headers=out_headers, background=BackgroundTask(result.aclose))
+        return _stream_response(result, out_headers)
 
     @app.api_route("/v1/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
     async def proxy_api(path: str, request: Request):
@@ -321,26 +393,20 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
         endpoint = await supervisor.ensure(user)
         if endpoint is None:
             return JSONResponse({"error": "engine unavailable"}, status_code=503)
-        content = await request.body()
-        if len(content) > MAX_BODY:
-            return JSONResponse({"error": "request too large"}, status_code=413)
-        headers = {k: v for k, v in request.headers.items() if k.lower() not in DROP}
-        headers["X-OpenWorker-Token"] = endpoint.token
-        headers["X-OpenWorker-Actor"] = user["username"]
+        content = await _bounded_body(request, MAX_BODY)
         url = f"http://127.0.0.1:{endpoint.port}{route}"
         if request.url.query:
             url += "?" + request.url.query
         try:
-            upstream = app.state.client.build_request(request.method, url, headers=headers, content=content)
+            upstream = upstream_request(request.method, url, endpoint, headers=request.headers, content=content, actor=user["username"])
             result = await app.state.client.send(upstream, stream=True)
         except httpx.HTTPError:
             return JSONResponse({"error": "engine unavailable"}, status_code=503)
-        out_headers = {k: v for k, v in result.headers.items() if k.lower() not in HOP | {"set-cookie", "access-control-allow-origin", "access-control-allow-credentials"}}
-        return StreamingResponse(result.aiter_raw(), status_code=result.status_code, headers=out_headers, background=BackgroundTask(result.aclose))
+        return _stream_response(result, _safe_headers(result.headers))
 
     @app.websocket("/ws/{path:path}")
     async def proxy_ws(ws: WebSocket, path: str):
-        if not origin_ok(ws.headers.get("origin")):
+        if _invalid_path(path) or not origin_ok(ws.headers.get("origin")):
             await ws.close(code=1008)
             return
         cookie = ws.cookies.get(COOKIE, "")
@@ -356,6 +422,7 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
         url = f"ws://127.0.0.1:{endpoint.port}/ws/{path}"
         if ws.url.query:
             url += "?" + ws.url.query
+        code = 1013
         try:
             async with connect(url, subprotocols=["openworker", endpoint.token], additional_headers={"X-OpenWorker-Actor": user["username"]}, max_size=16 * 1024 * 1024) as upstream:
                 await ws.accept(subprotocol="openworker" if "openworker" in ws.scope.get("subprotocols", []) else None)
@@ -366,7 +433,7 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
                         if message["type"] == "websocket.disconnect":
                             break
                         if not store.get_session(cookie):
-                            break
+                            return 4401
                         if message.get("text") is not None:
                             await upstream.send(message["text"])
                         elif message.get("bytes") is not None:
@@ -375,8 +442,8 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
                 async def engine_to_browser():
                     while True:
                         frame = await upstream.recv()
-                        if not store.get_session(cookie):
-                            break
+                        if not store.get_session(cookie, touch=False):
+                            return 4401
                         if isinstance(frame, bytes):
                             await ws.send_bytes(frame)
                         else:
@@ -384,18 +451,15 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
 
                 async def watch_session():
                     while True:
-                        await asyncio.sleep(15)
+                        await asyncio.sleep(SESSION_CHECK_SECONDS)
                         if not store.get_session(cookie, touch=False):
-                            break
+                            return 4401
 
-                done, pending = await asyncio.wait([asyncio.create_task(browser_to_engine()), asyncio.create_task(engine_to_browser()), asyncio.create_task(watch_session())], return_when=asyncio.FIRST_COMPLETED)
-                for task in pending:
-                    task.cancel()
-                await asyncio.gather(*pending, return_exceptions=True)
-        except (WebSocketDisconnect, OSError, Exception):
+                code = await _relay_tasks(browser_to_engine(), engine_to_browser(), watch_session())
+        except Exception:
             pass
         try:
-            await ws.close()
+            await ws.close(code=code)
         except RuntimeError:
             pass
 
@@ -406,12 +470,21 @@ def create_app(*, spa: Path, data_dir: Path, public_origin: str, sandbox_provide
             return RedirectResponse("/web/login", status_code=303)
         if user.get("must_change"):
             return RedirectResponse("/web/change-password", status_code=303)
-        if path and (not ASSET_NAME.fullmatch(path) or ".." in Path(path).parts):
+        if path and (not ASSET_NAME.fullmatch(path) or _invalid_path(path)):
             return Response(status_code=404)
         target = (spa / path).resolve() if path else spa / "index.html"
-        if target.is_file() and target.is_relative_to(spa) and target.name != "index.html":
-            return FileResponse(target, media_type=mimetypes.guess_type(target.name)[0])
+        if not target.is_relative_to(spa):
+            return Response(status_code=404)
+        if target.is_file() and target.name != "index.html":
+            cache = "private, max-age=31536000, immutable" if path.startswith("assets/") and FINGERPRINT.search(target.name) else "private, no-cache"
+            return FileResponse(target, media_type=mimetypes.guess_type(target.name)[0], headers={"Cache-Control": cache})
+        if path and (path.split("/", 1)[0] in {"assets", "web", "v1", "ws", "h"} or Path(path).suffix):
+            if path != "index.html":
+                return Response(status_code=404)
         index = (spa / "index.html").read_text(encoding="utf-8")
+        # Vite's relative base also supports Tauri. Browser deep links need the
+        # document's asset base pinned to the gateway root.
+        index = index.replace('="./', '="/')
         index = index.replace("</head>", "<script>window.__COWORKER_WEB__=true;</script></head>", 1)
         return _no_cache(HTMLResponse(index))
 
