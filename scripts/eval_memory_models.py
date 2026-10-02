@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare model memory saves and fresh-chat recall through OpenRouter.
+"""Compare model memory saves and fresh-chat recall through OpenRouter or a local endpoint.
 
 Every model/run/scenario gets an empty, temporary SQLite store. Each scenario consists
 of one save chat and one genuinely fresh recall chat that receives only the persisted
@@ -9,6 +9,8 @@ memory tools, guidance, and provider router; it does not change memory policy.
 Example:
     python scripts/eval_memory_models.py
     python scripts/eval_memory_models.py --models openai/gpt-6-luna --runs 1
+    python scripts/eval_memory_models.py --base-url http://localhost:8090/v1 \
+        --models Ornith-1.5-35B-Uncensored-Q6_K --runs 1
 """
 
 from __future__ import annotations
@@ -36,6 +38,7 @@ DEFAULT_MODELS = [
 OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 MAX_TOOL_ROUNDS = 6
 MAX_COMPLETION_TOKENS = 768
+MANGLED_PREVIEW_CHARS = 200
 
 
 @dataclass(frozen=True)
@@ -171,15 +174,17 @@ def resolve_api_key(env: dict[str, str] | None = None, env_file: Path | None = N
     return _load_dotenv_key(env_file or Path(__file__).resolve().parents[1] / ".env")
 
 
-def _parse_models(raw_models: list[str]) -> list[str]:
+def _parse_models(raw_models: list[str], *, local_endpoint: bool = False) -> list[str]:
     models: list[str] = []
     for raw in raw_models:
         models.extend(part.strip() for part in raw.split(",") if part.strip())
     if not models:
         raise ValueError("provide at least one model")
-    invalid = [model for model in models if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.:/-]+", model)]
+    model_pattern = r"[^\s,]+" if local_endpoint else r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.:/-]+"
+    invalid = [model for model in models if not re.fullmatch(model_pattern, model)]
     if invalid:
-        raise ValueError("model IDs must use OpenRouter's provider/model format")
+        expected = "non-empty local model IDs" if local_endpoint else "OpenRouter's provider/model format"
+        raise ValueError(f"model IDs must use {expected}")
     return list(dict.fromkeys(models))
 
 
@@ -258,7 +263,7 @@ def _record_usage(metrics: RunMetrics, turn: Any) -> None:
 def _run_conversation(
     *,
     provider: Any,
-    model: str,
+    provider_model: str,
     messages: list[dict[str, Any]],
     registry: Any,
     metrics: RunMetrics,
@@ -270,7 +275,7 @@ def _run_conversation(
     for _ in range(MAX_TOOL_ROUNDS):
         try:
             turn = provider.complete(
-                model=f"openrouter:{model}",
+                model=provider_model,
                 messages=messages,
                 tools=registry.schemas(),
                 reasoning_effort="low",
@@ -288,6 +293,13 @@ def _run_conversation(
 
         assistant_calls = []
         for call in calls:
+            if set(call.arguments or {}) == {"_raw"}:
+                raw = str(call.arguments.get("_raw") or "")
+                if len(raw) > MANGLED_PREVIEW_CHARS:
+                    call.arguments = {
+                        "_raw": raw[:MANGLED_PREVIEW_CHARS]
+                        + f"… [unparsed tool-call text, {len(raw)} chars, truncated in history]"
+                    }
             args_text = json.dumps(call.arguments or {}, ensure_ascii=False, separators=(",", ":"))
             assistant_calls.append(
                 {
@@ -303,11 +315,25 @@ def _run_conversation(
             metrics.memory_tool_calls[call.name] = metrics.memory_tool_calls.get(call.name, 0) + 1
             if call.name == "ask_user":
                 metrics.permission_requests += 1
-            try:
-                result = registry.execute(call.name, call.arguments)
-            except Exception as exc:
-                result = {"error": _sanitize_error(exc, secret)}
-                metrics.errors.append(f"tool {call.name}: {_sanitize_error(exc, secret)}")
+            if set(call.arguments or {}) == {"_raw"}:
+                if getattr(turn, "finish_reason", None) == "length":
+                    reason = (
+                        "tool-call arguments were cut off by the output-token limit; "
+                        "reissue the content in smaller pieces"
+                    )
+                else:
+                    reason = (
+                        "tool-call arguments did not parse as a JSON object; _raw is not "
+                        "a parameter, so reissue the call using declared parameters"
+                    )
+                result = {"error": "tool call not executed", "reason": reason}
+                metrics.errors.append(f"tool {call.name}: malformed JSON arguments")
+            else:
+                try:
+                    result = registry.execute(call.name, call.arguments)
+                except Exception as exc:
+                    result = {"error": _sanitize_error(exc, secret)}
+                    metrics.errors.append(f"tool {call.name}: {_sanitize_error(exc, secret)}")
             messages.append(
                 {
                     "role": "tool",
@@ -321,7 +347,16 @@ def _run_conversation(
     return latest_text
 
 
-def _run_case(provider: Any, model: str, run: int, scenario: Scenario, prices: dict[str, Decimal], secret: str) -> RunMetrics:
+def _run_case(
+    provider: Any,
+    model: str,
+    run: int,
+    scenario: Scenario,
+    prices: dict[str, Decimal],
+    secret: str,
+    *,
+    provider_model: str,
+) -> RunMetrics:
     from coworker.memory import Scope, memory_tools
     from coworker.memory.sqlite_store import SQLiteMemoryStore
     from coworker.tools import ToolRegistry
@@ -343,7 +378,7 @@ def _run_case(provider: Any, model: str, run: int, scenario: Scenario, prices: d
             ]
             _run_conversation(
                 provider=provider,
-                model=model,
+                provider_model=provider_model,
                 messages=save_messages,
                 registry=first_registry,
                 metrics=metrics,
@@ -374,7 +409,7 @@ def _run_case(provider: Any, model: str, run: int, scenario: Scenario, prices: d
             metrics.prior_chat_messages_injected = 0
             answer = _run_conversation(
                 provider=provider,
-                model=model,
+                provider_model=provider_model,
                 messages=recall_messages,
                 registry=fresh_registry,
                 metrics=metrics,
@@ -387,7 +422,13 @@ def _run_case(provider: Any, model: str, run: int, scenario: Scenario, prices: d
             store.close()
 
 
-def _summarize(results: list[RunMetrics], models: list[str], runs: int) -> dict[str, Any]:
+def _summarize(
+    results: list[RunMetrics],
+    models: list[str],
+    runs: int,
+    *,
+    cost_note: str,
+) -> dict[str, Any]:
     summaries: list[dict[str, Any]] = []
     for model in models:
         selected = [item for item in results if item.model == model]
@@ -439,10 +480,7 @@ def _summarize(results: list[RunMetrics], models: list[str], runs: int) -> dict[
         "runs_per_scenario": runs,
         "scenario_count": len(SCENARIOS),
         "total_scenario_runs": len(results),
-        "cost_note": (
-            "Estimated from OpenRouter's current model catalog token rates; provider routing, "
-            "credits, and cache discounts can make the billed amount differ."
-        ),
+        "cost_note": cost_note,
         "results": [asdict(item) for item in results],
     }
 
@@ -485,7 +523,7 @@ def _print_summary(report: dict[str, Any]) -> None:
                 f"permission requests {values['permission_requests']}"
             )
     errors = [
-        (item.model, item.run, item.scenario, error)
+        (item["model"], item["run"], item["scenario"], error)
         for item in report["results"]
         for error in item["errors"]
     ]
@@ -510,12 +548,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--models",
         nargs="+",
-        default=DEFAULT_MODELS,
+        default=None,
         metavar="MODEL",
-        help="OpenRouter model IDs (space-separated or comma-separated; default: five verified models)",
+        help="model IDs (space-separated or comma-separated; defaults to the five verified OpenRouter models; required with --base-url)",
     )
     parser.add_argument("--runs", type=_positive_int, default=3, help="isolated repetitions per scenario (default: 3)")
     parser.add_argument("--output", type=Path, help="also write the full, credential-free report as JSON")
+    parser.add_argument(
+        "--base-url",
+        help="use an OpenAI-compatible endpoint directly (for example http://localhost:8090/v1); skips OpenRouter auth/pricing",
+    )
     parser.add_argument(
         "--env-file",
         type=Path,
@@ -524,43 +566,63 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    raw_models = args.models or ([] if args.base_url else DEFAULT_MODELS)
+    if args.base_url and not args.models:
+        parser.error("--models is required when --base-url is used")
     try:
-        models = _parse_models(args.models)
+        models = _parse_models(raw_models, local_endpoint=bool(args.base_url))
     except ValueError as exc:
         parser.error(str(exc))
 
-    api_key = resolve_api_key(env_file=args.env_file)
-    if not api_key:
-        print(
-            f"Error: OPENROUTER_API_KEY is not set and was not found in {args.env_file}.",
-            file=sys.stderr,
+    if args.base_url:
+        from coworker.providers import OpenAIProvider
+
+        # OpenAI's SDK requires an API key argument even for unauthenticated local
+        # servers; this placeholder is local-only and is never sent to OpenRouter.
+        api_key = "openworker-local-endpoint"
+        prices: dict[str, dict[str, Decimal]] = {model: {} for model in models}
+        provider = OpenAIProvider(api_key=api_key, base_url=args.base_url.rstrip("/"))
+        provider_models = {model: model for model in models}
+        secret_for_errors = api_key
+        cost_note = "Local endpoint pricing is unavailable; cost is reported as n/a."
+    else:
+        api_key = resolve_api_key(env_file=args.env_file)
+        if not api_key:
+            print(
+                f"Error: OPENROUTER_API_KEY is not set and was not found in {args.env_file}.",
+                file=sys.stderr,
+            )
+            return 2
+        # ProviderRouter resolves provider credentials from environment; keep the .env value
+        # in this process only and never write it to a config, database, or output report.
+        os.environ["OPENROUTER_API_KEY"] = api_key
+        try:
+            prices = _load_prices(api_key, models)
+        except Exception as exc:
+            safe_error = _sanitize_error(exc, api_key)
+            print(f"Error: unable to load OpenRouter model pricing: {safe_error}", file=sys.stderr)
+            return 2
+        missing = [model for model in models if model not in prices]
+        if missing:
+            print(
+                "Error: these model IDs were not present in the current OpenRouter catalog: "
+                + ", ".join(missing),
+                file=sys.stderr,
+            )
+            return 2
+
+        from coworker.providers import ProviderRouter
+        from coworker.secrets import EphemeralSecretStore
+
+        # Do not let a previously configured GUI profile override the key read from this
+        # process's environment/.env file, and never touch the user's persistent secrets.
+        provider = ProviderRouter(EphemeralSecretStore())
+        provider_models = {model: f"openrouter:{model}" for model in models}
+        secret_for_errors = api_key
+        cost_note = (
+            "Estimated from OpenRouter's current model catalog token rates; provider routing, "
+            "credits, and cache discounts can make the billed amount differ."
         )
-        return 2
-    # ProviderRouter resolves provider credentials from environment; keep the .env value
-    # in this process only and never write it to a config, database, or output report.
-    os.environ.setdefault("OPENROUTER_API_KEY", api_key)
-
-    try:
-        prices = _load_prices(api_key, models)
-    except Exception as exc:
-        safe_error = _sanitize_error(exc, api_key)
-        print(f"Error: unable to load OpenRouter model pricing: {safe_error}", file=sys.stderr)
-        return 2
-    missing = [model for model in models if model not in prices]
-    if missing:
-        print(
-            "Error: these model IDs were not present in the current OpenRouter catalog: "
-            + ", ".join(missing),
-            file=sys.stderr,
-        )
-        return 2
-
-    from coworker.providers import ProviderRouter
-    from coworker.secrets import EphemeralSecretStore
-
-    # Do not let a previously configured GUI profile override the key read from this
-    # process's environment/.env file, and never touch the user's persistent secrets.
-    provider = ProviderRouter(EphemeralSecretStore())
     results: list[RunMetrics] = []
     total_runs = len(models) * len(SCENARIOS) * args.runs
     completed = 0
@@ -571,13 +633,21 @@ def main(argv: list[str] | None = None) -> int:
                 completed += 1
                 print(f"[{completed}/{total_runs}] {model} run {run}: {scenario.name}", flush=True)
                 try:
-                    metrics = _run_case(provider, model, run, scenario, model_prices, api_key)
+                    metrics = _run_case(
+                        provider,
+                        model,
+                        run,
+                        scenario,
+                        model_prices,
+                        secret_for_errors,
+                        provider_model=provider_models[model],
+                    )
                 except Exception as exc:
                     metrics = RunMetrics(model=model, run=run, scenario=scenario.name, category=scenario.category)
-                    metrics.errors.append(_sanitize_error(exc, api_key))
+                    metrics.errors.append(_sanitize_error(exc, secret_for_errors))
                 results.append(metrics)
 
-    report = _summarize(results, models, args.runs)
+    report = _summarize(results, models, args.runs, cost_note=cost_note)
     _print_summary(report)
     if args.output:
         try:
