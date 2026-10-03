@@ -1,0 +1,138 @@
+{
+  "phase": 1,
+  "status": "complete",
+  "date": "2026-10-03",
+  "timezone": "Asia/Kolkata",
+  "base_revision": "fbb1a6bc67ba068c614079173edbea42f15139da",
+  "implementation_revision": "73ab572c9697f76fb5d0ea3b5af2cc164f4af92e",
+  "source_tree_sha256": "528f44c733ad9c0d55e23fd779f6d339757fe2db35ee2f2bf7e116e0183f7b4b",
+  "source_file_hashes": {
+    "LICENSE": "b874c49d0408b72b87638e9cab1349c12d9525e924d2e625525095430b88f449",
+    "pyproject.toml": "85b44f41c338bc3527138e01e3eb83bba6bbf61c170ef02bd92292abf414fa55",
+    "README.md": "8e1d991744d1d1b707401fa12dfbdacc2c6ef2e2a4c4afb6f57dd4317cf05a87",
+    "src/memory_bench/__init__.py": "9ea93545efdc4ff8a1c5c37ef9d6616ca37770eb7451bbdfa5ba066d5bf799eb",
+    "src/memory_bench/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+    "src/memory_bench/assets/contract.json": "2cc679a2e2627c136df457936eb10a0d18083df964363310889315cbb2b0a5fd",
+    "src/memory_bench/assets/corpus/development.json": "3a40317aa41d5d885924dc9e2331af7c9aa7bba056cb1dc9a7e84ab180478150",
+    "src/memory_bench/assets/corpus/heldout.json": "3a198c31df2d02a7ff46242d48f3bddd85b79db6eff2b9efe7e805d55fa30838",
+    "src/memory_bench/assets/corpus-schema.json": "db08f0e09b39e8a2c03b006293288806723738c6cc2e2eb81c0d6a60e0ab79a8",
+    "src/memory_bench/assets/fixtures/lifecycle.json": "51c1c48079d650ff5c44f49004e1b77930ab7c895a59e7aab2dd397e76e5a56d",
+    "src/memory_bench/assets/fixtures/native.json": "af5ab1c1389a8da4112f039612807df56b8bc7a380f42386fd6f04774a8dbeb5",
+    "src/memory_bench/assets/fixtures/scoring.json": "8933184b27527ade533b3b4e7d8faf3ab6bf8f8f4a44897df7013f7fa1742245",
+    "src/memory_bench/assets/policies/conservative.md": "c84c13d62cf8cc8fdbdc95e16d9f4572d65423e2ace9daa76d2779e89db277dc",
+    "src/memory_bench/assets/policies/recurring.md": "a1ebba539d5be75af87b9eca2a95338c8de85717e85245af640c389caf0632ff",
+    "src/memory_bench/assets/protocol/operations.md": "dc96d63bb0f872d88f662b6d782d6df1f9ee345ec43690c9c88644d9eb314153",
+    "src/memory_bench/assets/protocol/scoring.md": "67d41ae7e4b70b6cf2237f25f28d342c36daedaaaee6ab40b3aec57cc6d4890e",
+    "src/memory_bench/assets.py": "de339e17b3edaf759e0481a5aba2d5e7d11ebb208b65052cc4405b41266bb864",
+    "src/memory_bench/cli.py": "75e8115bee7153586a197fc4d9295cb141c60ff70b98a9b252429d19e29f4b96",
+    "src/memory_bench/contract.py": "278e30f90df0a8ab0ed665b23aa76fe8dbf9fb8610efc3706dc9e05ac4cf62ba",
+    "src/memory_bench/model_input.py": "45cda57104e905e09d68c0ba83d2263cf3f2455c48b4553a223c8b3e90d89ecb",
+    "src/memory_bench/validation.py": "e39bdc11e7362130321bc3e49fd4f13d7d6e71b535b259dec2cdece6c1893486",
+    "tests/conftest.py": "9897b95c892423f55fb0eb72c74e70c7aebf04c29133bd8a0a8ae08d6397018b",
+    "tests/test_contract.py": "8616395c4e6c5b47a29444d0bf4c628217e8e41d84a8bb15040139d99e2de555",
+    "tests/test_corpus.py": "e41465df40d72e4bb66823765a2de8035cee958cfabe9af818238141acd845fc",
+    "tests/test_fixtures_and_cli.py": "72f83d9beb78380c608c072f6532a667b47d55a39c0a80f54ce289bb3af6f94c",
+    "tools/build_assets.py": "0462aed84bf5e6afcce121fd39ce9314feeacd12c8276e45e3e690a6d194867e",
+    "tools/verify_portability.py": "b7c8318f4f18494d5cf44f769961c176123eff6820dcf9d9cce8062d57d97b74"
+  },
+  "validation": {
+    "asset_hashes": {
+      "contract.json": "d991db4b1a3e6222fa0f1dbf9e70b53c18b305cb497ccb25c9cc5371e81227b5",
+      "corpus-schema.json": "299acac7a3e5f3ab4654ed699408423a48dc36d9341d95d851d6ff87f4b860b9",
+      "corpus/development.json": "f6e9e95d3a33fe0bcccb0fb573c06b788af381d63dbd52326646313556f96ac5",
+      "corpus/heldout.json": "aa56e6ec4578af3b5d725c127938054cdc1b7cac7e38063c863d49d4c25e60f8",
+      "fixtures/lifecycle.json": "a18989b8cd9d4d9226635f50fd742c7f997ee31fca7b9883cb4caf86990d4d1d",
+      "fixtures/native.json": "c95e5c7798c7ac58287ada110169010be17058b6651bddea99bac6dd20d7e77f",
+      "fixtures/scoring.json": "c1805b27d42b32cfb589901fa7083f5886684ca589b3d647449aa73401aa55e6",
+      "policies/conservative.md": "c84c13d62cf8cc8fdbdc95e16d9f4572d65423e2ace9daa76d2779e89db277dc",
+      "policies/recurring.md": "a1ebba539d5be75af87b9eca2a95338c8de85717e85245af640c389caf0632ff",
+      "protocol/operations.md": "dc96d63bb0f872d88f662b6d782d6df1f9ee345ec43690c9c88644d9eb314153",
+      "protocol/scoring.md": "67d41ae7e4b70b6cf2237f25f28d342c36daedaaaee6ab40b3aec57cc6d4890e"
+    },
+    "bundle_hash": "ada6e044e3c63177d82123d78f2092cc9b1f2a47269328f5b0a571f9927ccc0b",
+    "counts": {
+      "development": {
+        "controls": 210,
+        "conversations": 270,
+        "enabled_checkpoints": {
+          "read": 90,
+          "sequence": 270,
+          "write": 195
+        },
+        "personas": 15,
+        "scripted_turns": 315
+      },
+      "heldout": {
+        "controls": 210,
+        "conversations": 270,
+        "enabled_checkpoints": {
+          "read": 90,
+          "sequence": 270,
+          "write": 195
+        },
+        "personas": 15,
+        "scripted_turns": 315
+      }
+    },
+    "hash_algorithm": "sha256; canonical JSON / LF UTF-8 text",
+    "inference_requests": 0,
+    "lifecycle_fixtures": 10,
+    "native_schema_fixtures": 4,
+    "package_version": "0.1.0",
+    "protocol": "standalone-memory-benchmark-v1",
+    "scoring_fixtures": 25,
+    "status": "valid"
+  },
+  "environment": {
+    "python": "3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]",
+    "distributions": {
+      "anyio": "4.15.1",
+      "certifi": "2026.7.22",
+      "colorama": "0.4.6",
+      "h11": "0.16.0",
+      "httpcore": "1.0.9",
+      "httpx": "0.28.1",
+      "idna": "3.20",
+      "iniconfig": "2.3.0",
+      "packaging": "26.3",
+      "pip": "25.3",
+      "pluggy": "1.6.0",
+      "Pygments": "2.21.0",
+      "pytest": "9.1.1",
+      "setuptools": "84.0.0",
+      "standalone-memory-bench": "0.1.0",
+      "typing_extensions": "4.16.0",
+      "wheel": "0.48.0"
+    },
+    "requires_python": ">=3.10",
+    "requirements": [
+      "httpx<1,>=0.27",
+      "pytest<10,>=8; extra == \"test\""
+    ],
+    "openworker_available": false
+  },
+  "tests": {
+    "passed": 110,
+    "installed_wheel": true,
+    "source_path_disabled": true,
+    "network_guard": true,
+    "openworker_import_guard": true,
+    "pytest_summary": "110 passed in 14.46s"
+  },
+  "wheel_sha256": "bc03c4ff2a41eb4f7af9700ea82e96a62849012b1974b050c729e01b86a607b9",
+  "portability_command": "python tools/verify_portability.py --wheelhouse build/wheelhouse",
+  "installation_network": false,
+  "inference_requests": 0,
+  "historical_source_preservation": {
+    "conversations": 150,
+    "scripted_messages": 195,
+    "exact": true
+  },
+  "python_310_syntax_files": 13,
+  "limitations": [
+    "Python 3.10 syntax-only verification; runtime acceptance on Python 3.14.2",
+    "Declared fixtures are not store/scorer/adapter execution acceptance",
+    "Fixed key/value aliases may miss valid equivalent forms",
+    "Phases 2-5 not started"
+  ]
+}
