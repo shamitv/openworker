@@ -1,4 +1,4 @@
-"""Phase 1 CLI: no network, credential loading, store or inference commands."""
+"""Offline asset validation CLI. Store and scoring execution have Python APIs."""
 
 from __future__ import annotations
 

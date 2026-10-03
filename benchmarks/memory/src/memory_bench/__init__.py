@@ -1,3 +1,3 @@
-"""Standalone memory benchmark. Phase 1 implements contracts and validation only."""
+"""Standalone memory benchmark contracts, SQLite operations and offline scoring."""
 
 __version__ = "0.1.0"

@@ -1,9 +1,9 @@
 # Standalone memory benchmark
 
-Phase 1 ships versioned contracts, policies, expanded synthetic corpora, expected
-scoring fixtures and offline validation. Store, scoring execution, model adapters,
-live commands and instruction variants belong to later phases. No inference is
-performed by this package version.
+Phases 1 and 2 ship versioned contracts, policies, expanded synthetic corpora,
+offline validation, an independent SQLite store, a shared operation dispatcher
+and deterministic scoring. Model adapters, live commands and instruction variants
+belong to later phases. This package version performs no inference.
 
 Copy this entire directory anywhere, then install and validate it independently:
 
@@ -15,8 +15,8 @@ python -m memory_bench validate
 python -m pytest -c pyproject.toml --confcutdir=tests
 ```
 
-Python 3.10+ is supported. `httpx` is the sole runtime dependency; the Phase 1
-validator uses only the standard library. Tests require `pytest`. Validation and
+Python 3.10+ is supported. `httpx` is the sole runtime dependency; validation,
+storage and scoring use only the standard library. Tests require `pytest`. Validation and
 tests use no network or OpenWorker installation. Package installation may require
 an available package index or a local wheelhouse. `memory-bench validate` is also
 available after installation. All runtime resources are read with
@@ -77,15 +77,96 @@ prepared snapshot; they expect no mutations. Sequence runs execute all messages,
 starting with empty owner memory and explicit peer-only fixture controls. Follow-ups
 retain only their current conversation's messages. No sequence checkpoint is seeded
 with expected owner facts. Annotated sequence states describe policy-conforming
-outcomes; the future runner/scorer must use actual state and mark absent correction
+outcomes; the scorer uses actual state and marks absent correction
 or deletion prerequisites unexercised, never seed or manufacture them.
 Current-state annotations describe the owner's progression; peer-only checkpoints
 have `storage_scored=false` and report namespace/recall controls separately. Peer
 fixtures never earn storage TP/FP credit. Every scoring fixture identifies its track.
 
-Scoring fixtures contain declarations of expected results, not a working scorer.
-Lifecycle fixtures validate declarative traces, not a store or HTTP adapter. Native
-fixtures freeze envelope/argument examples; execution parity is a Phase 3 gate.
+All 25 scoring fixtures now execute the scorer. Additional deterministic tests run
+the corpus's annotated decisions through SQLite and the dispatcher for both policies
+and all three tracks in both splits. These synthetic scripted tests verify the
+infrastructure; they do not measure a model. Lifecycle fixtures still validate
+declarative traces. Native adapter execution parity is a Phase 3 gate.
+
+## Store, dispatcher and scoring APIs
+
+`MemoryStore(path)` supports `seed(records)`, `snapshot()`, `selected(user_id,
+workspace_id)` and context-manager/close/reopen use. Seeding initializes an empty
+store once, preserves supplied IDs and validates the entire snapshot before writing.
+New IDs are monotonic, including after deletion and reopening. `selected` returns
+the same projected records used by `build_model_input`.
+
+`OperationDispatcher(store, OperationContext(user_id, workspace_id,
+conversation_id), permission_reply=None)` supplies `dispatch(operation)` and
+`dispatch_batch(operations)`. Its `events` property returns detached, ordered
+operation/context/result evidence. A contract error returns the frozen error
+envelope. SQLite/I/O failures are recorded as infrastructure errors and raised.
+Permission calls expose the scripted reply only when invoked, default to denial,
+and do not mutate memory. The dispatcher executes policy violations so they remain
+measurable. Each successful mutation commits independently.
+
+`create_checkpoint_store(path, persona, conversation, policy, track)` requires a
+new path and chooses the annotated write/read snapshot or sequence peer controls.
+Create a sequence store once; subsequent conversations share it. At a restart,
+close it and use `reopen_sequence_store(path)`. The helpers never seed expected owner
+facts into sequence state. The caller owns condition/persona/repetition file paths
+and must use separate files for independent runs.
+
+`checkpoint_evidence(...)` validates and copies a version-1 JSON-serializable
+capture. It requires `condition`, `track`, `starting_records`, `final_records`,
+`turns`, `status` and optional `errors`. Missing snapshots are `None`. Each turn is:
+
+```python
+{
+    "message_index": 0,
+    "answer": "the final answer for this user turn",  # None when unavailable
+    "status": "complete",  # otherwise the recorded failure reason
+    "operations": dispatcher.events,
+}
+```
+
+Only final answers belong in `answer`; provisional text stays in the future
+runner's raw diagnostics. Each turn's operations contain only that turn's events.
+Indices must be unique and ordered. A completed checkpoint must have a nonempty
+completed final answer for every scheduled user turn. `status="unexecuted"` keeps
+coverage visible without earning storage credit. C5's message 0 answer is scored
+for recall while message 1 changes final storage.
+
+`score_checkpoint(persona, conversation, policy, track, evidence)` returns detached
+JSON data containing policy storage counts, full-state/preservation checks, scope,
+duplicates, unnecessary/temporary saves, consent, correction/forgetting controls,
+per-field answer matches, common outcomes, errors and the raw snapshots.
+`aggregate_scores(case_scores)` groups by condition, policy and track, combining
+personas/repetitions and summing counts before division. It retains every case,
+null denominator, failed/unexecuted checkpoint and unexercised control. Aggregate
+answer matches, common targets, consent and correction/forgetting have independent
+denominators. No percentage averaging or cross-track pooling occurs.
+
+Common `fact_presence` measures whether fixed behavioral targets are present in
+full current state; it is a target-recall diagnostic, not new-save credit. Read
+seeds receive no save credit. Write scores first remove unchanged prior facts
+one-to-one, including accepted aliases and row-ID churn. History-only changes are
+excluded from new-write scoring but included in read-mutation and retirement checks.
+`unnecessary_saves` lists unmatched scored records, including duplicates and facts
+under an incorrect key/scope; raw records explain these false positives.
+
+Correction reports correct-current-value presence, obsolete-current retirement,
+historical retirement and combined strict retirement separately. Policy conformance
+permits historical explanations during correction, while requiring obsolete active
+current copies to be corrected. Forgetting searches all owner keys/workspaces and
+history. Absent pre-control prerequisites produce null/unexercised controls.
+Forbidden saves and sensitive writes are inspected in the operation trace even if
+later deleted. Consent must precede a successful write and match its exact
+key/value/scope in the current user/workspace/conversation. An explicit sensitive
+remember request needs no permission call; re-asking fails conformance. Unnecessary
+questions in `not_required` cases are reported separately.
+
+Committed snapshots remain scorable after execution failure, but failed cases
+cannot pass policy conformance. Missing state evidence remains unscorable. Answers
+require the requested labels exactly once, one per line, with literal `UNKNOWN`
+for unavailable fields. Exclusions scan the entire answer, and preference format
+and reason have separate matches.
 
 ## Matching and provenance
 
@@ -98,7 +179,10 @@ the future reports must show that limitation and retain raw unmatched records.
 
 `validate` prints counts, individual SHA-256 asset hashes and a bundle hash. JSON
 hashes use sorted-key compact UTF-8 JSON; Markdown hashes use LF-normalized UTF-8.
-Collection and scorer revisions must remain separately identifiable in later phases.
+`memory_bench.provenance.scorer_provenance()` returns the independent scorer revision,
+SHA-256, implementation source hashes and frozen asset hashes. Source/text hashes
+normalize line endings; JSON uses canonical encoding. Collection provenance remains
+separate when replay is implemented.
 
 To maintain the checked-in, fully expanded assets, the optional authoring tool accepts
 an explicit historical source path:
@@ -120,4 +204,5 @@ python tools/verify_portability.py --wheelhouse /path/to/wheelhouse
 The helper copies this directory, creates a clean environment, builds and installs
 the wheel with `--no-index`, runs guarded validation from an unrelated working
 directory, and tests the installed wheel with the source-path override disabled.
-Reports and owned verification environments remain in the ignored `build` directory.
+Reports include the installed scorer hash. Owned verification environments remain
+in the ignored `build` directory.

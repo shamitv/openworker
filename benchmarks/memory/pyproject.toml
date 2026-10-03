@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "standalone-memory-bench"
 version = "0.1.0"
-description = "Portable synthetic memory benchmark contracts and offline corpus validation"
+description = "Portable synthetic memory benchmark with SQLite operations and deterministic scoring"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
