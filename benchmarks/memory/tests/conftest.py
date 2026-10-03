@@ -18,7 +18,7 @@ def forbid_runtime_network_and_openworker(monkeypatch):
         return original(name, *args, **kwargs)
 
     def forbidden(*args, **kwargs):
-        raise AssertionError("Phase 1 attempted network access")
+        raise AssertionError("offline benchmark attempted network access")
 
     monkeypatch.setattr(builtins, "__import__", guarded_import)
     monkeypatch.setattr(socket, "create_connection", forbidden)
