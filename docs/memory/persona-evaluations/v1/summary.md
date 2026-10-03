@@ -32,15 +32,31 @@ This report summarizes existing evidence. Preparing it made no new inference req
 
 An automatic-save success requires matching persisted memory before the blind probe and no consent question during C1/C2. Global scope is checked separately: a fact embedded in a temporary workspace note can pass storage and recall while failing the scope check.
 
-## Failures and observed behavior
+## What worked and what did not with the local LLM
 
+These observations describe the local Ornith model under the existing OpenWorker memory guidance, with one run per persona.
+
+### What worked
+
+- **Explicit remembering stored the requested facts:** context, preference format, preference reason and notebook label were saved for all **15/15 personas**. Correct global scope is a separate measure.
+- **Saved memory was usable in fresh chats:** after explicit remembering, C6 recalled the original context and A heading for **15/15 personas**. A headings were saved with correct workspace scope for **15/15**; B headings for **14/15**.
+- **Recall continued after restart:** the corrected context was recalled for **13/15 personas**, and the A heading for **15/15**. Notebook forgetting plus an UNKNOWN answer survived restart for **12/15**.
+- **The hosted memory path and account boundaries worked:** all 150 conversations passed fresh-session, routing and injection checks. Owner controls stayed out of the peer's memories, tools and answer, and the peer was denied access to the owner's workspace for **15/15**. These are application isolation results. API failures, turn errors and timeouts were zero.
+
+### What did not
+
+- **Natural context was not reliably remembered automatically:** save plus fresh-chat recall succeeded for **5/15 personas**, including some workspace notes. P01's Grade 8 CBSE anchor failed. Automatic preference-format and preference-reason save plus recall each succeeded for **3/15**.
+- **Global scope was inconsistent:** all matching early context rows were correctly global for **2/15 personas**; after explicit global instructions, this rose to **10/15**. Older workspace-scoped copies can fail this check even when a new global row is correct.
+- **Correction often retained the original wording:** strict removal passed for **3/15**. This includes failures caused by historical or negated references such as “updated from Grade 8”; it does not mean only three personas recalled the new value. Corrected recall after restart passed for **13/15**.
 - **Temporary information persisted:** five saved rows across four personas contained labels intended only for a draft.
 - **Forgetting missed another copy:** P07 deleted its notebook entry, but the label remained inside its workspace-heading entry and was recalled in B.
 - **Workspace selection was overridden in an answer:** P11 received correct injected memory, then read account-wide entries and mentioned both workspace headings as a conflict.
 - **Three visible consent questions** were recorded; structured consent questions were zero.
 - **Two tool failures** occurred: an update referenced a missing memory ID, and an output limit truncated a tool call.
 - **Thirteen `todo_write` calls** violated the memory-only prompt. They required no approval.
-- Five duplicate active fact matches were recorded. Turn errors, API failures, timeouts and missing labelled probe fields were zero.
+- Five duplicate active fact matches were recorded.
+
+Overall, the local model handled explicit memory requests and later retrieval better than automatic selection of durable facts. Scope selection, temporary-detail exclusion, complete forgetting and adherence to the memory-only instruction remained uneven. Storage, recall, scope and deletion should be judged separately.
 
 ## Performance and environment
 
