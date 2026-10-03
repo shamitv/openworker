@@ -1,10 +1,11 @@
 import copy
 import json
+import re
 import sqlite3
 
 import pytest
 
-from memory_bench.assets import canonical_json, load_json
+from memory_bench.assets import asset_hashes, canonical_json, load_json
 from memory_bench.checkpoints import checkpoint_evidence
 from memory_bench.matching import matches_record, matches_value, normalize
 from memory_bench.operations import OperationContext, OperationDispatcher
@@ -356,11 +357,13 @@ def test_aggregation_keeps_tracks_conditions_nulls_and_errors():
     assert read_group["coverage"]["storage_unscored"] == 1
 
 
-def test_provenance_and_evidence_are_stable_detached_and_serializable():
+def test_provenance_and_evidence_are_stable_detached_and_serializable(required_asset_names):
     hashes = scorer_provenance()
     assert hashes == scorer_provenance()
     assert len(hashes["sha256"]) == 64
-    assert len(hashes["asset_hashes"]) == 11
+    assert required_asset_names <= hashes["asset_hashes"].keys()
+    assert hashes["asset_hashes"] == asset_hashes()
+    assert all(re.fullmatch(r"[a-f0-9]{64}", value) for value in hashes["asset_hashes"].values())
     p = persona()
     c = p["conversations"][0]
     before = [fact_row(p, "original")]

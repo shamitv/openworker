@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 import sys
 
 import pytest
@@ -84,10 +85,31 @@ def test_invalid_scoring_fixture_declarations(change):
         validate_scoring_fixtures(data)
 
 
-def test_hashes_are_stable_and_json_canonicalization_is_order_independent():
+def test_hashes_are_stable_and_json_canonicalization_is_order_independent(required_asset_names):
     assert asset_hashes() == asset_hashes()
     assert canonical_json({"b": 2, "a": 1}) == canonical_json({"a": 1, "b": 2})
-    assert len(asset_hashes()) == 11
+    hashes = asset_hashes()
+    assert required_asset_names <= hashes.keys()
+    assert all(re.fullmatch(r"[a-f0-9]{64}", value) for value in hashes.values())
+
+
+def test_asset_manifest_and_scorer_provenance_include_new_assets(tmp_path, monkeypatch):
+    from memory_bench import assets
+    from memory_bench.provenance import scorer_provenance
+
+    bundled = tmp_path / "assets"
+    bundled.mkdir()
+    (bundled / "contract.json").write_text('{"test": true}', encoding="utf-8")
+    monkeypatch.setattr(assets, "files", lambda name: tmp_path)
+    before = scorer_provenance()
+    variants = bundled / "instructions"
+    variants.mkdir()
+    (variants / "new-variant.md").write_text("New instruction\n", encoding="utf-8")
+    after = scorer_provenance()
+    assert set(after["asset_hashes"]) == {"contract.json", "instructions/new-variant.md"}
+    assert after["asset_hashes"] == asset_hashes()
+    assert before["sha256"] != after["sha256"]
+    assert before["source_hashes"] == after["source_hashes"]
 
 
 @pytest.mark.parametrize("name", ["../corpus/development.json", "/contract.json", "corpus\\development.json", "corpus//development.json"])

@@ -34,3 +34,10 @@ def development():
 @pytest.fixture
 def heldout():
     return load_json("corpus/heldout.json")
+
+
+@pytest.fixture
+def required_asset_names():
+    return {"contract.json", "corpus-schema.json", "corpus/development.json", "corpus/heldout.json",
+            "policies/conservative.md", "policies/recurring.md", "protocol/operations.md",
+            "protocol/scoring.md", "fixtures/scoring.json", "fixtures/lifecycle.json", "fixtures/native.json"}
