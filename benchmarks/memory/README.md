@@ -1,9 +1,10 @@
 # Standalone memory benchmark
 
-Phases 1 and 2 ship versioned contracts, policies, expanded synthetic corpora,
-offline validation, an independent SQLite store, a shared operation dispatcher
-and deterministic scoring. Model adapters, live commands and instruction variants
-belong to later phases. This package version performs no inference.
+The package ships versioned contracts, policies, expanded synthetic corpora,
+offline validation, an independent SQLite store, deterministic scoring, direct
+local HTTP collection through JSON/native interfaces, and six instruction variants.
+Only explicit `smoke` and `run` commands perform inference. Phase 5 evaluation is
+a separate gate and is not run as part of installation or validation.
 
 Copy this entire directory anywhere, then install and validate it independently:
 
@@ -195,7 +196,7 @@ hashes use sorted-key compact UTF-8 JSON; Markdown hashes use LF-normalized UTF-
 `memory_bench.provenance.scorer_provenance()` returns the independent scorer revision,
 SHA-256, implementation source hashes and frozen asset hashes. Source/text hashes
 normalize line endings; JSON uses canonical encoding. Collection provenance remains
-separate when replay is implemented.
+separate from each replay's scoring provenance.
 
 To maintain the checked-in, fully expanded assets, the optional authoring tool accepts
 an explicit historical source path:
@@ -222,3 +223,56 @@ in the ignored `build` directory.
 On failure, command diagnostics are saved under `build/portability-reports` before
 the current invocation's disposable directory is removed. Cleanup failures are
 reported alongside the original error; previous verification directories are retained.
+
+
+## Collection, replay and reports
+
+Live actions require an explicit local `--base-url`, exact advertised `--models`,
+and a new `--output` directory. Use a loopback/private IP or localhost, with an
+empty root path or `/v1`. Public endpoints, provider routes, redirects, inherited
+credentials, environment proxies and automatic retries are refused. No `.env` is
+loaded. Requests are sequential and have no auxiliary inference calls.
+
+```sh
+python -m memory_bench smoke --base-url http://10.42.0.202:8090/v1 --models Ornith-1.5-35B-Uncensored-Q6_K --output /tmp/memory-bench-smoke-attempt-01
+python -m memory_bench run --base-url http://127.0.0.1:8000/v1 --models exact-advertised-id --output /tmp/memory-bench-development-01 --dataset development --policies conservative recurring --prompts baseline rules examples --interfaces json native --tracks write read sequence --runs 1
+python -m memory_bench replay --input /tmp/memory-bench-smoke-attempt-01 --output /tmp/memory-bench-rescore-01
+python -m memory_bench report --input /tmp/memory-bench-smoke-attempt-01 --output /tmp/memory-bench-report-01
+```
+
+`smoke` fixes development P01, both policies' baseline instructions, both interfaces,
+all three tracks and one repetition: twelve track runs, 148 checkpoints and 172 user
+turns. It accepts one advertised model and rejects coverage overrides. `run` requires
+every factor selection explicitly; only `--runs` defaults to one. Both dataset
+splits and all named policies/prompts/interfaces/tracks are supported. No full
+held-out run is implied by implementing or completing a smoke.
+
+Both adapters use the same ordered operation lifecycle: text accompanying operations
+is provisional, operation errors are returned without repair, and only a nonempty
+answer without operations is final. A turn permits six operation batches plus one
+final-answer request and at most seven requests, with a 180-second total deadline.
+Submitted wire settings are temperature=0, reasoning_effort=low, max_tokens=2048,
+stream=false. Unsupported settings fail visibly; server-effective settings remain
+null when the server does not report them. Successfully committed writes survive
+later errors. Fresh conversations receive only current context, selected memory
+and the new user message; only current-conversation follow-ups retain history.
+
+Outputs contain manifest.json, append-only diagnostics.jsonl and checkpoints.jsonl,
+results.json, and report.md. The manifest freezes source/asset hashes, requested and
+actual schedules, settings, request usage/timings, coverage and cleanup. Interrupted
+or failed runs retain partial evidence and explicit unexecuted checkpoints. Disposable
+SQLite files are removed after snapshots are captured. Keep raw output outside Git.
+Only reviewed results.json and report.md belong in published synthetic findings.
+
+Reports keep policy conformance, common outcomes and the three tracks separate,
+retain case evidence and denominators, and show null for unavailable usage/empty
+ratios. Model/format/tool failures remain measured outcomes; unresolved routing,
+configuration, API, store or cleanup failures produce a failed infrastructure gate.
+A complete collection does not imply correct model answers or memory decisions.
+
+`replay` and `report` perform zero inference. Replay preserves collection provenance
+and appends scoring provenance, refusing a different corpus, contract or lifecycle.
+Reports remove headers, raw requests/responses, private paths and raw error messages;
+full diagnostics remain in the original private output. The six instruction variants
+are bundled and hashed. Rules/examples retain their complete baseline policy;
+examples have explicit development P02 sources and contain no held-out examples.
