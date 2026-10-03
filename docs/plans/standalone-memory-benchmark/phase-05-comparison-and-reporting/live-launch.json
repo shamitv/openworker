@@ -1,0 +1,38 @@
+{
+  "phase": 5,
+  "attempt": "heldout-attempt-01",
+  "status_at_recording": "running",
+  "started_at_unix": 1791029079.02329,
+  "source_revision": "14964e4",
+  "accepted_at_revision": "83a701b",
+  "wheel_sha256": "671768c23ec356d74695f11b731900b4375eb69e8ab121257de0eeb9712aa905",
+  "collection_sha256": "4f417fd9a4ea45cbc0246ee8afda6baa98b23e87ddacdef795dac7acf0877253",
+  "scorer_sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+  "reporting_sha256": "9b162ef7340457b6df43a2682ea6746e3739f532edab20357bccc05f2d813df8",
+  "initial_schedule_sha256": "dfb39db1ed13de098888c0aac897cf25392a7cbbd680900979dd973e971c9d59",
+  "command": {
+    "executable": "benchmarks/memory/build/portability-ytaar7zd/env/Scripts/python.exe",
+    "arguments": [
+      "-I", "-m", "memory_bench", "run",
+      "--base-url", "http://10.42.0.202:8090/v1",
+      "--models", "Ornith-1.5-35B-Uncensored-Q6_K",
+      "--dataset", "heldout",
+      "--policies", "conservative", "recurring",
+      "--prompts", "baseline", "rules", "examples",
+      "--interfaces", "json", "native",
+      "--tracks", "write", "read", "sequence",
+      "--runs", "1",
+      "--output", "<OS temporary directory>/memory-bench-heldout-20261003-attempt-01"
+    ],
+    "cwd": "benchmarks/memory/build/portability-ytaar7zd/unrelated-cwd",
+    "private_output_root_redacted": true
+  },
+  "execution": "managed terminal session",
+  "terminal_session_id": 1333,
+  "catalog_rechecked": true,
+  "selected_advertised_id": "Ornith-1.5-35B-Uncensored-Q6_K",
+  "cleanup_at_recording": "pending",
+  "gate_passed": null,
+  "gate_note": "Collection is running; final accounting, replay, reviewed export, cleanup and normal push remain required.",
+  "launch_note": "The detached Windows launch was rejected by tool policy before execution; no inference occurred. The direct managed CLI then started the one recorded attempt."
+}
