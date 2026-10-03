@@ -4,13 +4,13 @@
 
 Measure how local models and instructions select, store, correct, forget and recall memory through a self-contained benchmark. Compare model behavior with instructions fixed, instruction wording within one policy, and the effects of different memory policies.
 
-Build the future package under `benchmarks/memory`. It must work after copying that directory to another machine and installing its own dependencies. Runtime dependencies are Python 3.10+ and `httpx`; deterministic tests use `pytest`. The package calls the model endpoint directly and owns its memory store, operation loop and scorer.
+The package lives under `benchmarks/memory` and works after copying that directory and installing its own dependencies. Runtime dependencies are Python 3.10+ and `httpx`; deterministic tests use `pytest`. The package calls the model endpoint directly and owns its memory store, operation loop and scorer.
 
 ## Planning delivery and current progress
 
 Planning date: 2026-10-03 (Asia/Kolkata). Branch: `codex/standalone-memory-benchmark`, created from `feat/headless-vm-ui-serving` at `01f7ec8d89578ef98f6afec24033d78b600377a5`.
 
-This delivery consists of planning documents. Every implementation phase starts **Not started**, with unchecked tasks. Creating and publishing these documents completes the planning deliverable; implementation, deterministic checks and live evidence are required to complete the phases.
+The original planning delivery marked all phases **Not started**. Implementation progress on 2026-10-03 now completes **Phases 1–4**, including source/isolated-wheel acceptance and the bounded P01 smoke. The [Phase 4 status](phase-04-experiments-and-smoke/status.md) retains both explicit smoke attempts and their model/infrastructure outcomes. **Phase 5 remains Not started** and requires a later explicit request.
 
 The existing [hosted corpus](../../../tests/fixtures/memory/personas_v1.json) and [local-model findings](../../memory/persona-evaluations/v1/summary.md) are development references. The earlier benchmark scripts import OpenWorker components and do not establish standalone acceptance. Their results remain historical evidence under different protocols.
 
@@ -72,9 +72,9 @@ Phases depend on their predecessors. A phase is complete only after its acceptan
 
 ## Planned CLI and experiment matrix
 
-The future package provides `validate`, `smoke`, `run`, `replay` and `report`. These commands are planned interfaces, not implemented by this documentation delivery.
+The implemented package provides `validate`, `smoke`, `run`, `replay` and `report`; see its [README](../../../benchmarks/memory/README.md) for command usage. Replay and report make no inference calls.
 
-Live commands require `--base-url`, `--models` and a new `--output` directory. Full runs support dataset, policy, prompt, interface and track selection plus `--runs`. Use names `development`/`heldout`, `conservative`/`recurring`, `baseline`/`rules`/`examples`, `json`/`native` and `write`/`read`/`sequence` consistently in CLI arguments and reports.
+Live commands require `--base-url`, `--models` and a new `--output` directory. Full runs require explicit dataset, policy, prompt, interface and track selections; `--runs` defaults to one. Use names `development`/`heldout`, `conservative`/`recurring`, `baseline`/`rules`/`examples`, `json`/`native` and `write`/`read`/`sequence` consistently in CLI arguments and reports.
 
 The matrix is `model × policy × prompt variant × interface × persona × repetition`; report each evaluation track separately. Scheduling is sequential, reproducible and recorded. Compare models with all other factors fixed; compare wording within a model and policy; compare policy outcomes explicitly. A result describes a model/instruction combination and does not establish a prompt-independent model ranking.
 

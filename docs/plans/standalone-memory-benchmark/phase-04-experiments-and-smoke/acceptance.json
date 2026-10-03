@@ -1,0 +1,405 @@
+{
+  "asset_bundle_sha256": "37673a35e7bcf37058d705133e75ab676ef73345fbc49c6a9e13284161ae24bf",
+  "date": "2026-10-03",
+  "deterministic_acceptance": {
+    "environment": {
+      "Pygments": "2.21.0",
+      "anyio": "4.15.1",
+      "certifi": "2026.7.22",
+      "colorama": "0.4.6",
+      "h11": "0.16.0",
+      "httpcore": "1.0.9",
+      "httpx": "0.28.1",
+      "idna": "3.20",
+      "iniconfig": "2.3.0",
+      "packaging": "26.3",
+      "pip": "25.3",
+      "pluggy": "1.6.0",
+      "pytest": "9.1.1",
+      "setuptools": "84.0.0",
+      "standalone-memory-bench": "0.1.0",
+      "typing_extensions": "4.16.0",
+      "wheel": "0.48.0"
+    },
+    "inference_requests": 0,
+    "installed_wheel": {
+      "command": "C:\\work\\openworker\\.venv\\Scripts\\python.exe tools/verify_portability.py --wheelhouse build/wheelhouse",
+      "cwd": "benchmarks/memory",
+      "installation_network": false,
+      "openworker_available": false,
+      "passed": 345,
+      "private_report": "benchmarks/memory/build/portability-w2w3ltrh/report.json",
+      "seconds": 219.45,
+      "source_fallback": false,
+      "wheel_sha256": "5ab19722e0dfeba5befc73064ea5410aea8b91c6f42489650a1e865d6fc03c7c"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.2",
+    "record": "../phase-03-model-runner/followup-acceptance.json",
+    "source": {
+      "command": "C:\\work\\openworker\\.venv\\Scripts\\python.exe -m pytest -c pyproject.toml --confcutdir=tests --basetemp build/phase34-source-acceptance-03 -q -p no:cacheprovider",
+      "cwd": "benchmarks/memory",
+      "passed": 345,
+      "plugin_autoload": false,
+      "seconds": 220.4
+    }
+  },
+  "evidence_git_revision": "8170491d27644ebe3152b9e4b07bb62a6e9d8cf3",
+  "implementation_revision": "f42305ea73f5af034026b29745c0de25b15310b4",
+  "limitations": [
+    "P01 development baseline smoke only; no model/policy superiority or held-out comparison.",
+    "70 measured model format failures and 12 unexecuted follow-up turns remain in evidence.",
+    "Gold labels and requested settings were not changed after observing results.",
+    "Lexical matching can miss paraphrases; null denominators and unexercised controls remain explicit.",
+    "Collection used the frozen accepted 70962bb wheel; final connection-timeout classification was independently retested in f42305e.",
+    "Private output directory roots are redacted; exact directory labels, command arguments and working-directory locations are retained."
+  ],
+  "offline_replay_report": [
+    {
+      "action": "replay",
+      "command": {
+        "arguments": [
+          "-I",
+          "-m",
+          "memory_bench",
+          "replay",
+          "--input",
+          "<OS temporary directory>/memory-bench-smoke-20261003-attempt-02",
+          "--output",
+          "<OS temporary directory>/memory-bench-smoke-20261003-attempt-02-replay-01"
+        ],
+        "cwd": "benchmarks/memory/build/portability-w2w3ltrh/unrelated-cwd",
+        "executable": "benchmarks/memory/build/portability-w2w3ltrh/env/Scripts/python.exe",
+        "private_output_paths_redacted": true
+      },
+      "condition_scores_identical": true,
+      "current_scoring_sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+      "exit_code": 0,
+      "inference_requests": 0,
+      "original_collection_provenance_preserved": true,
+      "original_scoring_provenance_preserved": true,
+      "wheel_sha256": "5ab19722e0dfeba5befc73064ea5410aea8b91c6f42489650a1e865d6fc03c7c"
+    },
+    {
+      "action": "report",
+      "command": {
+        "arguments": [
+          "-I",
+          "-m",
+          "memory_bench",
+          "report",
+          "--input",
+          "<OS temporary directory>/memory-bench-smoke-20261003-attempt-02",
+          "--output",
+          "<OS temporary directory>/memory-bench-smoke-20261003-attempt-02-report-01"
+        ],
+        "cwd": "benchmarks/memory/build/portability-w2w3ltrh/unrelated-cwd",
+        "executable": "benchmarks/memory/build/portability-w2w3ltrh/env/Scripts/python.exe",
+        "private_output_paths_redacted": true
+      },
+      "condition_scores_identical": true,
+      "current_scoring_sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+      "exit_code": 0,
+      "inference_requests": 0,
+      "original_collection_provenance_preserved": true,
+      "original_scoring_provenance_preserved": true,
+      "wheel_sha256": "5ab19722e0dfeba5befc73064ea5410aea8b91c6f42489650a1e865d6fc03c7c"
+    }
+  ],
+  "phase": 4,
+  "phase_5": {
+    "heldout_inference_requests": 0,
+    "requires_later_explicit_request": true,
+    "status": "not_started"
+  },
+  "requested_settings": {
+    "max_tokens": 2048,
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0
+  },
+  "server_effective_settings": null,
+  "smoke_attempts": [
+    {
+      "attempt": "01",
+      "cleanup": {
+        "removed_files": 1,
+        "status": "complete"
+      },
+      "collection": {
+        "provenance": "../../../memory/standalone-evaluations/phase04-smoke/attempt-01/results.json",
+        "revision": "standalone-memory-runner-v1",
+        "sha256": "7115578ae74737065e0000d4ee9db0ae3c99268543e7e55bcad92a1506421869"
+      },
+      "collection_scoring": {
+        "asset_hashes": {
+          "contract.json": "d991db4b1a3e6222fa0f1dbf9e70b53c18b305cb497ccb25c9cc5371e81227b5",
+          "corpus-schema.json": "299acac7a3e5f3ab4654ed699408423a48dc36d9341d95d851d6ff87f4b860b9",
+          "corpus/development.json": "8cf19742ff549be73a6be7a8ae88e28b39a0da5129c916b1cfac4dcd5bcce199",
+          "corpus/heldout.json": "aa56e6ec4578af3b5d725c127938054cdc1b7cac7e38063c863d49d4c25e60f8",
+          "fixtures/lifecycle.json": "a18989b8cd9d4d9226635f50fd742c7f997ee31fca7b9883cb4caf86990d4d1d",
+          "fixtures/native.json": "c95e5c7798c7ac58287ada110169010be17058b6651bddea99bac6dd20d7e77f",
+          "fixtures/scoring.json": "c1805b27d42b32cfb589901fa7083f5886684ca589b3d647449aa73401aa55e6",
+          "instruction-sources.json": "cdea4ad37533bc9a715188aafe62b83a89eac00fdbd2def8151671576dfddc70",
+          "instructions/conservative-baseline.md": "c84c13d62cf8cc8fdbdc95e16d9f4572d65423e2ace9daa76d2779e89db277dc",
+          "instructions/conservative-examples.md": "6e301b4c623e9d8be26f1715f65ea859f8d31c8afb80ad5816c8e60ab05be808",
+          "instructions/conservative-rules.md": "2bab9f3579e204345e37854db44c67afd6718bc57778a15ea6f207df617636c8",
+          "instructions/recurring-baseline.md": "a1ebba539d5be75af87b9eca2a95338c8de85717e85245af640c389caf0632ff",
+          "instructions/recurring-examples.md": "eefe9f903345b4619318ea5451cbff3113f116e4d3a5a840155498419f285aaa",
+          "instructions/recurring-rules.md": "7918e050ab8742e40361301cdff7c8dd8a825606a9e1f5a573c22df5f301db43",
+          "policies/conservative.md": "c84c13d62cf8cc8fdbdc95e16d9f4572d65423e2ace9daa76d2779e89db277dc",
+          "policies/recurring.md": "a1ebba539d5be75af87b9eca2a95338c8de85717e85245af640c389caf0632ff",
+          "protocol/operations.md": "dc96d63bb0f872d88f662b6d782d6df1f9ee345ec43690c9c88644d9eb314153",
+          "protocol/scoring.md": "58aae0c8376856d74ce5d38b59a0384a1a04dc8a595a8014565fb3d3fb1bb592"
+        },
+        "hash_algorithm": "sha256; LF UTF-8 source/text and canonical JSON assets",
+        "revision": "standalone-memory-scorer-v1",
+        "sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+        "source_hashes": {
+          "assets.py": "d6f67563c352e3761a843c2a5459f3fbcd125641973bc25b65c4bc07baf6bd47",
+          "checkpoints.py": "c71c09da12344333ff7c7836ad310ba0f5ddef6fad8117c62c8a9f10e2cf35ca",
+          "contract.py": "278e30f90df0a8ab0ed665b23aa76fe8dbf9fb8610efc3706dc9e05ac4cf62ba",
+          "matching.py": "594d54b0775de32a1e2359acc2b6c8467b1223cbee59b0923478caaf12c4d1fb",
+          "model_input.py": "79d1a7c5ab5a9f245efaff912356f92f750fea5b66029ffa676210b77d18107d",
+          "operations.py": "e26f2f6196e141c079081a657f557619bcfc8d44627d1220066a49737d7440c6",
+          "provenance.py": "e74a28ddf703630b5e8f9118dedcf2cc19e39ef286e69ddb72e01eee3fe76074",
+          "scoring.py": "e9776958aec16404e66660b49165217fe2fc48b400161fe2eb21fe1c2a654cde",
+          "store.py": "8784dcb3b12b4992dff37289c352f711f7cf70c2cd7cec18bc979f24c8aed73f"
+        }
+      },
+      "command": {
+        "arguments": [
+          "-I",
+          "-m",
+          "memory_bench",
+          "smoke",
+          "--base-url",
+          "http://10.42.0.202:8090/v1",
+          "--models",
+          "Ornith-1.5-35B-Uncensored-Q6_K",
+          "--output",
+          "<OS temporary directory>/memory-bench-smoke-20261003-attempt-01"
+        ],
+        "cwd": "benchmarks/memory/build/portability-73icm2hk/unrelated-cwd",
+        "executable": "benchmarks/memory/build/portability-73icm2hk/env/Scripts/python.exe",
+        "output_path_redacted": true
+      },
+      "coverage": {
+        "checkpoints": 148,
+        "completed": 0,
+        "failed": 1,
+        "track_runs": 12,
+        "unexecuted": 147
+      },
+      "failure": "HTTP 500 from server template rejecting two system messages; aborted without retry/fallback. Retained earlier evidence.",
+      "finished_at_unix": 1791021252.2788,
+      "gate_passed": false,
+      "git_revision": "2649a7d7f8d0a458e5b1cfecac0ccdf48d64b4e8",
+      "infrastructure_errors": [
+        {
+          "code": "api_error",
+          "type": null
+        }
+      ],
+      "requests": {
+        "catalog_requests": 1,
+        "cost": null,
+        "failed_requests": 1,
+        "inference_requests": 1,
+        "missing_usage_requests": 1,
+        "upstream_seconds": 0.04161640000529587,
+        "usage": {
+          "completion_tokens": null,
+          "completion_tokens_reported_requests": 0,
+          "prompt_tokens": null,
+          "prompt_tokens_reported_requests": 0,
+          "total_tokens": null,
+          "total_tokens_reported_requests": 0
+        }
+      },
+      "started_at_unix": 1791021247.700758,
+      "status": "failed",
+      "wheel_sha256": "9fa50d0e8d6b7486368e1da1d43aaa486a19681fb9d76c3bf21d24475a7d4291"
+    },
+    {
+      "attempt": "02",
+      "catalog": {
+        "advertised_id": "Ornith-1.5-35B-Uncensored-Q6_K",
+        "metadata": {
+          "ftype": "Q6_K",
+          "n_ctx": 200192,
+          "n_ctx_train": 262144,
+          "n_embd": 2048,
+          "n_params": 35505251456,
+          "n_vocab": 248320,
+          "size": 29197740544,
+          "vocab_type": 2
+        },
+        "owner": "llamacpp"
+      },
+      "cleanup": {
+        "removed_files": 80,
+        "status": "complete"
+      },
+      "collection": {
+        "provenance": "../../../memory/standalone-evaluations/phase04-smoke/attempt-02/results.json",
+        "revision": "standalone-memory-runner-v1",
+        "sha256": "e100e6ebc2ea0b92516a64f8ba5e9d5968ed6119fe2e6afb1853667081da1d65"
+      },
+      "collection_scoring": {
+        "asset_hashes": {
+          "contract.json": "d991db4b1a3e6222fa0f1dbf9e70b53c18b305cb497ccb25c9cc5371e81227b5",
+          "corpus-schema.json": "299acac7a3e5f3ab4654ed699408423a48dc36d9341d95d851d6ff87f4b860b9",
+          "corpus/development.json": "8cf19742ff549be73a6be7a8ae88e28b39a0da5129c916b1cfac4dcd5bcce199",
+          "corpus/heldout.json": "aa56e6ec4578af3b5d725c127938054cdc1b7cac7e38063c863d49d4c25e60f8",
+          "fixtures/lifecycle.json": "a18989b8cd9d4d9226635f50fd742c7f997ee31fca7b9883cb4caf86990d4d1d",
+          "fixtures/native.json": "c95e5c7798c7ac58287ada110169010be17058b6651bddea99bac6dd20d7e77f",
+          "fixtures/scoring.json": "c1805b27d42b32cfb589901fa7083f5886684ca589b3d647449aa73401aa55e6",
+          "instruction-sources.json": "cdea4ad37533bc9a715188aafe62b83a89eac00fdbd2def8151671576dfddc70",
+          "instructions/conservative-baseline.md": "c84c13d62cf8cc8fdbdc95e16d9f4572d65423e2ace9daa76d2779e89db277dc",
+          "instructions/conservative-examples.md": "6e301b4c623e9d8be26f1715f65ea859f8d31c8afb80ad5816c8e60ab05be808",
+          "instructions/conservative-rules.md": "2bab9f3579e204345e37854db44c67afd6718bc57778a15ea6f207df617636c8",
+          "instructions/recurring-baseline.md": "a1ebba539d5be75af87b9eca2a95338c8de85717e85245af640c389caf0632ff",
+          "instructions/recurring-examples.md": "eefe9f903345b4619318ea5451cbff3113f116e4d3a5a840155498419f285aaa",
+          "instructions/recurring-rules.md": "7918e050ab8742e40361301cdff7c8dd8a825606a9e1f5a573c22df5f301db43",
+          "policies/conservative.md": "c84c13d62cf8cc8fdbdc95e16d9f4572d65423e2ace9daa76d2779e89db277dc",
+          "policies/recurring.md": "a1ebba539d5be75af87b9eca2a95338c8de85717e85245af640c389caf0632ff",
+          "protocol/operations.md": "dc96d63bb0f872d88f662b6d782d6df1f9ee345ec43690c9c88644d9eb314153",
+          "protocol/scoring.md": "58aae0c8376856d74ce5d38b59a0384a1a04dc8a595a8014565fb3d3fb1bb592"
+        },
+        "hash_algorithm": "sha256; LF UTF-8 source/text and canonical JSON assets",
+        "revision": "standalone-memory-scorer-v1",
+        "sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+        "source_hashes": {
+          "assets.py": "d6f67563c352e3761a843c2a5459f3fbcd125641973bc25b65c4bc07baf6bd47",
+          "checkpoints.py": "c71c09da12344333ff7c7836ad310ba0f5ddef6fad8117c62c8a9f10e2cf35ca",
+          "contract.py": "278e30f90df0a8ab0ed665b23aa76fe8dbf9fb8610efc3706dc9e05ac4cf62ba",
+          "matching.py": "594d54b0775de32a1e2359acc2b6c8467b1223cbee59b0923478caaf12c4d1fb",
+          "model_input.py": "79d1a7c5ab5a9f245efaff912356f92f750fea5b66029ffa676210b77d18107d",
+          "operations.py": "e26f2f6196e141c079081a657f557619bcfc8d44627d1220066a49737d7440c6",
+          "provenance.py": "e74a28ddf703630b5e8f9118dedcf2cc19e39ef286e69ddb72e01eee3fe76074",
+          "scoring.py": "e9776958aec16404e66660b49165217fe2fc48b400161fe2eb21fe1c2a654cde",
+          "store.py": "8784dcb3b12b4992dff37289c352f711f7cf70c2cd7cec18bc979f24c8aed73f"
+        }
+      },
+      "command": {
+        "arguments": [
+          "-I",
+          "-m",
+          "memory_bench",
+          "smoke",
+          "--base-url",
+          "http://10.42.0.202:8090/v1",
+          "--models",
+          "Ornith-1.5-35B-Uncensored-Q6_K",
+          "--output",
+          "<OS temporary directory>/memory-bench-smoke-20261003-attempt-02"
+        ],
+        "cwd": "benchmarks/memory/build/portability-zwr6mw49/unrelated-cwd",
+        "executable": "benchmarks/memory/build/portability-zwr6mw49/env/Scripts/python.exe",
+        "output_path_redacted": true
+      },
+      "coverage": {
+        "checkpoints": 148,
+        "completed": 78,
+        "failed": 70,
+        "track_runs": 12,
+        "unexecuted": 0
+      },
+      "finished_at_unix": 1791026418.0062647,
+      "format_failures": {
+        "distinct_failed_turns": 70,
+        "incomplete_length": 67,
+        "missing_json_envelope_fields": 3
+      },
+      "gate_passed": true,
+      "git_revision": "70962bb813248927c8a586e7bbb63710074883b5",
+      "infrastructure_errors": [],
+      "requests": {
+        "catalog_requests": 1,
+        "cost": null,
+        "failed_requests": 0,
+        "inference_requests": 198,
+        "missing_usage_requests": 0,
+        "upstream_seconds": 4765.574705000967,
+        "usage": {
+          "completion_tokens": 248903,
+          "completion_tokens_reported_requests": 198,
+          "prompt_tokens": 414580,
+          "prompt_tokens_reported_requests": 198,
+          "total_tokens": 663483,
+          "total_tokens_reported_requests": 198
+        }
+      },
+      "review": {
+        "cleanup": {
+          "removed_files": 80,
+          "status": "complete",
+          "stores_directory_absent": true
+        },
+        "finish_reasons": {
+          "length": 67,
+          "stop": 107,
+          "tool_calls": 24
+        },
+        "isolation_checks": {
+          "fresh_conversation_boundaries": 148,
+          "namespaces_qualified_by_track": true,
+          "requested_settings_verified_in_all_requests": true,
+          "schedule_order_matched": true,
+          "sequence_snapshots_preserved": true,
+          "single_initial_system_message": true,
+          "workspace_namespaces_qualified_by_track": true
+        },
+        "operations": {
+          "memory_forget": {
+            "error": 0,
+            "ok": 10
+          },
+          "memory_read": {
+            "error": 0,
+            "ok": 6
+          },
+          "memory_update": {
+            "error": 0,
+            "ok": 4
+          },
+          "remember": {
+            "error": 1,
+            "ok": 30
+          },
+          "request_permission": {
+            "error": 0,
+            "ok": 1
+          }
+        },
+        "operations_by_interface": {
+          "json": 20,
+          "native": 32
+        },
+        "reviewed_export": true,
+        "sequence_reopens": 4,
+        "server_metadata": {
+          "server_headers": [
+            "llama.cpp"
+          ],
+          "system_fingerprints": [
+            "b11342-f1cee9941"
+          ]
+        },
+        "turn_coverage": {
+          "completed": 90,
+          "executed": 160,
+          "failed": 70,
+          "scheduled": 172,
+          "unexecuted_followups_after_failure": 12
+        }
+      },
+      "started_at_unix": 1791021643.825898,
+      "status": "complete",
+      "wheel_sha256": "16c690f591b7adcad151989db3012d2ac5033d9b2aca29bba67b20c81606e418"
+    }
+  ],
+  "status": "complete",
+  "timezone": "Asia/Kolkata"
+}
