@@ -84,3 +84,24 @@ text and does not interpret negation; unmatched records remain inspectable. The
 server may accept a parameter without reporting its effective value; the report
 records the submitted values and leaves server-effective values unavailable.
 Live acceptance belongs to Phase 4. Phase 5 remains pending.
+
+
+## Connection-prerequisite follow-up
+
+Commit f42305e distinguishes connection/pool timeouts from a model generation
+deadline. Connection and pool waits are bounded to the smaller of 30 seconds and
+the remaining turn budget; an unavailable endpoint cannot earn a successful gate
+as a measured model timeout. No output settings, model IDs, policies or gold changed.
+
+The full source suite passed **345 tests in 220.40s** and the copied/installed wheel
+passed **345 tests in 219.45s**, again without OpenWorker, source fallback or network
+access. The source command uses build/phase34-source-acceptance-03. Full commands,
+hashes and versions are in [followup-acceptance.json](followup-acceptance.json).
+The new wheel SHA-256 is
+5ab19722e0dfeba5befc73064ea5410aea8b91c6f42489650a1e865d6fc03c7c.
+The corpus/asset bundle and scorer hashes are unchanged.
+
+The original acceptance record is preserved. Live attempt 02 continues on its
+frozen 70962bb wheel with its original collection provenance; the follow-up does
+not alter any requests in that collection. Further replay/report validation uses
+the latest independently installed wheel and performs no inference.
