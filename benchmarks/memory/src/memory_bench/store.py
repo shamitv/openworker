@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 from pathlib import Path
 
 from .contract import ContractError, validate_operation, validate_record
@@ -34,6 +35,18 @@ class MemoryStore:
 
     def close(self) -> None:
         self._db.close()
+
+    def set_deadline(self, deadline: float | None, clock=time.monotonic) -> None:
+        """Bound SQLite lock waits and long queries by the runner's turn budget."""
+        self._db.set_progress_handler(None, 0)
+        if deadline is None:
+            self._db.execute("PRAGMA busy_timeout=5000")
+            return
+        remaining = deadline - clock()
+        if remaining <= 0:
+            raise TimeoutError("operation deadline expired")
+        self._db.execute(f"PRAGMA busy_timeout={int(remaining * 1000)}")
+        self._db.set_progress_handler(lambda: int(clock() >= deadline), 20)
 
     def __enter__(self):
         return self
