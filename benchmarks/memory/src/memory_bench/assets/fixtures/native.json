@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "protocol": "standalone-memory-benchmark-v1",
+  "fixtures": [
+    {
+      "id": "native_batch",
+      "response": {
+        "content": "Provisional",
+        "tool_calls": [
+          {
+            "id": "call-1",
+            "type": "function",
+            "function": {
+              "name": "remember",
+              "arguments": "{\"key\": \"current_school_grade_and_curriculum\", \"value\": \"I am in Grade 8 following CBSE\", \"scope\": \"global\"}"
+            }
+          }
+        ]
+      },
+      "expected_error": null
+    },
+    {
+      "id": "native_final",
+      "response": {
+        "role": "assistant",
+        "content": "Finished"
+      },
+      "expected_error": null
+    },
+    {
+      "id": "native_malformed_arguments",
+      "response": {
+        "content": null,
+        "tool_calls": [
+          {
+            "id": "call-1",
+            "type": "function",
+            "function": {
+              "name": "remember",
+              "arguments": "{broken"
+            }
+          }
+        ]
+      },
+      "expected_error": "invalid_arguments"
+    },
+    {
+      "id": "native_malformed_envelope",
+      "response": {
+        "tool_calls": []
+      },
+      "expected_error": "format_error"
+    }
+  ]
+}

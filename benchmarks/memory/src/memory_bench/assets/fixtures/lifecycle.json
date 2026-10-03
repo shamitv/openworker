@@ -1,0 +1,856 @@
+{
+  "schema_version": 1,
+  "protocol": "standalone-memory-benchmark-v1",
+  "fixtures": [
+    {
+      "id": "final_answer",
+      "requests": [
+        {
+          "elapsed_seconds": 1,
+          "response": {
+            "answer": "Finished",
+            "operations": []
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "complete",
+        "batches": 0,
+        "requests": 1,
+        "final_answer": "Finished"
+      }
+    },
+    {
+      "id": "ordered_mixed_batch",
+      "requests": [
+        {
+          "elapsed_seconds": 1,
+          "response": {
+            "answer": "Provisional save claim",
+            "operations": [
+              {
+                "name": "remember",
+                "arguments": {
+                  "key": "current_school_grade_and_curriculum",
+                  "value": "I am in Grade 8 following CBSE",
+                  "scope": "global"
+                }
+              },
+              {
+                "name": "memory_forget",
+                "arguments": {
+                  "memory_id": 999
+                }
+              },
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "remember",
+              "result": {
+                "ok": true,
+                "data": {
+                  "record": {
+                    "id": 1,
+                    "user_id": "P01-owner",
+                    "workspace_id": null,
+                    "scope": "global",
+                    "key": "current_school_grade_and_curriculum",
+                    "value": "I am in Grade 8 following CBSE",
+                    "history": []
+                  }
+                },
+                "error": null
+              }
+            },
+            {
+              "name": "memory_forget",
+              "result": {
+                "ok": false,
+                "data": null,
+                "error": {
+                  "code": "unavailable_id",
+                  "message": "ID is unavailable for this user"
+                }
+              }
+            },
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 2,
+          "response": {
+            "answer": "I am in Grade 8 following CBSE",
+            "operations": []
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "complete",
+        "batches": 1,
+        "requests": 2,
+        "final_answer": "I am in Grade 8 following CBSE"
+      },
+      "required_committed_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ]
+    },
+    {
+      "id": "read_before_final",
+      "requests": [
+        {
+          "elapsed_seconds": 1,
+          "response": {
+            "answer": "Not final",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 2,
+          "response": {
+            "answer": "I am in Grade 8 following CBSE",
+            "operations": []
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "complete",
+        "batches": 1,
+        "requests": 2,
+        "final_answer": "I am in Grade 8 following CBSE"
+      }
+    },
+    {
+      "id": "six_batches_then_final",
+      "requests": [
+        {
+          "elapsed_seconds": 1,
+          "response": {
+            "answer": "provisional 1",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 2,
+          "response": {
+            "answer": "provisional 2",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 3,
+          "response": {
+            "answer": "provisional 3",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 4,
+          "response": {
+            "answer": "provisional 4",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 5,
+          "response": {
+            "answer": "provisional 5",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 6,
+          "response": {
+            "answer": "provisional 6",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 7,
+          "response": {
+            "answer": "Final after results",
+            "operations": []
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "complete",
+        "batches": 6,
+        "requests": 7,
+        "final_answer": "Final after results"
+      }
+    },
+    {
+      "id": "seventh_batch_not_executed",
+      "requests": [
+        {
+          "elapsed_seconds": 1,
+          "response": {
+            "answer": "provisional 1",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 2,
+          "response": {
+            "answer": "provisional 2",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 3,
+          "response": {
+            "answer": "provisional 3",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 4,
+          "response": {
+            "answer": "provisional 4",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 5,
+          "response": {
+            "answer": "provisional 5",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 6,
+          "response": {
+            "answer": "provisional 6",
+            "operations": [
+              {
+                "name": "memory_read",
+                "arguments": {
+                  "memory_ids": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_read",
+              "result": {
+                "ok": true,
+                "data": {
+                  "records": [
+                    {
+                      "id": 1,
+                      "user_id": "P01-owner",
+                      "workspace_id": null,
+                      "scope": "global",
+                      "key": "current_school_grade_and_curriculum",
+                      "value": "I am in Grade 8 following CBSE",
+                      "history": []
+                    }
+                  ],
+                  "missing_ids": []
+                },
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 7,
+          "response": {
+            "answer": "Still provisional",
+            "operations": [
+              {
+                "name": "remember",
+                "arguments": {
+                  "key": "current_school_grade_and_curriculum",
+                  "value": "I am in Grade 8 following CBSE",
+                  "scope": "global"
+                }
+              }
+            ]
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "round_exhaustion",
+        "batches": 6,
+        "requests": 7,
+        "final_answer": null
+      }
+    },
+    {
+      "id": "malformed_envelope",
+      "requests": [
+        {
+          "elapsed_seconds": 1,
+          "response": {
+            "operations": []
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "format_error",
+        "batches": 0,
+        "requests": 1,
+        "final_answer": null
+      }
+    },
+    {
+      "id": "deadline",
+      "requests": [
+        {
+          "elapsed_seconds": 180,
+          "response": {
+            "answer": "Too late",
+            "operations": []
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "deadline",
+        "batches": 0,
+        "requests": 1,
+        "final_answer": null
+      }
+    },
+    {
+      "id": "empty_final_answer",
+      "requests": [
+        {
+          "elapsed_seconds": 1,
+          "response": {
+            "answer": " ",
+            "operations": []
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "format_error",
+        "batches": 0,
+        "requests": 1,
+        "final_answer": null
+      }
+    },
+    {
+      "id": "unknown_operation_feedback",
+      "requests": [
+        {
+          "elapsed_seconds": 1,
+          "response": {
+            "answer": "",
+            "operations": [
+              {
+                "name": "unknown",
+                "arguments": {}
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "unknown",
+              "result": {
+                "ok": false,
+                "data": null,
+                "error": {
+                  "code": "unknown_operation",
+                  "message": "Unknown operation"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 2,
+          "response": {
+            "answer": "Acknowledged",
+            "operations": []
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "complete",
+        "batches": 1,
+        "requests": 2,
+        "final_answer": "Acknowledged"
+      }
+    },
+    {
+      "id": "invalid_argument_feedback",
+      "requests": [
+        {
+          "elapsed_seconds": 1,
+          "response": {
+            "answer": "",
+            "operations": [
+              {
+                "name": "memory_forget",
+                "arguments": {
+                  "memory_id": "bad"
+                }
+              }
+            ]
+          },
+          "results": [
+            {
+              "name": "memory_forget",
+              "result": {
+                "ok": false,
+                "data": null,
+                "error": {
+                  "code": "invalid_arguments",
+                  "message": "Expected integer ID"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "elapsed_seconds": 2,
+          "response": {
+            "answer": "Acknowledged",
+            "operations": []
+          },
+          "results": []
+        }
+      ],
+      "expected": {
+        "status": "complete",
+        "batches": 1,
+        "requests": 2,
+        "final_answer": "Acknowledged"
+      }
+    }
+  ]
+}

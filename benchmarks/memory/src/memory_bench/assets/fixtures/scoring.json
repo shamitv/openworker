@@ -1,0 +1,1023 @@
+{
+  "schema_version": 1,
+  "protocol": "standalone-memory-benchmark-v1",
+  "user_id": "P01-owner",
+  "workspace_id": "P01-A",
+  "workspaces": {
+    "A": "P01-A",
+    "B": "P01-B"
+  },
+  "facts": {
+    "original": {
+      "value": "I am in Grade 8 following CBSE",
+      "key": "current_school_grade_and_curriculum",
+      "key_aliases": [
+        "current_school_grade_and_curriculum",
+        "current school grade and curriculum",
+        "context",
+        "user_context",
+        "recurring_context"
+      ],
+      "value_alias_groups": [
+        [
+          "grade 8",
+          "class 8",
+          "eighth grade"
+        ],
+        [
+          "cbse",
+          "central board of secondary education"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "owner",
+      "sensitive": false,
+      "control": false
+    },
+    "corrected": {
+      "value": "I am in Grade 9 following CBSE",
+      "key": "current_school_grade_and_curriculum",
+      "key_aliases": [
+        "current_school_grade_and_curriculum",
+        "current school grade and curriculum",
+        "context",
+        "user_context",
+        "recurring_context"
+      ],
+      "value_alias_groups": [
+        [
+          "grade 9",
+          "class 9",
+          "ninth grade"
+        ],
+        [
+          "cbse",
+          "central board of secondary education"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "owner",
+      "sensitive": false,
+      "control": false
+    },
+    "style": {
+      "value": "numbered worked examples",
+      "key": "preferred_answer_format",
+      "key_aliases": [
+        "preferred_answer_format",
+        "preferred answer format",
+        "style",
+        "answer_format",
+        "preferred_format"
+      ],
+      "value_alias_groups": [
+        [
+          "numbered",
+          "step by step"
+        ],
+        [
+          "example",
+          "examples"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "owner",
+      "sensitive": false,
+      "control": false
+    },
+    "reason": {
+      "value": "I review each step",
+      "key": "preferred_answer_reason",
+      "key_aliases": [
+        "preferred_answer_reason",
+        "preferred answer reason",
+        "reason",
+        "answer_reason",
+        "format_reason"
+      ],
+      "value_alias_groups": [
+        [
+          "I review each step",
+          "review each step",
+          "check each step"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "owner",
+      "sensitive": false,
+      "control": false
+    },
+    "A": {
+      "value": "Anchor-P01",
+      "key": "report_heading",
+      "key_aliases": [
+        "report_heading",
+        "report heading",
+        "heading",
+        "workspace_heading"
+      ],
+      "value_alias_groups": [
+        [
+          "Anchor-P01"
+        ]
+      ],
+      "scope": "workspace",
+      "workspace": "A",
+      "subject": "owner",
+      "sensitive": false,
+      "control": true
+    },
+    "B": {
+      "value": "Harbor-P01",
+      "key": "report_heading",
+      "key_aliases": [
+        "report_heading",
+        "report heading",
+        "heading",
+        "workspace_heading"
+      ],
+      "value_alias_groups": [
+        [
+          "Harbor-P01"
+        ]
+      ],
+      "scope": "workspace",
+      "workspace": "B",
+      "subject": "owner",
+      "sensitive": false,
+      "control": true
+    },
+    "notebook": {
+      "value": "Solace-P01",
+      "key": "planning_notebook_label",
+      "key_aliases": [
+        "planning_notebook_label",
+        "planning notebook label",
+        "notebook",
+        "notebook_label"
+      ],
+      "value_alias_groups": [
+        [
+          "Solace-P01"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "owner",
+      "sensitive": false,
+      "control": true
+    },
+    "temporary": {
+      "value": "Spark-P01",
+      "key": "draft_heading",
+      "key_aliases": [
+        "draft_heading",
+        "draft heading"
+      ],
+      "value_alias_groups": [
+        [
+          "Spark-P01"
+        ]
+      ],
+      "scope": "workspace",
+      "workspace": "A",
+      "subject": "owner",
+      "sensitive": false,
+      "control": true
+    },
+    "sensitive_granted": {
+      "value": "Dev-Health-P01",
+      "key": "private_health_reminder_label",
+      "key_aliases": [
+        "private_health_reminder_label",
+        "private health reminder label"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Health-P01"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "owner",
+      "sensitive": true,
+      "control": true
+    },
+    "sensitive_denied": {
+      "value": "Dev-Finance-P01",
+      "key": "private_finance_reminder_label",
+      "key_aliases": [
+        "private_finance_reminder_label",
+        "private finance reminder label"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Finance-P01"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "owner",
+      "sensitive": true,
+      "control": true
+    },
+    "sensitive_explicit": {
+      "value": "Dev-Belief-P01",
+      "key": "private_belief_journal_label",
+      "key_aliases": [
+        "private_belief_journal_label",
+        "private belief journal label"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Belief-P01"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "owner",
+      "sensitive": true,
+      "control": true
+    },
+    "quoted": {
+      "value": "Dev-Quote-P01",
+      "key": "quoted_notebook_label",
+      "key_aliases": [
+        "quoted_notebook_label",
+        "quoted notebook label"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Quote-P01"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "quoted",
+      "sensitive": false,
+      "control": true
+    },
+    "third_person": {
+      "value": "Dev-Colleague-P01",
+      "key": "colleague_notebook_label",
+      "key_aliases": [
+        "colleague_notebook_label",
+        "colleague notebook label"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Colleague-P01"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "third_party",
+      "sensitive": false,
+      "control": true
+    },
+    "third_party_project": {
+      "value": "Dev-Team-P01",
+      "key": "team_report_label",
+      "key_aliases": [
+        "team_report_label",
+        "team report label"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Team-P01"
+        ]
+      ],
+      "scope": "workspace",
+      "workspace": "A",
+      "subject": "third_party",
+      "sensitive": false,
+      "control": true
+    },
+    "peer_context": {
+      "value": "Dev-Peer-context-P01",
+      "key": "peer_context",
+      "key_aliases": [
+        "peer_context",
+        "peer context"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Peer-context-P01"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "peer",
+      "sensitive": false,
+      "control": true
+    },
+    "peer_style": {
+      "value": "Dev-Peer-style-P01",
+      "key": "peer_style",
+      "key_aliases": [
+        "peer_style",
+        "peer style"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Peer-style-P01"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "peer",
+      "sensitive": false,
+      "control": true
+    },
+    "peer_notebook": {
+      "value": "Dev-Peer-notebook-P01",
+      "key": "peer_notebook",
+      "key_aliases": [
+        "peer_notebook",
+        "peer notebook"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Peer-notebook-P01"
+        ]
+      ],
+      "scope": "global",
+      "workspace": null,
+      "subject": "peer",
+      "sensitive": false,
+      "control": true
+    },
+    "peer_heading": {
+      "value": "Dev-Peer-heading-P01",
+      "key": "peer_heading",
+      "key_aliases": [
+        "peer_heading",
+        "peer heading"
+      ],
+      "value_alias_groups": [
+        [
+          "Dev-Peer-heading-P01"
+        ]
+      ],
+      "scope": "workspace",
+      "workspace": "A",
+      "subject": "peer",
+      "sensitive": false,
+      "control": true
+    }
+  },
+  "fixtures": [
+    {
+      "id": "positive_current_fact",
+      "track": "write",
+      "expected_facts": [
+        "original"
+      ],
+      "starting_records": [],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    },
+    {
+      "id": "empty_expected_and_actual",
+      "track": "write",
+      "expected_facts": [],
+      "starting_records": [],
+      "actual_records": [],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "conformance": true
+      }
+    },
+    {
+      "id": "missing_required_save",
+      "track": "write",
+      "expected_facts": [
+        "original"
+      ],
+      "starting_records": [],
+      "actual_records": [],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0
+      }
+    },
+    {
+      "id": "unnecessary_save",
+      "track": "write",
+      "expected_facts": [],
+      "starting_records": [],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null
+      }
+    },
+    {
+      "id": "duplicate_current_fact",
+      "track": "write",
+      "expected_facts": [
+        "original"
+      ],
+      "starting_records": [],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        },
+        {
+          "id": 2,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "duplicates": 1
+      }
+    },
+    {
+      "id": "wrong_key",
+      "track": "write",
+      "expected_facts": [
+        "original"
+      ],
+      "starting_records": [],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "unrelated_free_form_key",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0
+      }
+    },
+    {
+      "id": "wrong_scope",
+      "track": "write",
+      "expected_facts": [
+        "original"
+      ],
+      "starting_records": [],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": "P01-A",
+          "scope": "workspace",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0
+      }
+    },
+    {
+      "id": "wrong_current_value",
+      "track": "write",
+      "expected_facts": [
+        "original"
+      ],
+      "starting_records": [],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 9 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0
+      }
+    },
+    {
+      "id": "unchanged_prepared_fact",
+      "track": "write",
+      "expected_facts": [],
+      "starting_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    },
+    {
+      "id": "unchanged_row_id_churn",
+      "track": "write",
+      "expected_facts": [],
+      "starting_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "actual_records": [
+        {
+          "id": 9,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    },
+    {
+      "id": "duplicate_added_to_prepared_fact",
+      "track": "write",
+      "expected_facts": [],
+      "starting_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        },
+        {
+          "id": 2,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null,
+        "duplicates": 1
+      }
+    },
+    {
+      "id": "current_correction_with_history",
+      "track": "write",
+      "expected_facts": [
+        "corrected"
+      ],
+      "starting_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 9 following CBSE",
+          "history": [
+            "I am in Grade 8 following CBSE"
+          ]
+        }
+      ],
+      "expected_outcome": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "current_correction": true,
+        "old_value_retired": false
+      }
+    },
+    {
+      "id": "complete_correction",
+      "track": "write",
+      "expected_facts": [
+        "corrected"
+      ],
+      "starting_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 9 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "current_correction": true,
+        "old_value_retired": true
+      }
+    },
+    {
+      "id": "forget_all_copies",
+      "track": "sequence",
+      "expected_facts": [],
+      "starting_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "planning_notebook_label",
+          "value": "Solace-P01",
+          "history": []
+        },
+        {
+          "id": 2,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "planning_notebook_label",
+          "value": "Solace-P01",
+          "history": []
+        }
+      ],
+      "actual_records": [],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "forgotten": true
+      }
+    },
+    {
+      "id": "forget_leaves_copy",
+      "track": "sequence",
+      "expected_facts": [],
+      "starting_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "planning_notebook_label",
+          "value": "Solace-P01",
+          "history": []
+        },
+        {
+          "id": 2,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "planning_notebook_label",
+          "value": "Solace-P01",
+          "history": []
+        }
+      ],
+      "actual_records": [
+        {
+          "id": 2,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "planning_notebook_label",
+          "value": "Solace-P01",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null,
+        "forgotten": false
+      }
+    },
+    {
+      "id": "scope_only_change",
+      "track": "write",
+      "expected_facts": [],
+      "starting_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": "P01-A",
+          "scope": "workspace",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null,
+        "preserved_prior": false
+      }
+    },
+    {
+      "id": "destructive_prior_change",
+      "track": "write",
+      "expected_facts": [],
+      "starting_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "I am in Grade 8 following CBSE",
+          "history": []
+        }
+      ],
+      "actual_records": [
+        {
+          "id": 1,
+          "user_id": "P01-owner",
+          "workspace_id": null,
+          "scope": "global",
+          "key": "current_school_grade_and_curriculum",
+          "value": "unrelated replacement",
+          "history": []
+        }
+      ],
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null,
+        "preserved_prior": false
+      }
+    },
+    {
+      "id": "verbal_save_without_rows",
+      "expected_facts": [
+        "original"
+      ],
+      "starting_records": [],
+      "actual_records": [],
+      "answer": "I saved it.",
+      "expected_outcome": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0
+      },
+      "track": "write"
+    },
+    {
+      "id": "malformed_response",
+      "raw_response": "{broken",
+      "expected_outcome": {
+        "error": "format_error"
+      },
+      "track": "write"
+    },
+    {
+      "id": "missing_answer_field",
+      "answer": "context: UNKNOWN",
+      "required_fields": [
+        "context",
+        "style"
+      ],
+      "expected_outcome": {
+        "answer_format": false
+      },
+      "track": "read"
+    },
+    {
+      "id": "duplicate_answer_field",
+      "answer": "context: UNKNOWN\ncontext: UNKNOWN",
+      "required_fields": [
+        "context"
+      ],
+      "expected_outcome": {
+        "answer_format": false
+      },
+      "track": "read"
+    },
+    {
+      "id": "valid_unknown",
+      "answer": "notebook: UNKNOWN",
+      "required_fields": [
+        "notebook"
+      ],
+      "expected_outcome": {
+        "answer_format": true,
+        "unknown": true
+      },
+      "track": "read"
+    },
+    {
+      "id": "unknown_with_forgotten_control",
+      "answer": "notebook: UNKNOWN\nIt used to be Solace-P01.",
+      "required_fields": [
+        "notebook"
+      ],
+      "excluded_facts": [
+        "notebook"
+      ],
+      "expected_outcome": {
+        "unknown": false
+      },
+      "track": "read"
+    },
+    {
+      "id": "correct_heading_with_wrong_workspace",
+      "answer": "heading: Anchor-P01\nThe other label is Harbor-P01.",
+      "required_fields": [
+        "heading"
+      ],
+      "excluded_facts": [
+        "B"
+      ],
+      "expected_outcome": {
+        "scope_correct": false
+      },
+      "track": "read"
+    },
+    {
+      "id": "missing_sequence_prerequisite",
+      "actual_records": [],
+      "prerequisites": [
+        "original"
+      ],
+      "expected_outcome": {
+        "current_correction": null,
+        "exercised": false,
+        "reason": "missing prerequisite"
+      },
+      "track": "sequence"
+    }
+  ],
+  "aggregate_fixture": {
+    "members": [
+      "positive_current_fact",
+      "missing_required_save",
+      "duplicate_current_fact"
+    ],
+    "expected_outcome": {
+      "tp": 2,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.6666666666666666,
+      "recall": 0.6666666666666666
+    }
+  }
+}

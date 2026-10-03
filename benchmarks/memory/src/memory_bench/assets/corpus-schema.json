@@ -1,0 +1,1028 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "protocol": {
+      "type": "string",
+      "enum": [
+        "standalone-memory-benchmark-v1"
+      ]
+    },
+    "synthetic": {
+      "type": "boolean",
+      "enum": [
+        true
+      ]
+    },
+    "split": {
+      "type": "string",
+      "enum": [
+        "development",
+        "heldout"
+      ]
+    },
+    "source": {
+      "type": "object"
+    },
+    "personas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "split": {
+            "type": "string",
+            "enum": [
+              "development",
+              "heldout"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "topic": {
+            "type": "string",
+            "minLength": 1
+          },
+          "context_subject": {
+            "type": "string",
+            "minLength": 1
+          },
+          "namespaces": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "peer": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "owner",
+              "peer"
+            ],
+            "additionalProperties": false
+          },
+          "workspaces": {
+            "type": "object",
+            "properties": {
+              "A": {
+                "type": "string",
+                "minLength": 1
+              },
+              "B": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "A",
+              "B"
+            ],
+            "additionalProperties": false
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "key_aliases": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "value_alias_groups": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1
+                  },
+                  "minItems": 1
+                },
+                "scope": {
+                  "type": "string",
+                  "enum": [
+                    "global",
+                    "workspace"
+                  ]
+                },
+                "workspace": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "subject": {
+                  "type": "string",
+                  "enum": [
+                    "owner",
+                    "peer",
+                    "quoted",
+                    "third_party"
+                  ]
+                },
+                "sensitive": {
+                  "type": "boolean"
+                },
+                "control": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "value",
+                "key",
+                "key_aliases",
+                "value_alias_groups",
+                "scope",
+                "workspace",
+                "subject",
+                "sensitive",
+                "control"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "sequence_start": {
+            "type": "object",
+            "properties": {
+              "owner_records": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "workspace_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "minLength": 1
+                    },
+                    "scope": {
+                      "type": "string",
+                      "enum": [
+                        "global",
+                        "workspace"
+                      ]
+                    },
+                    "key": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "history": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "user_id",
+                    "workspace_id",
+                    "scope",
+                    "key",
+                    "value",
+                    "history"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "peer_controls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "workspace_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "minLength": 1
+                    },
+                    "scope": {
+                      "type": "string",
+                      "enum": [
+                        "global",
+                        "workspace"
+                      ]
+                    },
+                    "key": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "history": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "user_id",
+                    "workspace_id",
+                    "scope",
+                    "key",
+                    "value",
+                    "history"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "owner_records",
+              "peer_controls"
+            ],
+            "additionalProperties": false
+          },
+          "conversations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "actor": {
+                  "type": "string",
+                  "enum": [
+                    "owner",
+                    "peer"
+                  ]
+                },
+                "user_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "workspace_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "messages": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "source_messages": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "new_conversation": {
+                  "type": "boolean"
+                },
+                "restart_before": {
+                  "type": "boolean"
+                },
+                "coverage": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
+                "permission_reply": {
+                  "type": "object",
+                  "properties": {
+                    "granted": {
+                      "type": "boolean"
+                    },
+                    "reply": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "granted",
+                    "reply"
+                  ],
+                  "additionalProperties": false
+                },
+                "prerequisites": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "control": {
+                        "type": "string",
+                        "enum": [
+                          "correction",
+                          "forgetting"
+                        ]
+                      },
+                      "facts": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                      }
+                    },
+                    "required": [
+                      "control",
+                      "facts"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "policy_expectations": {
+                  "type": "object",
+                  "properties": {
+                    "conservative": {
+                      "type": "object",
+                      "properties": {
+                        "required_additions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "required_updates": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "previous": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "current": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            },
+                            "required": [
+                              "previous",
+                              "current"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required_deletions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "retained_prior_facts": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "expected_current_facts": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "forbidden_new_facts": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "permission": {
+                          "type": "string",
+                          "enum": [
+                            "ask_then_grant",
+                            "ask_then_deny",
+                            "explicitly_granted",
+                            "not_required"
+                          ]
+                        },
+                        "allowed_realizations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "minItems": 1,
+                          "uniqueItems": true
+                        }
+                      },
+                      "required": [
+                        "required_additions",
+                        "required_updates",
+                        "required_deletions",
+                        "retained_prior_facts",
+                        "expected_current_facts",
+                        "forbidden_new_facts",
+                        "permission",
+                        "allowed_realizations"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "recurring": {
+                      "type": "object",
+                      "properties": {
+                        "required_additions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "required_updates": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "previous": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "current": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            },
+                            "required": [
+                              "previous",
+                              "current"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required_deletions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "retained_prior_facts": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "expected_current_facts": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "forbidden_new_facts": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uniqueItems": true
+                        },
+                        "permission": {
+                          "type": "string",
+                          "enum": [
+                            "ask_then_grant",
+                            "ask_then_deny",
+                            "explicitly_granted",
+                            "not_required"
+                          ]
+                        },
+                        "allowed_realizations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "minItems": 1,
+                          "uniqueItems": true
+                        }
+                      },
+                      "required": [
+                        "required_additions",
+                        "required_updates",
+                        "required_deletions",
+                        "retained_prior_facts",
+                        "expected_current_facts",
+                        "forbidden_new_facts",
+                        "permission",
+                        "allowed_realizations"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "conservative",
+                    "recurring"
+                  ],
+                  "additionalProperties": false
+                },
+                "common_targets": {
+                  "type": "object",
+                  "properties": {
+                    "saved_facts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "uniqueItems": true
+                    },
+                    "probe_fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "uniqueItems": true
+                      }
+                    },
+                    "excluded_answer_facts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "uniqueItems": true
+                    },
+                    "retired_current_facts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": [
+                    "saved_facts",
+                    "probe_fields",
+                    "excluded_answer_facts",
+                    "retired_current_facts"
+                  ],
+                  "additionalProperties": false
+                },
+                "tracks": {
+                  "type": "object",
+                  "properties": {
+                    "write": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "message_indices": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "uniqueItems": true
+                        },
+                        "starting_records": {
+                          "type": "object",
+                          "properties": {
+                            "conservative": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                  },
+                                  "user_id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "workspace_id": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "minLength": 1
+                                  },
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "global",
+                                      "workspace"
+                                    ]
+                                  },
+                                  "key": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "value": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "history": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "user_id",
+                                  "workspace_id",
+                                  "scope",
+                                  "key",
+                                  "value",
+                                  "history"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "recurring": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                  },
+                                  "user_id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "workspace_id": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "minLength": 1
+                                  },
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "global",
+                                      "workspace"
+                                    ]
+                                  },
+                                  "key": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "value": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "history": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "user_id",
+                                  "workspace_id",
+                                  "scope",
+                                  "key",
+                                  "value",
+                                  "history"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "conservative",
+                            "recurring"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "message_indices",
+                        "starting_records"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "read": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "message_indices": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "uniqueItems": true
+                        },
+                        "starting_records": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "user_id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "workspace_id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 1
+                              },
+                              "scope": {
+                                "type": "string",
+                                "enum": [
+                                  "global",
+                                  "workspace"
+                                ]
+                              },
+                              "key": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "value": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "history": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "user_id",
+                              "workspace_id",
+                              "scope",
+                              "key",
+                              "value",
+                              "history"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "probe_fields": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "uniqueItems": true
+                          }
+                        },
+                        "expected_mutations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "message_indices",
+                        "starting_records",
+                        "probe_fields",
+                        "expected_mutations"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sequence": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "storage_scored": {
+                          "type": "boolean"
+                        },
+                        "message_indices": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "uniqueItems": true
+                        },
+                        "starting_records": {
+                          "type": "null"
+                        },
+                        "expected_current_facts": {
+                          "type": "object",
+                          "properties": {
+                            "conservative": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "uniqueItems": true
+                            },
+                            "recurring": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "uniqueItems": true
+                            }
+                          },
+                          "required": [
+                            "conservative",
+                            "recurring"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "probe_fields": {
+                          "type": "object",
+                          "properties": {
+                            "conservative": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "uniqueItems": true
+                              }
+                            },
+                            "recurring": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "uniqueItems": true
+                              }
+                            }
+                          },
+                          "required": [
+                            "conservative",
+                            "recurring"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "storage_scored",
+                        "message_indices",
+                        "starting_records",
+                        "expected_current_facts",
+                        "probe_fields"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "write",
+                    "read",
+                    "sequence"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "id",
+                "actor",
+                "user_id",
+                "workspace_id",
+                "messages",
+                "source_messages",
+                "new_conversation",
+                "restart_before",
+                "coverage",
+                "permission_reply",
+                "prerequisites",
+                "policy_expectations",
+                "common_targets",
+                "tracks"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "id",
+          "split",
+          "name",
+          "topic",
+          "context_subject",
+          "namespaces",
+          "workspaces",
+          "facts",
+          "sequence_start",
+          "conversations"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 15,
+      "maxItems": 15
+    }
+  },
+  "required": [
+    "schema_version",
+    "protocol",
+    "synthetic",
+    "split",
+    "source",
+    "personas"
+  ],
+  "additionalProperties": false
+}

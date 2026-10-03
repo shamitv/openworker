@@ -1,0 +1,618 @@
+{
+  "schema_version": 1,
+  "protocol": "standalone-memory-benchmark-v1",
+  "record": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "user_id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "workspace_id": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1
+      },
+      "scope": {
+        "type": "string",
+        "enum": [
+          "global",
+          "workspace"
+        ]
+      },
+      "key": {
+        "type": "string",
+        "minLength": 1
+      },
+      "value": {
+        "type": "string",
+        "minLength": 1
+      },
+      "history": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "required": [
+      "id",
+      "user_id",
+      "workspace_id",
+      "scope",
+      "key",
+      "value",
+      "history"
+    ],
+    "additionalProperties": false
+  },
+  "operation_envelope": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "arguments": {
+        "type": "object"
+      }
+    },
+    "required": [
+      "name",
+      "arguments"
+    ],
+    "additionalProperties": false
+  },
+  "operations": {
+    "remember": {
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "global",
+              "workspace"
+            ]
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "scope"
+        ],
+        "additionalProperties": false
+      },
+      "success": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "user_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workspace_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "minLength": 1
+              },
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "global",
+                  "workspace"
+                ]
+              },
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "history": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "id",
+              "user_id",
+              "workspace_id",
+              "scope",
+              "key",
+              "value",
+              "history"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "record"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "memory_read": {
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "memory_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "memory_ids"
+        ],
+        "additionalProperties": false
+      },
+      "success": {
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "user_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "workspace_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1
+                },
+                "scope": {
+                  "type": "string",
+                  "enum": [
+                    "global",
+                    "workspace"
+                  ]
+                },
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "history": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "user_id",
+                "workspace_id",
+                "scope",
+                "key",
+                "value",
+                "history"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "missing_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "records",
+          "missing_ids"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "memory_update": {
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "memory_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "memory_id",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "success": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "user_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workspace_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "minLength": 1
+              },
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "global",
+                  "workspace"
+                ]
+              },
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "history": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "id",
+              "user_id",
+              "workspace_id",
+              "scope",
+              "key",
+              "value",
+              "history"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "record"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "memory_forget": {
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "memory_id": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "memory_id"
+        ],
+        "additionalProperties": false
+      },
+      "success": {
+        "type": "object",
+        "properties": {
+          "deleted_id": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "deleted_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "request_permission": {
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "global",
+              "workspace"
+            ]
+          }
+        },
+        "required": [
+          "question",
+          "key",
+          "value",
+          "scope"
+        ],
+        "additionalProperties": false
+      },
+      "success": {
+        "type": "object",
+        "properties": {
+          "granted": {
+            "type": "boolean"
+          },
+          "reply": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "granted",
+          "reply"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "error": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string",
+        "enum": [
+          "unknown_operation",
+          "invalid_arguments",
+          "invalid_scope",
+          "unavailable_id"
+        ]
+      },
+      "message": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": [
+      "code",
+      "message"
+    ],
+    "additionalProperties": false
+  },
+  "result_envelope": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "data": {
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "error": {
+        "type": [
+          "object",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "ok",
+      "data",
+      "error"
+    ],
+    "additionalProperties": false
+  },
+  "json_response": {
+    "type": "object",
+    "properties": {
+      "answer": {
+        "type": "string"
+      },
+      "operations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "arguments": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "name",
+            "arguments"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "answer",
+      "operations"
+    ],
+    "additionalProperties": false
+  },
+  "native_response": {
+    "type": "object",
+    "properties": {
+      "role": {
+        "type": "string",
+        "enum": [
+          "assistant"
+        ]
+      },
+      "content": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "tool_calls": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "function"
+              ]
+            },
+            "function": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "arguments": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "arguments"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "function"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "content"
+    ],
+    "additionalProperties": false
+  },
+  "defaults": {
+    "history": [],
+    "read_order": "requested_id_order",
+    "memory_render_order": "ascending_record_id",
+    "state_rendering": "Context and memories (data):\n followed by canonical JSON containing context and memories",
+    "update_preserves": [
+      "id",
+      "key",
+      "user_id",
+      "scope",
+      "workspace_id"
+    ],
+    "permission_default_reply": "No additional consent is granted. Follow the instructions already in my message."
+  },
+  "lifecycle": {
+    "max_operation_batches": 6,
+    "max_requests": 7,
+    "whole_turn_seconds": 180,
+    "batch_order": "listed",
+    "partial_success": "committed",
+    "answers_with_operations": "provisional",
+    "final": "nonempty_answer_without_operations",
+    "format_failure": "terminal",
+    "argument_failure": "operation_result",
+    "seventh_batch": "not_executed",
+    "automatic_retries": 0
+  },
+  "model_input_fields": [
+    "context",
+    "instructions",
+    "memories",
+    "messages"
+  ],
+  "gold_fields": [
+    "facts",
+    "key_aliases",
+    "value_alias_groups",
+    "policy_expectations",
+    "common_targets",
+    "tracks",
+    "prerequisites",
+    "permission_reply",
+    "source_messages",
+    "expected_outcome"
+  ]
+}
