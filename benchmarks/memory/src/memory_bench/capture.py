@@ -6,6 +6,7 @@ from copy import deepcopy
 import json
 import os
 from pathlib import Path
+import time
 
 from .assets import canonical_json
 
@@ -13,7 +14,17 @@ from .assets import canonical_json
 def write_json(path: Path, value) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(canonical_json(value) + b"\n")
-    temporary.replace(path)
+    # Windows readers/scanners can briefly hold the destination without delete
+    # sharing. Retry only publication of this already-written file; never repeat
+    # model requests, SQLite operations, or append-only evidence writes.
+    for attempt in range(4):
+        try:
+            temporary.replace(path)
+            return
+        except PermissionError as exc:
+            if getattr(exc, "winerror", None) not in (5, 32, 33) or attempt == 3:
+                raise
+            time.sleep(0.025 * 2 ** attempt)
 
 
 class Capture:
