@@ -28,7 +28,7 @@ Versioned corpus + policy/instruction assets + explicit model/interface selectio
 
 Writing checkpoints receive their required prior state independently. Prepared-memory reading uses the same supplied records across model/prompt conditions. Sequence tests retain earlier misses; an absent correction or deletion prerequisite makes that control unexercised. Persona expected facts must never be seeded into sequence state to manufacture success. Prescribed peer controls are explicit fixture data and reported separately.
 
-Every condition gets independent user/workspace namespaces and a fresh store. New conversations receive instructions, selected memory and the new question. Follow-up turns retain only their current conversation's messages. User/workspace IDs are abstract labels rather than hosted accounts or filesystem paths.
+Every condition/track gets independent user/workspace namespaces and a fresh store. Write and read checkpoints each restore their own annotated starting state; only sequence conversations retain earlier writes. New conversations receive instructions, selected memory and the new question. Follow-up turns retain only their current conversation's messages. User/workspace IDs are abstract labels rather than hosted accounts or filesystem paths.
 
 ## Policies, instructions and interfaces
 
@@ -47,6 +47,16 @@ Both interfaces use the same memory records and operation implementation:
 - **`native`:** the model invokes the operations as native tools and returns an answer.
 
 Freeze operation semantics, argument schemas, state rendering and error handling before comparisons. Record interface effects separately from model, policy and wording effects. Gold answers, operation expectations, scoring aliases and conformance labels stay outside model-visible inputs.
+
+Both interfaces follow one response lifecycle: execute an operation batch in listed order, return its results/errors, then request the next response. Answers accompanying operations are provisional. Only a valid response without operations supplies the scored final answer. The limit is six operation batches plus at most one final-answer request, all within the whole-turn deadline. Phase 1 freezes this protocol; Phase 3 implements and verifies adapter parity.
+
+Storage precision/recall uses fixed, one-to-one fact/scope matching against each policy's annotations. In write checkpoints, unchanged prepared facts earn no new-write credit; full final state still determines correction, forgetting and preservation of required prior facts. Zero denominators produce `null`, and reports retain TP/FP/FN counts, denominators and coverage. Common behavioral targets remain the same across policies; valid conservative no-save decisions are scored through policy conformance.
+
+## Review decisions — 2026-10-03
+
+- **Interface lifecycle:** retain the shared dispatcher and results already required; add operation ordering, provisional answers, termination and round accounting so both interfaces answer after the same available results.
+- **Scoring:** retain separate policy conformance and common outcomes; specify matching, changes versus prepared state, zero denominators and aggregation before collecting evidence.
+- **Phase dependency:** test the dispatcher directly in Phase 2 and move JSON/native adapter parity acceptance to Phase 3, where adapters are implemented.
 
 ## Phase order
 
@@ -80,7 +90,7 @@ Phase 5 requires a later explicit request for the full sweep. Its default is all
 | Initial model | `Ornith-1.5-35B-Uncensored-Q6_K`, subject to a fresh catalog check |
 | Temperature / reasoning effort | `0` / `low` |
 | Output limit | 2,048 tokens per request |
-| Operation rounds | Six per turn |
+| Operation rounds | Six operation batches per turn, then at most one final-answer request |
 | Whole-turn deadline | 180 seconds, shared across all requests/operations in that turn |
 | Requests | Sequential, with no automatic retries or model fallback |
 | Local cost | Unpriced; `null` |
@@ -89,7 +99,7 @@ Accept only explicit loopback/private-network endpoints and exact advertised mod
 
 No hosted VM deployment, account provisioning, browser fixture, gateway or OpenShell is required. The standalone runner must not import OpenWorker providers, tools, memory code or prompt rendering. It generates no automatic titles or other auxiliary model calls.
 
-Record actual model ID, available server metadata, effective settings, corpus/policy/instruction/schema/scorer hashes, request counts, available usage and latency. Missing usage and unavailable metadata remain explicit `null`; failed cases remain visible. Preserve raw diagnostics outside Git and publish reviewed synthetic evidence without credentials or authentication headers.
+Record actual model ID, available server metadata, effective settings, corpus/policy/instruction/schema/response-protocol/scorer hashes, request counts, available usage and latency. Missing usage and unavailable metadata remain explicit `null`; failed cases remain visible. Preserve raw diagnostics outside Git and publish reviewed synthetic evidence without credentials or authentication headers.
 
 Replay rescoring uses captured evidence without inference and records its own revision/hash. Keep write, prepared-memory read and sequence scores separate. Report correction of current values separately from retirement of historical wording, and do not combine these results with earlier protocols.
 

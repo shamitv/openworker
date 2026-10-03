@@ -2,9 +2,9 @@
 
 ## Implementation
 
-Implement the experiment matrix and reproducible sequential scheduling. Assign stable condition identifiers for model, policy, prompt variant, interface, persona and repetition. Record the requested and actual schedule. Each condition has an independent store and explicitly identified conversations/checkpoints.
+Implement the experiment matrix and reproducible sequential scheduling. Assign stable condition identifiers for model, policy, prompt variant, interface, persona and repetition, with separate track/checkpoint identifiers. Record the requested and actual schedule. Each track has an independent store; write/read checkpoints restore their own starting snapshots, and only sequence conversations share accumulated state.
 
-Prepare and freeze six instruction assets: baseline, clearer rules and rules with development examples for each of the conservative and recurring policies. Within-policy variants must retain the same policy requirements. Freeze the corpus, contracts, rendering and scorer before held-out evaluation; record their hashes. Held-out cases must not be used to tune prompts or choose their examples.
+Prepare and freeze six instruction assets: baseline, clearer rules and rules with development examples for each of the conservative and recurring policies. Within-policy variants must retain the same policy requirements. Freeze the corpus, contracts, response lifecycle, rendering and scorer before held-out evaluation; record their hashes. Held-out cases must not be used to tune prompts or choose their examples.
 
 Report writing, prepared-memory reading and sequence outcomes separately. Compare wording within a model/policy/interface condition. Compare policies explicitly, with policy-specific conformance and common outcome columns. Preserve model/interface interactions and case-level results rather than collapsing all conditions into one percentage.
 
@@ -43,6 +43,6 @@ These commands are future interfaces. Run tests from the standalone package's te
 
 ## Acceptance
 
-All deterministic suites pass, including scheduling/filtering and gold-leakage checks. The smoke accounts for all twelve selected track runs, with complete capture or explicit failure records. Routing, state/conversation isolation, actual operation execution, scoring and cleanup are verified. An explicit failure record satisfies coverage accounting, but unresolved infrastructure failures prevent the smoke gate from passing.
+All deterministic suites pass, including scheduling/filtering, track-order invariance, adapter lifecycle parity, scoring denominator/prior-state fixtures and gold-leakage checks. The smoke accounts for all twelve selected track runs, with complete capture or explicit failure records. Routing, state/conversation isolation, actual operation execution, scoring and cleanup are verified. An explicit failure record satisfies coverage accounting, but unresolved infrastructure failures prevent the smoke gate from passing.
 
 Record actual commands, package/environment versions, model/settings, collection/scoring revisions, hashes, model outcomes, repeated attempts and cleanup in status.md. Leave Phase 5 pending.
