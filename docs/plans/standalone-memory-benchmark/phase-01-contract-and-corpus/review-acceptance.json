@@ -1,0 +1,393 @@
+{
+  "status": "passed",
+  "date": "2026-10-03",
+  "timezone": "Asia/Kolkata",
+  "phases": [
+    1,
+    2
+  ],
+  "description": "Accepted Phase 1 review corrections applied after Phase 2 acceptance, without inference",
+  "implementation_revision": {
+    "git_base": "97f8bc1514d03a5a5f33c85adedd2ce39e55957b",
+    "worktree": "uncommitted accepted review corrections over the current Phase 2 implementation",
+    "source_tree_sha256": "da0e9b0dec882c66f1a8d98555635828ac1d85f4c23a7a0b3be2371a73430d33"
+  },
+  "source_manifest_algorithm": "SHA-256 of canonical sorted-key compact JSON mapping relative paths to raw-file SHA-256; build/cache artifacts excluded",
+  "source_file_hashes": {
+    "LICENSE": "9adea960040c493741f3a39625ec5dbe5f18623097d1dc451d7b550608176d28",
+    "pyproject.toml": "8ebda4e188018835991a1cd340e467450b1787dccdf3546a5876aced8e4cb504",
+    "README.md": "6f858e2031b5c89e19c60699a110b6b71d588b3f3043ca45cef5ffe4c902041a",
+    "src/memory_bench/__init__.py": "b935b1cd81369ac8c8b6f0fc76e41bc0b917286b20255fa288956180179f6339",
+    "src/memory_bench/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+    "src/memory_bench/assets/contract.json": "2cc679a2e2627c136df457936eb10a0d18083df964363310889315cbb2b0a5fd",
+    "src/memory_bench/assets/corpus/development.json": "115acfeba69f2b8ad0dab88959d32f451c9dd111cf92c9b8131f7bf00658300b",
+    "src/memory_bench/assets/corpus/heldout.json": "3a198c31df2d02a7ff46242d48f3bddd85b79db6eff2b9efe7e805d55fa30838",
+    "src/memory_bench/assets/corpus-schema.json": "db08f0e09b39e8a2c03b006293288806723738c6cc2e2eb81c0d6a60e0ab79a8",
+    "src/memory_bench/assets/fixtures/lifecycle.json": "51c1c48079d650ff5c44f49004e1b77930ab7c895a59e7aab2dd397e76e5a56d",
+    "src/memory_bench/assets/fixtures/native.json": "af5ab1c1389a8da4112f039612807df56b8bc7a380f42386fd6f04774a8dbeb5",
+    "src/memory_bench/assets/fixtures/scoring.json": "8933184b27527ade533b3b4e7d8faf3ab6bf8f8f4a44897df7013f7fa1742245",
+    "src/memory_bench/assets/policies/conservative.md": "c84c13d62cf8cc8fdbdc95e16d9f4572d65423e2ace9daa76d2779e89db277dc",
+    "src/memory_bench/assets/policies/recurring.md": "a1ebba539d5be75af87b9eca2a95338c8de85717e85245af640c389caf0632ff",
+    "src/memory_bench/assets/protocol/operations.md": "dc96d63bb0f872d88f662b6d782d6df1f9ee345ec43690c9c88644d9eb314153",
+    "src/memory_bench/assets/protocol/scoring.md": "58aae0c8376856d74ce5d38b59a0384a1a04dc8a595a8014565fb3d3fb1bb592",
+    "src/memory_bench/assets.py": "de339e17b3edaf759e0481a5aba2d5e7d11ebb208b65052cc4405b41266bb864",
+    "src/memory_bench/checkpoints.py": "c71c09da12344333ff7c7836ad310ba0f5ddef6fad8117c62c8a9f10e2cf35ca",
+    "src/memory_bench/cli.py": "babc897f2ed2ccca1e65b822b6082ffde1db5d8705ec8c9c187f79bf82853a72",
+    "src/memory_bench/contract.py": "278e30f90df0a8ab0ed665b23aa76fe8dbf9fb8610efc3706dc9e05ac4cf62ba",
+    "src/memory_bench/matching.py": "594d54b0775de32a1e2359acc2b6c8467b1223cbee59b0923478caaf12c4d1fb",
+    "src/memory_bench/model_input.py": "45cda57104e905e09d68c0ba83d2263cf3f2455c48b4553a223c8b3e90d89ecb",
+    "src/memory_bench/operations.py": "e26f2f6196e141c079081a657f557619bcfc8d44627d1220066a49737d7440c6",
+    "src/memory_bench/provenance.py": "772a93466cf9acadfe378dc489e5d51e2c8d951136dd47771f9a0ee333420913",
+    "src/memory_bench/scoring.py": "e9776958aec16404e66660b49165217fe2fc48b400161fe2eb21fe1c2a654cde",
+    "src/memory_bench/store.py": "924b4c9ab1c750a68d83ea6af78ee272332a251004e593ed739fdf8befc98192",
+    "src/memory_bench/validation.py": "4bc7b2879de7d6d1bde33048edfa650f834a269347867c7123155b4efbe0cbab",
+    "tests/conftest.py": "0c936e8d49e366a7ea1bee15c8d26eb935e955b7c5a28077e66c67f4b40ad14a",
+    "tests/test_checkpoint_execution.py": "907db2728a9877325b959262eee953317a8f155307ca0e8f025ddeba95a049eb",
+    "tests/test_contract.py": "8616395c4e6c5b47a29444d0bf4c628217e8e41d84a8bb15040139d99e2de555",
+    "tests/test_corpus.py": "baa56ff772a9f3bcd256865e482356baa97daa531359cb06b1a8ba3453fbe5a2",
+    "tests/test_fixtures_and_cli.py": "1c6f565ac1ccbdaeb3b3ef8a92db4c71d8a5abae2768933cd6351afedda61155",
+    "tests/test_portability.py": "f5870cf36e042e25dccba7a0199e391abf475e21f50bb3ed2669a425618482fb",
+    "tests/test_scoring.py": "525cb1c2f3df6853b5f7676c1f63f391ffea1005c86eecf6147ed035c68920e8",
+    "tests/test_store.py": "d5f6dcb8dda8380d96cd23154d2968bec517064ceccc78ffd30c82b0828100cf",
+    "tools/build_assets.py": "1d9ec7dabe42f73e50a9371cfef9c36d55ea50ba37870d295a62d71f7863a6e2",
+    "tools/verify_portability.py": "d7ee8e4cf4995dabf01cbc6b6748655ee22ebf912e5eabcdc5bc2a8dabd89326"
+  },
+  "scorer": {
+    "revision": "standalone-memory-scorer-v1",
+    "sha256": "ba79518e096b7ba1d43b3fc8a6347dc0aeb196fd9cf1e2c7debaf53b122dae9c",
+    "source_hashes": {
+      "scoring.py": "e9776958aec16404e66660b49165217fe2fc48b400161fe2eb21fe1c2a654cde",
+      "matching.py": "594d54b0775de32a1e2359acc2b6c8467b1223cbee59b0923478caaf12c4d1fb",
+      "checkpoints.py": "c71c09da12344333ff7c7836ad310ba0f5ddef6fad8117c62c8a9f10e2cf35ca",
+      "operations.py": "e26f2f6196e141c079081a657f557619bcfc8d44627d1220066a49737d7440c6",
+      "store.py": "924b4c9ab1c750a68d83ea6af78ee272332a251004e593ed739fdf8befc98192",
+      "contract.py": "278e30f90df0a8ab0ed665b23aa76fe8dbf9fb8610efc3706dc9e05ac4cf62ba",
+      "model_input.py": "45cda57104e905e09d68c0ba83d2263cf3f2455c48b4553a223c8b3e90d89ecb",
+      "assets.py": "de339e17b3edaf759e0481a5aba2d5e7d11ebb208b65052cc4405b41266bb864",
+      "provenance.py": "772a93466cf9acadfe378dc489e5d51e2c8d951136dd47771f9a0ee333420913"
+    },
+    "asset_hashes": {
+      "contract.json": "d991db4b1a3e6222fa0f1dbf9e70b53c18b305cb497ccb25c9cc5371e81227b5",
+      "corpus/development.json": "8cf19742ff549be73a6be7a8ae88e28b39a0da5129c916b1cfac4dcd5bcce199",
+      "corpus/heldout.json": "aa56e6ec4578af3b5d725c127938054cdc1b7cac7e38063c863d49d4c25e60f8",
+      "corpus-schema.json": "299acac7a3e5f3ab4654ed699408423a48dc36d9341d95d851d6ff87f4b860b9",
+      "fixtures/lifecycle.json": "a18989b8cd9d4d9226635f50fd742c7f997ee31fca7b9883cb4caf86990d4d1d",
+      "fixtures/native.json": "c95e5c7798c7ac58287ada110169010be17058b6651bddea99bac6dd20d7e77f",
+      "fixtures/scoring.json": "c1805b27d42b32cfb589901fa7083f5886684ca589b3d647449aa73401aa55e6",
+      "policies/conservative.md": "c84c13d62cf8cc8fdbdc95e16d9f4572d65423e2ace9daa76d2779e89db277dc",
+      "policies/recurring.md": "a1ebba539d5be75af87b9eca2a95338c8de85717e85245af640c389caf0632ff",
+      "protocol/operations.md": "dc96d63bb0f872d88f662b6d782d6df1f9ee345ec43690c9c88644d9eb314153",
+      "protocol/scoring.md": "58aae0c8376856d74ce5d38b59a0384a1a04dc8a595a8014565fb3d3fb1bb592"
+    },
+    "hash_algorithm": "sha256; LF UTF-8 source/text and canonical JSON assets"
+  },
+  "validation": {
+    "asset_hashes": {
+      "contract.json": "d991db4b1a3e6222fa0f1dbf9e70b53c18b305cb497ccb25c9cc5371e81227b5",
+      "corpus-schema.json": "299acac7a3e5f3ab4654ed699408423a48dc36d9341d95d851d6ff87f4b860b9",
+      "corpus/development.json": "8cf19742ff549be73a6be7a8ae88e28b39a0da5129c916b1cfac4dcd5bcce199",
+      "corpus/heldout.json": "aa56e6ec4578af3b5d725c127938054cdc1b7cac7e38063c863d49d4c25e60f8",
+      "fixtures/lifecycle.json": "a18989b8cd9d4d9226635f50fd742c7f997ee31fca7b9883cb4caf86990d4d1d",
+      "fixtures/native.json": "c95e5c7798c7ac58287ada110169010be17058b6651bddea99bac6dd20d7e77f",
+      "fixtures/scoring.json": "c1805b27d42b32cfb589901fa7083f5886684ca589b3d647449aa73401aa55e6",
+      "policies/conservative.md": "c84c13d62cf8cc8fdbdc95e16d9f4572d65423e2ace9daa76d2779e89db277dc",
+      "policies/recurring.md": "a1ebba539d5be75af87b9eca2a95338c8de85717e85245af640c389caf0632ff",
+      "protocol/operations.md": "dc96d63bb0f872d88f662b6d782d6df1f9ee345ec43690c9c88644d9eb314153",
+      "protocol/scoring.md": "58aae0c8376856d74ce5d38b59a0384a1a04dc8a595a8014565fb3d3fb1bb592"
+    },
+    "bundle_hash": "bfaff8d303291fea2152fb973e3e6b1231c3f7de472dec3bc114a0bde5457691",
+    "counts": {
+      "development": {
+        "controls": 210,
+        "conversations": 270,
+        "enabled_checkpoints": {
+          "read": 90,
+          "sequence": 270,
+          "write": 195
+        },
+        "personas": 15,
+        "scripted_turns": 315
+      },
+      "heldout": {
+        "controls": 210,
+        "conversations": 270,
+        "enabled_checkpoints": {
+          "read": 90,
+          "sequence": 270,
+          "write": 195
+        },
+        "personas": 15,
+        "scripted_turns": 315
+      }
+    },
+    "hash_algorithm": "sha256; canonical JSON / LF UTF-8 text",
+    "inference_requests": 0,
+    "lifecycle_fixtures": 10,
+    "native_schema_fixtures": 4,
+    "package_version": "0.1.0",
+    "protocol": "standalone-memory-benchmark-v1",
+    "scoring_fixtures": 25,
+    "status": "valid"
+  },
+  "changed_assets": [
+    "corpus/development.json",
+    "protocol/scoring.md"
+  ],
+  "static_checks": {
+    "changed_alias_groups": [
+      "P03/style",
+      "P05/style",
+      "P07/style",
+      "P09/style",
+      "P12/style"
+    ],
+    "all_other_corpus_content_unchanged": true,
+    "heldout_unchanged": true,
+    "deterministic_regeneration": true,
+    "historical_conversations_preserved": 150,
+    "historical_messages_preserved": 195,
+    "python_310_syntax_files": 23,
+    "validation_status": "valid",
+    "bundle_hash": "bfaff8d303291fea2152fb973e3e6b1231c3f7de472dec3bc114a0bde5457691"
+  },
+  "historical_records": {
+    "phase-01-contract-and-corpus": {
+      "acceptance.json": "76b6b406841815ddf1a70308f67b31d01a595ac9250a7274c24792a5ffc9d1c0",
+      "status.md": "9f948881c3be482892d6131bc70572016d08dfaa1f6c43c716c437fe354166ea"
+    },
+    "phase-02-store-and-scoring": {
+      "acceptance.json": "3a999b8afbc2a507e660e87b48048d7ffa178c6fcf4de60a63ba92be3fdb44e6",
+      "status.md": "c0d518299765bf105f460e45b309c54374279b1f1d8bd9d67f2a2eb02e782f54"
+    }
+  },
+  "review_sha256": "3476923d6fe1d9b4374f00e209052fd7f7b18bbda521639e049fbda7682caf75",
+  "tests": {
+    "source": {
+      "passed": 255,
+      "seconds": 72.72,
+      "command": [
+        "C:/work/openworker/.venv/Scripts/python.exe",
+        "-m",
+        "pytest",
+        "-c",
+        "pyproject.toml",
+        "--confcutdir=tests",
+        "--basetemp",
+        "build/review-full-4e5dfffd49f548f88f22ee44a4073351",
+        "-q"
+      ],
+      "environment": {
+        "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"
+      },
+      "cwd": "benchmarks/memory"
+    },
+    "installed_wheel": {
+      "passed": 255,
+      "seconds": 69.76,
+      "summary": "........................................................................ [ 28%]\n........................................................................ [ 56%]\n........................................................................ [ 84%]\n.......................................                                  [100%]\n255 passed in 69.76s (0:01:09)"
+    },
+    "focused": {
+      "passed": 158,
+      "seconds": 14.87,
+      "note": "Run before adding the final prior-state/duplicate regression"
+    }
+  },
+  "commands": [
+    [
+      "python",
+      "tools/build_assets.py",
+      "--development-source",
+      "../../tests/fixtures/memory/personas_v1.json"
+    ],
+    [
+      "python",
+      "-m",
+      "memory_bench",
+      "validate"
+    ],
+    [
+      "python",
+      "tools/verify_portability.py",
+      "--wheelhouse",
+      "build/wheelhouse"
+    ]
+  ],
+  "environment": {
+    "python": "3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]",
+    "module": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env\\Lib\\site-packages\\memory_bench\\__init__.py",
+    "distributions": {
+      "anyio": "4.15.1",
+      "certifi": "2026.7.22",
+      "colorama": "0.4.6",
+      "h11": "0.16.0",
+      "httpcore": "1.0.9",
+      "httpx": "0.28.1",
+      "idna": "3.20",
+      "iniconfig": "2.3.0",
+      "packaging": "26.3",
+      "pip": "25.3",
+      "pluggy": "1.6.0",
+      "Pygments": "2.21.0",
+      "pytest": "9.1.1",
+      "setuptools": "84.0.0",
+      "standalone-memory-bench": "0.1.0",
+      "typing_extensions": "4.16.0",
+      "wheel": "0.48.0"
+    },
+    "requires_python": ">=3.10",
+    "requirements": [
+      "httpx<1,>=0.27",
+      "pytest<10,>=8; extra == \"test\""
+    ],
+    "openworker_available": false
+  },
+  "portability": {
+    "report": "benchmarks/memory/build/portability-v6f3s6qd/report.json",
+    "commands": [
+      {
+        "command": [
+          "C:\\work\\openworker\\.venv\\Scripts\\python.exe",
+          "-m",
+          "venv",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env"
+        ],
+        "cwd": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\unrelated-cwd",
+        "returncode": 0
+      },
+      {
+        "command": [
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env\\Scripts\\python.exe",
+          "-m",
+          "pip",
+          "--isolated",
+          "--cache-dir",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\pip-cache",
+          "install",
+          "--no-index",
+          "--find-links",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\wheelhouse",
+          "setuptools>=68",
+          "wheel"
+        ],
+        "cwd": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\unrelated-cwd",
+        "returncode": 0
+      },
+      {
+        "command": [
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env\\Scripts\\python.exe",
+          "-m",
+          "pip",
+          "--isolated",
+          "--cache-dir",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\pip-cache",
+          "wheel",
+          "--no-index",
+          "--no-build-isolation",
+          "--find-links",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\wheelhouse",
+          "--no-deps",
+          "--wheel-dir",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\wheels",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\copied-package"
+        ],
+        "cwd": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\unrelated-cwd",
+        "returncode": 0
+      },
+      {
+        "command": [
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env\\Scripts\\python.exe",
+          "-m",
+          "pip",
+          "--isolated",
+          "--cache-dir",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\pip-cache",
+          "install",
+          "--no-index",
+          "--find-links",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\wheelhouse",
+          "--find-links",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\wheels",
+          "standalone-memory-bench[test]==0.1.0"
+        ],
+        "cwd": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\unrelated-cwd",
+        "returncode": 0
+      },
+      {
+        "command": [
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env\\Scripts\\python.exe",
+          "-I",
+          "-c",
+          "import importlib.metadata as m, importlib.util, json, sys\nimport memory_bench\nassert importlib.util.find_spec('coworker') is None, 'OpenWorker is installed'\nassert 'site-packages' in memory_bench.__file__, 'using source tree rather than wheel'\nprint(json.dumps({'python':sys.version, 'module':memory_bench.__file__, 'distributions':{d.metadata['Name']:d.version for d in m.distributions()}, 'requires_python':m.metadata('standalone-memory-bench')['Requires-Python'], 'requirements':m.requires('standalone-memory-bench'), 'openworker_available':False}))\n"
+        ],
+        "cwd": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\unrelated-cwd",
+        "returncode": 0
+      },
+      {
+        "command": [
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env\\Scripts\\python.exe",
+          "-I",
+          "-c",
+          "import socket, sys\ndef forbidden(*args, **kwargs):\n    raise AssertionError('validation attempted network access')\nsocket.create_connection = forbidden\nsocket.socket.connect = forbidden\nsocket.socket.connect_ex = forbidden\nfrom memory_bench.cli import main\nassert main(['validate']) == 0\nassert 'coworker' not in sys.modules\n"
+        ],
+        "cwd": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\unrelated-cwd",
+        "returncode": 0
+      },
+      {
+        "command": [
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env\\Scripts\\python.exe",
+          "-I",
+          "-m",
+          "memory_bench",
+          "validate"
+        ],
+        "cwd": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\unrelated-cwd",
+        "returncode": 0
+      },
+      {
+        "command": [
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env\\Scripts\\python.exe",
+          "-I",
+          "-c",
+          "import json; from memory_bench.provenance import scorer_provenance; print(json.dumps(scorer_provenance()))"
+        ],
+        "cwd": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\unrelated-cwd",
+        "returncode": 0
+      },
+      {
+        "command": [
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\env\\Scripts\\python.exe",
+          "-m",
+          "pytest",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\copied-package\\tests",
+          "-c",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\copied-package\\pyproject.toml",
+          "--confcutdir",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\copied-package\\tests",
+          "-o",
+          "pythonpath=",
+          "--basetemp",
+          "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\test-temp",
+          "-q"
+        ],
+        "cwd": "C:\\work\\openworker\\benchmarks\\memory\\build\\portability-v6f3s6qd\\unrelated-cwd",
+        "returncode": 0
+      }
+    ],
+    "wheel_sha256": "8cf9fe1896d162e38cde502fee627a7b4ca6f878f4733143ab9038138efd9448",
+    "source_and_installed_scorer_equal": true,
+    "copied_package_matches_manifest": true,
+    "successful_artifacts_retained": true
+  },
+  "git_diff_check": true,
+  "installation_network": false,
+  "inference_requests": 0,
+  "commits_created": false,
+  "pushes_performed": false,
+  "limitations": [
+    "Lexical aliases can overmatch unrelated or negated text and miss unlisted paraphrases; only the five agreed development formats were tightened.",
+    "Sibling validation checks canonical values, not every possible alias combination or model answer.",
+    "Portability was checked in a clean local environment, not on a second physical machine.",
+    "Python 3.10 received a syntax check; runtime verification used Python 3.14.2.",
+    "Failure cleanup is best effort; evidence preservation failure retains the disposable directory, and Windows locks may prevent removal."
+  ]
+}

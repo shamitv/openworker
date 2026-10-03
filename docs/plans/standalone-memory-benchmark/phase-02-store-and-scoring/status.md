@@ -57,3 +57,40 @@ The scorer hash covers the LF-normalized implementation source hash map, frozen 
 ## Limits and subsequent phases
 
 Runtime acceptance used Python 3.14.2 on Windows; Python 3.10 received a syntax check rather than runtime execution. Fixed aliases can miss valid free-form keys/paraphrases; unmatched records and raw snapshots remain inspectable. No model adapters, HTTP execution, live inference, model comparison or hosted deployment occurred. JSON/native execution parity belongs to Phase 3. Phases 3–5 remain pending.
+
+
+## Corrective review acceptance — 2026-10-03
+
+The preceding acceptance remains the historical record of the original implementation.
+Accepted Phase 1 review feedback was subsequently applied to the working tree after
+Phase 2 acceptance. The [review response](../phase-01-contract-and-corpus/review-response.md) documents each disposition;
+[review-acceptance.json](../phase-01-contract-and-corpus/review-acceptance.json) records the new commands, environment and full hashes.
+Both original acceptance.json files are preserved unchanged.
+
+Targeted development format aliases were tightened for P03/P05/P07/P09/P12. Validation
+now rejects canonical sibling-value collisions in either split and enforces C1 as
+policy_difference's primary checkpoint. Scoring documentation clarifies storage
+ownership, propagated policy expectations, unit coverage and lexical limitations.
+Extensible asset checks and bounded failure cleanup with preserved diagnostics were added.
+Only corpus/development.json and protocol/scoring.md changed among bundled assets;
+held-out data, messages, snapshots, policy requirements and expected outcomes are unchanged.
+
+Offline validation reports valid. The source suite passed **255 tests in 72.72s**;
+the copied, built and installed wheel passed **255 tests in 69.76s** without OpenWorker,
+source fallback or network access. Regeneration is deterministic; all 150 historical
+conversations and 195 messages are preserved. Python 3.10 syntax parsing passed for
+23 Python files. Inference requests: **0**. No commits or pushes were performed.
+
+| Corrective evidence | SHA-256 |
+|---|---|
+| Development corpus | `8cf19742ff549be73a6be7a8ae88e28b39a0da5129c916b1cfac4dcd5bcce199` |
+| Bundle | `bfaff8d303291fea2152fb973e3e6b1231c3f7de472dec3bc114a0bde5457691` |
+| Scorer | `ba79518e096b7ba1d43b3fc8a6347dc0aeb196fd9cf1e2c7debaf53b122dae9c` |
+| Package tree (37 raw-file hashes) | `da0e9b0dec882c66f1a8d98555635828ac1d85f4c23a7a0b3be2371a73430d33` |
+| Installed wheel | `8cf9fe1896d162e38cde502fee627a7b4ca6f878f4733143ab9038138efd9448` |
+
+The detailed ignored report is benchmarks/memory/build/portability-v6f3s6qd/report.json.
+The new hashes identify the corrected working tree; earlier hash tables identify
+historical revisions. Fixed aliases can still overmatch or miss paraphrases, sibling
+checks cover canonical values only, and failure cleanup is best effort under locks.
+Phases 1 and 2 have corrective acceptance; Phases 3–5 remain pending.

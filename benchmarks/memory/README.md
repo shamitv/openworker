@@ -176,6 +176,19 @@ unit distinctions. Format and reason are scored independently. Development reaso
 aliases were tightened from historical single-word matches so a generic probe's
 topic cannot satisfy a reason. Unknown keys or unlisted paraphrases remain unmatched;
 the future reports must show that limitation and retain raw unmatched records.
+Aliases can also overmatch unrelated text; the lexical matcher does not interpret
+negation. Targeted development format aliases require summaries with sets,
+ingredients with grams, commentary after settings, distances with kilometres,
+and complete direction phrases. Canonical sibling values must remain separable.
+Storage ownership means the owner's user namespace, rather than `subject: owner`;
+authorized third-party project facts count as owner saves and peer controls do not.
+
+`policy_difference` marks C1's primary policy divergence from empty owner state.
+C2/C3 inherit different state; C4's different additions reflect those priors and
+both policies reach the same explicit final state. Each split has 15 tagged
+checkpoints and 60 conversations with differing policy-expectation objects.
+Frozen unit normalization currently covers P02/P13's development context values
+and no held-out canonical values; its authoring origin is not inferred from this.
 
 `validate` prints counts, individual SHA-256 asset hashes and a bundle hash. JSON
 hashes use sorted-key compact UTF-8 JSON; Markdown hashes use LF-normalized UTF-8.
@@ -206,3 +219,6 @@ the wheel with `--no-index`, runs guarded validation from an unrelated working
 directory, and tests the installed wheel with the source-path override disabled.
 Reports include the installed scorer hash. Owned verification environments remain
 in the ignored `build` directory.
+On failure, command diagnostics are saved under `build/portability-reports` before
+the current invocation's disposable directory is removed. Cleanup failures are
+reported alongside the original error; previous verification directories are retained.
