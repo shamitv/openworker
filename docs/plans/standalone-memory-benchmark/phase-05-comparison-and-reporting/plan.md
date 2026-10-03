@@ -18,6 +18,8 @@ Present model comparisons with instructions/interface fixed; wording comparisons
 
 Record model ID, available server/environment metadata, effective inference settings, request counts, available usage and latency. Missing usage or unknown metadata remains null; local cost is unpriced. Preserve collection, policy/prompt/corpus/schema/response-protocol and scorer provenance. Replay-based rescoring preserves the original collection revision and adds the replay's scorer revision/hash without inference.
 
+The requested output limit is `max_tokens=12288` (12k), increased from 2048 by the user on 2026-10-03. Rebuild/install the updated standalone package before a new collection. Attempt 01 was launched with 2048; retain that setting in its evidence and identify a collection using the increased limit as a separate attempt.
+
 Retain raw diagnostics privately, review published evidence for credentials/authentication headers, remove owned temporary stores/resources and verify cleanup. Test portability in a separate environment containing only the copied package and its dependencies; require validation and deterministic tests there, plus live endpoint access only when live execution is requested. Preserve unrelated files and services.
 
 ## Planned full command

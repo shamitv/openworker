@@ -4,6 +4,14 @@ Status: In progress — software accepted; full held-out attempt 01 collecting
 
 Planning date: 2026-10-03 (Asia/Kolkata). Dependencies: Phases 1–4 and a later explicit full-sweep request.
 
+On 2026-10-03 the user requested increasing the output limit from 2k to 12k.
+The source client and current requested settings now use `max_tokens=12288`,
+up from 2048. The already installed wheel used for attempt 01 retains its original
+2048 limit; this source change does not alter that process or its recorded evidence.
+A collection with the increased limit requires the rebuilt package and a separately
+identified attempt. The earlier acceptance and launch hashes below describe the
+original package.
+
 The user explicitly requested **“Implement phase 5”** after the completed Phase 4
 delivery and an explanation of the full held-out matrix. This authorizes the Phase 5
 sweep. [execution-request.json](execution-request.json) records the selections and

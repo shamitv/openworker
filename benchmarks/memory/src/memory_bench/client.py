@@ -12,7 +12,7 @@ import httpx
 
 from .assets import strict_json
 
-SETTINGS = {"temperature": 0, "reasoning_effort": "low", "max_tokens": 2048, "stream": False}
+SETTINGS = {"temperature": 0, "reasoning_effort": "low", "max_tokens": 12288, "stream": False}
 PRIVATE_NETWORKS = tuple(ipaddress.ip_network(value) for value in
                          ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7"))
 

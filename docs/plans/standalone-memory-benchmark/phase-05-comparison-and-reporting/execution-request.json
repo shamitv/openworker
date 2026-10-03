@@ -2,7 +2,7 @@
   "attempt": "heldout-attempt-01",
   "authorization": {
     "date": "2026-10-03",
-    "scope": "Full held-out matrix specified by the Phase 5 plan; prior endpoint/model/settings retained.",
+    "scope": "Full held-out matrix specified by the Phase 5 plan; prior endpoint/model retained, max_tokens updated to 12288 by the later user request.",
     "timezone": "Asia/Kolkata",
     "user_request": "Implement phase 5"
   },
@@ -58,9 +58,15 @@
     ]
   },
   "settings": {
-    "max_tokens": 2048,
+    "max_tokens": 12288,
     "reasoning_effort": "low",
     "stream": false,
     "temperature": 0
+  },
+  "settings_update": {
+    "date": "2026-10-03",
+    "previous_max_tokens": 2048,
+    "user_request": "Modify max tokens to 12k (from current 2k).",
+    "applies_to": "Subsequent collections using the rebuilt package; heldout-attempt-01 was launched with max_tokens=2048."
   }
 }

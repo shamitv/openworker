@@ -251,7 +251,7 @@ Both adapters use the same ordered operation lifecycle: text accompanying operat
 is provisional, operation errors are returned without repair, and only a nonempty
 answer without operations is final. A turn permits six operation batches plus one
 final-answer request and at most seven requests, with a 180-second total deadline.
-Submitted wire settings are temperature=0, reasoning_effort=low, max_tokens=2048,
+Submitted wire settings are temperature=0, reasoning_effort=low, max_tokens=12288,
 stream=false. Unsupported settings fail visibly; server-effective settings remain
 null when the server does not report them. Successfully committed writes survive
 later errors. Fresh conversations receive only current context, selected memory
