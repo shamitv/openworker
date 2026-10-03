@@ -8,6 +8,7 @@ import importlib.metadata
 import platform
 
 from .assets import asset_hashes, canonical_json
+from . import __version__
 
 SCORER_REVISION = "standalone-memory-scorer-v1"
 SCORER_MODULES = ("scoring.py", "matching.py", "checkpoints.py", "operations.py", "store.py",
@@ -34,5 +35,5 @@ def collection_provenance() -> dict:
     return {"revision": revision, "source_hashes": sources, "asset_hashes": assets,
             "sha256": hashlib.sha256(canonical_json({"revision": revision, "sources": sources, "assets": assets})).hexdigest(),
             "python": platform.python_version(), "platform": platform.platform(),
-            "httpx": importlib.metadata.version("httpx"), "package_version": __import__("memory_bench").__version__,
+            "httpx": importlib.metadata.version("httpx"), "package_version": __version__,
             "hash_algorithm": "sha256; LF UTF-8 source/text and canonical JSON assets"}

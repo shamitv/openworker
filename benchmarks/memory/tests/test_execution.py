@@ -130,3 +130,18 @@ def test_track_order_does_not_change_scores_or_snapshots(tmp_path, development):
             scores[row["checkpoint_id"]] = score_checkpoint(p, c, "recurring", evidence["track"], evidence)
         results.append(scores)
     assert results[0] == results[1]
+
+
+def test_interrupt_retains_current_turn_and_unexecuted_coverage(tmp_path):
+    def handler(request):
+        if request.method == "GET":
+            return httpx.Response(200, json={"data": [{"id": "exact"}]})
+        raise asyncio.CancelledError()
+    path = tmp_path / "interrupted"
+    result = asyncio.run(collect(base_url="http://localhost/v1", models=["exact"], output=path,
+        schedule=tiny_schedule(), requested={}, transport=httpx.MockTransport(handler)))
+    assert result["status"] == "interrupted"
+    assert result["coverage"]["failed"] == 1
+    assert result["coverage"]["unexecuted"] > 0
+    assert result["cleanup"]["status"] == "complete"
+    assert read_checkpoints(path)[0]["evidence"]["turns"][0]["status"] == "interrupted"

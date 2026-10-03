@@ -29,6 +29,20 @@ def canonical_json(value) -> bytes:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
 
 
+def strict_json(value):
+    """Reject duplicate keys and non-JSON numbers instead of silently repairing."""
+    def object_pairs(pairs):
+        output = {}
+        for key, item in pairs:
+            if key in output:
+                raise ValueError(f"duplicate JSON key: {key}")
+            output[key] = item
+        return output
+    def invalid_constant(value):
+        raise ValueError(f"non-JSON number: {value}")
+    return json.loads(value, object_pairs_hook=object_pairs, parse_constant=invalid_constant)
+
+
 def asset_hashes() -> dict[str, str]:
     """JSON hashes use canonical JSON; text hashes use LF-normalized UTF-8."""
     hashes = {}

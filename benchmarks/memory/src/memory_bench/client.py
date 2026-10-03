@@ -10,6 +10,8 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from .assets import strict_json
+
 SETTINGS = {"temperature": 0, "reasoning_effort": "low", "max_tokens": 2048, "stream": False}
 PRIVATE_NETWORKS = tuple(ipaddress.ip_network(value) for value in
                          ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7"))
@@ -49,7 +51,7 @@ def local_url(value: str) -> str:
 
 def validate_model_id(model: str) -> None:
     if (not isinstance(model, str) or not model.strip() or model != model.strip() or
-            model.lower().startswith(("openrouter/", "openrouter:", "openai:", "provider:", "local:"))):
+            model.lower().startswith(("openrouter/", "openrouter:", "openai/", "openai:", "anthropic:", "provider:", "local:"))):
         raise ClientError("routing_error", "model must be an exact advertised ID, without a route alias")
 
 
@@ -88,14 +90,15 @@ class LocalClient:
             event["status_code"] = response.status_code
             event["server"] = response.headers.get("server")
             event["request_id"] = response.headers.get("x-request-id")
+            if 300 <= response.status_code < 400:
+                event["response_text"] = response.text
+                raise ClientError("routing_error", "redirect refused")
             try:
-                data = response.json()
+                data = strict_json(response.text)
             except ValueError as exc:
                 event["response_text"] = response.text
                 raise ClientError("api_error", "HTTP response is not JSON") from exc
             event["response"] = data
-            if 300 <= response.status_code < 400:
-                raise ClientError("routing_error", "redirect refused")
             if response.status_code >= 400:
                 code = "unsupported_settings" if response.status_code in (400, 422) and any(
                     key in str(data).lower() for key in SETTINGS) else "api_error"
@@ -103,6 +106,9 @@ class LocalClient:
             if not isinstance(data, dict):
                 raise ClientError("api_error", "HTTP JSON envelope must be an object")
             event["usage"] = deepcopy(data.get("usage"))
+            event["response_model"] = data.get("model")
+            event["response_id"] = data.get("id")
+            event["system_fingerprint"] = data.get("system_fingerprint")
             return data
         except (asyncio.TimeoutError, httpx.TimeoutException) as exc:
             event["error"] = {"code": "deadline", "message": str(exc) or "request exceeded remaining turn time"}

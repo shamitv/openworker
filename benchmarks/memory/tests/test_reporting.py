@@ -102,3 +102,21 @@ def test_live_cli_requires_explicit_selections_and_fixed_smoke(args):
 def test_existing_output_directory_is_not_overwritten(evidence):
     with pytest.raises(FileExistsError):
         replay(evidence, evidence)
+
+
+def test_complete_fixed_smoke_cli_uses_mock_http_only(tmp_path, monkeypatch, capsys):
+    from memory_bench.client import LocalClient
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, json={"data": [{"id": "exact"}]} if request.method == "GET" else
+            {"choices": [{"message": {"content": '{"answer":"UNKNOWN","operations":[]}'}}]})
+    monkeypatch.setattr("memory_bench.execution.LocalClient", lambda url, **kwargs:
+        LocalClient(url, transport=httpx.MockTransport(handler), record=kwargs["record"]))
+    path = tmp_path / "full-smoke"
+    assert cli.main(["smoke", "--base-url", "http://localhost/v1", "--models", "exact", "--output", str(path)]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["coverage"] == {"track_runs": 12, "checkpoints": 148, "completed": 148, "failed": 0, "unexecuted": 0}
+    assert len(calls) == 173
+    assert result["requests"]["usage"]["prompt_tokens"] is None
+    assert (path / "results.json").is_file()

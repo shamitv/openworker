@@ -153,3 +153,45 @@ def test_native_duplicate_call_ids_are_format_failure():
     value["choices"][0]["message"]["tool_calls"][1]["id"] = "call-0-0"
     with pytest.raises(ValueError, match="duplicate"):
         NativeAdapter().parse(value)
+
+
+@pytest.mark.parametrize("text", ['{"answer":"first","answer":"second","operations":[]}',
+    '{"answer":"x","operations":[{"name":"memory_forget","arguments":{"memory_id":NaN}}]}'])
+def test_json_duplicates_and_nonfinite_numbers_are_never_repaired(text):
+    with pytest.raises(ValueError):
+        adapter_for("json").parse({"choices": [{"message": {"content": text}}]})
+
+
+@pytest.mark.parametrize("interface", ["json", "native"])
+@pytest.mark.parametrize("granted", [True, False])
+def test_permission_result_drives_next_response_and_save(interface, granted):
+    requests = []
+    def handler(request):
+        if request.method == "GET":
+            return httpx.Response(200, json={"data": [{"id": "exact"}]})
+        body = json.loads(request.content)
+        requests.append(body)
+        if len(requests) == 1:
+            assert "Yes, save" not in json.dumps(body)
+            value = {"answer": "provisional", "operations": [{"name": "request_permission", "arguments": {
+                "question": "Save this?", "key": "health_label", "value": "Dev-Health-P01", "scope": "global"}}]}
+        elif len(requests) == 2:
+            feedback = json.loads(body["messages"][-1]["content"].split("\n", 1)[-1])
+            result = feedback[0]["result"] if interface == "json" else feedback
+            assert result["data"]["granted"] is granted
+            value = {"answer": "Done.", "operations": [{"name": "remember", "arguments": {
+                "key": "health_label", "value": "Dev-Health-P01", "scope": "global"}}] if result["data"]["granted"] else []}
+        else:
+            value = {"answer": "Saved after consent.", "operations": []}
+        return httpx.Response(200, json=completion(value, interface, len(requests)))
+    async def scenario():
+        with MemoryStore(":memory:") as store:
+            dispatcher = OperationDispatcher(store, OperationContext("u", "w", "c"),
+                permission_reply={"granted": granted, "reply": "Yes, save this." if granted else "No."})
+            async with LocalClient("http://localhost/v1", transport=httpx.MockTransport(handler)) as client:
+                await client.verify_models(["exact"])
+                result = await run_turn(client, "exact", interface, [], dispatcher)
+            assert result["status"] == "complete"
+            assert len(store.snapshot()) == int(granted)
+            assert len(result["operations"]) == (2 if granted else 1)
+    asyncio.run(scenario())

@@ -46,11 +46,11 @@ rule is a deliberate clarification of the historical guidance.
 
 `build_model_input` explicitly projects instructions, abstract context, selected
 memory and exact messages. It excludes gold facts, accepted aliases, expected state,
-permission scripts and scoring labels. The runner will return the scripted consent
+permission scripts and scoring labels. The runner returns the scripted consent
 reply only when a permission operation occurs. Denied/default replies grant nothing.
 All data is synthetic; no credentials, hosted accounts or filesystem workspaces are used.
 `render_state` freezes the shared context/memory heading and canonical JSON rendering
-for both future adapters. A conversation's message indices are a schedule: the runner
+for both adapters. A conversation's message indices are a schedule: the runner
 must submit user turns individually, recording actual assistant/tool history before
 each follow-up. The projection is not a preassembled HTTP request containing future turns.
 
@@ -127,7 +127,7 @@ capture. It requires `condition`, `track`, `starting_records`, `final_records`,
 }
 ```
 
-Only final answers belong in `answer`; provisional text stays in the future
+Only final answers belong in `answer`; provisional text stays in the
 runner's raw diagnostics. Each turn's operations contain only that turn's events.
 Indices must be unique and ordered. A completed checkpoint must have a nonempty
 completed final answer for every scheduled user turn. `status="unexecuted"` keeps
@@ -176,7 +176,7 @@ case/Unicode/punctuation normalization and whole phrases, preserving decimal and
 unit distinctions. Format and reason are scored independently. Development reason
 aliases were tightened from historical single-word matches so a generic probe's
 topic cannot satisfy a reason. Unknown keys or unlisted paraphrases remain unmatched;
-the future reports must show that limitation and retain raw unmatched records.
+reports show that limitation and retain raw unmatched records.
 Aliases can also overmatch unrelated text; the lexical matcher does not interpret
 negation. Targeted development format aliases require summaries with sets,
 ingredients with grams, commentary after settings, distances with kilometres,

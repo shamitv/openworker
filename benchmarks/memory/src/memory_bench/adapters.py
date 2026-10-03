@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 import json
 
-from .assets import canonical_json
+from .assets import canonical_json, strict_json
 from .contract import ContractError, contract, validate_response, validate_schema
 
 
@@ -35,7 +35,7 @@ class JsonAdapter:
         if message.get("role", "assistant") != "assistant" or message.get("tool_calls"):
             raise ContractError("format_error", "JSON mode requires assistant JSON content without tool calls")
         try:
-            value = json.loads(message["content"])
+            value = strict_json(message["content"])
         except (KeyError, TypeError, ValueError) as exc:
             raise ContractError("format_error", "assistant content is not a JSON object") from exc
         validate_response(value)
@@ -70,7 +70,7 @@ class NativeAdapter:
         for call in calls:
             function = call["function"]
             try:
-                arguments = json.loads(function["arguments"])
+                arguments = strict_json(function["arguments"])
             except ValueError:
                 # Keep the actual unparsed argument string. The shared dispatcher
                 # returns invalid_arguments, with no fabricated or repaired call.

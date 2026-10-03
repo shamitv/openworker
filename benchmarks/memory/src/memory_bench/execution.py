@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from copy import deepcopy
 from pathlib import Path
 import time
@@ -127,8 +128,8 @@ async def collect(*, base_url: str, models: list[str], output: str | Path, sched
                                         manifest["errors"].append({"code": "interrupted"})
                                         stop = True
                                     break
-                        except Exception as exc:
-                            status = "infrastructure_error"
+                        except BaseException as exc:
+                            status = "interrupted" if isinstance(exc, (KeyboardInterrupt, asyncio.CancelledError)) else "infrastructure_error"
                             errors.append({"code": status, "type": type(exc).__name__, "message": str(exc)})
                             manifest["errors"].extend(errors)
                             stop = True
@@ -155,12 +156,12 @@ async def collect(*, base_url: str, models: list[str], output: str | Path, sched
                     if store is not None:
                         store.close()
     except BaseException as exc:
-        code = exc.code if isinstance(exc, ClientError) else "interrupted" if isinstance(exc, (KeyboardInterrupt, __import__("asyncio").CancelledError)) else "infrastructure_error"
+        code = exc.code if isinstance(exc, ClientError) else "interrupted" if isinstance(exc, (KeyboardInterrupt, asyncio.CancelledError)) else "infrastructure_error"
         manifest["errors"].append({"code": code, "type": type(exc).__name__, "message": str(exc)})
     finally:
         if client is not None:
             manifest["requests"] = [{key: deepcopy(e.get(key)) for key in ("index", "kind", "model", "duration_seconds",
-                "status_code", "usage", "error", "server", "request_id")} for e in client.events]
+                "status_code", "usage", "error", "server", "request_id", "response_model", "response_id", "system_fingerprint")} for e in client.events]
         for entry in manifest["schedule"]:
             for checkpoint in entry["checkpoints"]:
                 if checkpoint["checkpoint_id"] not in captured_ids:
