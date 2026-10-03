@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "dataset": "development",
+  "persona_id": "P02",
+  "examples": [
+    {
+      "conversation_id": "C1",
+      "message_index": 0,
+      "excerpt": "I compare 90 gsm notebook paper. I prefer compact comparison tables because paper properties are easier to compare. Suggest three properties I should record when comparing notebook paper."
+    },
+    {
+      "conversation_id": "C4",
+      "message_index": 0,
+      "excerpt": "Remember for all my future chats that I compare 90 gsm notebook paper and that I prefer compact comparison tables because paper properties are easier to compare. Remember globally that my personal planning notebook label is Solace-P02. For this workspace only, remember that the heading for future reports is Anchor-P02."
+    },
+    {
+      "conversation_id": "C8",
+      "message_index": 0,
+      "excerpt": "Update my remembered context for all future chats: I compare 100 gsm notebook paper replaces I compare 90 gsm notebook paper. Also forget my personal planning notebook label; do not retain its value."
+    },
+    {
+      "conversation_id": "C11",
+      "message_index": 0,
+      "excerpt": "My private health reminder label is Dev-Health-P02. It is stable context for all future chats about my health reminders."
+    },
+    {
+      "conversation_id": "C12",
+      "message_index": 0,
+      "excerpt": "My private finance reminder label is Dev-Finance-P02. It is stable context for future chats, but I have not granted permission to save it."
+    },
+    {
+      "conversation_id": "C13",
+      "message_index": 0,
+      "excerpt": "Remember for future chats that my private belief journal label is Dev-Belief-P02. This is an explicit request to save that sensitive fact."
+    },
+    {
+      "conversation_id": "C14",
+      "message_index": 0,
+      "excerpt": "Analyse this fictional quotation: 'I always label my notebook Dev-Quote-P02'. The speaker is not me. What does the sentence communicate?"
+    },
+    {
+      "conversation_id": "C16",
+      "message_index": 0,
+      "excerpt": "For this workspace only, remember that our colleague's team report label is Dev-Team-P02. This is durable project information, not my personal notebook label."
+    },
+    {
+      "conversation_id": "C17",
+      "message_index": 0,
+      "excerpt": "Forget the report heading for this workspace everywhere it is retained, including any duplicate copies. Do not retain its value."
+    },
+    {
+      "conversation_id": "C18",
+      "message_index": 0,
+      "excerpt": "For all future chats, my preferred answer format remains compact comparison tables, because paper properties are easier to compare. This repeats my established preference."
+    }
+  ]
+}

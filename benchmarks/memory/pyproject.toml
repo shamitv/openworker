@@ -21,7 +21,7 @@ memory-bench = "memory_bench.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-memory_bench = ["assets/*.json", "assets/corpus/*.json", "assets/policies/*.md", "assets/protocol/*.md", "assets/fixtures/*.json"]
+memory_bench = ["assets/*.json", "assets/corpus/*.json", "assets/policies/*.md", "assets/instructions/*.md", "assets/protocol/*.md", "assets/fixtures/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

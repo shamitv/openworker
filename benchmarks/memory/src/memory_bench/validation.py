@@ -315,6 +315,8 @@ def check_counts(expected):
 
 
 def validate_all() -> dict:
+    from .prompts import validate_instructions
+    validate_instructions()
     validate_contract()
     corpora = {split: load_json(f"corpus/{split}.json") for split in ("development", "heldout")}
     counts = {split: validate_corpus(corpus, split) for split, corpus in corpora.items()}

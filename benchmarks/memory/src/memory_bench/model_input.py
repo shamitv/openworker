@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .assets import canonical_json, load_text
 from .contract import validate_record
+from .prompts import instruction_text
 
 
 def selected_memory(records: list[dict], user_id: str, workspace_id: str) -> list[dict]:
@@ -17,12 +18,12 @@ def selected_memory(records: list[dict], user_id: str, workspace_id: str) -> lis
     return sorted(selected, key=lambda row: row["id"])
 
 
-def build_model_input(persona: dict, conversation: dict, policy: str, records: list[dict], message_indices: list[int]) -> dict:
+def build_model_input(persona: dict, conversation: dict, policy: str, records: list[dict], message_indices: list[int], *, prompt: str = "baseline") -> dict:
     if policy not in ("conservative", "recurring"):
         raise ValueError("unknown policy")
     return {
         "context": {"user_id": conversation["user_id"], "workspace_id": conversation["workspace_id"]},
-        "instructions": load_text(f"policies/{policy}.md") + "\n\n" + load_text("protocol/operations.md"),
+        "instructions": instruction_text(policy, prompt) + "\n\n" + load_text("protocol/operations.md"),
         "memories": selected_memory(records, conversation["user_id"], conversation["workspace_id"]),
         "messages": [{"role": "user", "content": conversation["messages"][index]} for index in message_indices],
     }
