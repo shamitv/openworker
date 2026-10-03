@@ -37,6 +37,16 @@ def test_matrix_filters_and_repetitions_are_explicit():
     assert len({v["condition_id"] for v in value}) == 60
 
 
+def test_full_heldout_matrix_has_no_development_personas_and_complete_fixed_coverage():
+    value = schedule(dataset="heldout", models=["exact"], policies=["conservative", "recurring"],
+        prompts=["baseline", "rules", "examples"], interfaces=["json", "native"], tracks=["write", "read", "sequence"], runs=1)
+    assert len(value) == len({e["track_id"] for e in value}) == 540
+    assert len({e["condition_id"] for e in value}) == 180
+    assert sum(len(e["checkpoints"]) for e in value) == 6660
+    assert sum(len(c["message_indices"]) for e in value for c in e["checkpoints"]) == 7740
+    assert {e["condition"]["persona_id"] for e in value} == {f"H{i:02}" for i in range(1, 16)}
+
+
 @pytest.mark.parametrize("overrides", [{"runs": 0}, {"tracks": ["write", "write"]}, {"policies": []}, {"prompts": ["unknown"]}])
 def test_invalid_matrix_is_rejected(overrides):
     with pytest.raises(ValueError):

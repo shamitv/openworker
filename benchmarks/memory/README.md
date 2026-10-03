@@ -270,6 +270,30 @@ ratios. Model/format/tool failures remain measured outcomes; unresolved routing,
 configuration, API, store or cleanup failures produce a failed infrastructure gate.
 A complete collection does not imply correct model answers or memory decisions.
 
+The Phase 5 report adds matched wording, policy, interface and model comparisons.
+Every pair keeps all other factors and the track fixed. Different selected
+persona/repetition/case sets disable rate differences. Both sides retain coverage,
+numerators and denominators; null ratios stay null. Policy conformance has different
+requirements for conservative/recurring, while common outcomes keep fixed targets.
+Model comparisons require at least two selected advertised IDs. A single repetition
+does not measure run-to-run uncertainty or support statistical superiority claims.
+
+Detailed tables and JSON distinguish preference format/reason from answer-envelope
+format, scope, consent, temporary operations, duplicates, correction of the current
+value, retirement of historical wording and forgetting. Write storage measures
+changes relative to prepared state; sequence storage sums repeated observations of
+accumulated actual state. Controls with absent prerequisites remain unexercised.
+Distinct failed-case counts supplement raw error entries, which may occur at both
+turn and checkpoint levels. Representative failures are chosen deterministically
+per condition/category and reference the complete case evidence.
+
+Reports include scheduled/executed/completed/failed/unexecuted turn counts,
+catalog/response model metadata, available server fingerprints, latency distributions
+with missing-request counts, and separate reporting-source provenance. Adding or
+changing report presentation does not modify the frozen scorer or collection history.
+Raw reasoning and HTTP diagnostics remain private. Offline replay/report never
+reissue a failed request.
+
 `replay` and `report` perform zero inference. Replay preserves collection provenance
 and appends scoring provenance, refusing a different corpus, contract or lifecycle.
 Reports remove headers, raw requests/responses, private paths and raw error messages;

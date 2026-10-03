@@ -86,6 +86,33 @@ def test_catalog_failure_preserves_all_unexecuted_coverage_without_inference(tmp
     assert len(calls) == 1
 
 
+def test_heldout_collection_all_instruction_interface_track_variants_offline(tmp_path):
+    rows = schedule(dataset="heldout", models=["exact"], policies=["conservative", "recurring"],
+        prompts=["baseline", "rules", "examples"], interfaces=["json", "native"], tracks=["write", "read", "sequence"], runs=1)
+    rows = [r for r in rows if r["condition"]["persona_id"] == "H01"]
+    for row in rows:
+        row["checkpoints"] = row["checkpoints"][:1]
+    calls = []
+    def handler(request):
+        if request.method == "GET":
+            return httpx.Response(200, json={"data": [{"id": "exact"}]})
+        body = json.loads(request.content)
+        calls.append(body)
+        assert "policy_expectations" not in json.dumps(body)
+        assert "permission_reply" not in json.dumps(body)
+        content = '{"answer":"UNKNOWN","operations":[]}' if "response_format" in body else "UNKNOWN"
+        return httpx.Response(200, json={"model": "exact", "choices": [{"message": {"content": content}}]})
+    manifest = asyncio.run(collect(base_url="http://localhost/v1", models=["exact"], output=tmp_path / "heldout",
+        schedule=rows, requested={}, transport=httpx.MockTransport(handler)))
+    assert manifest["status"] == "complete"
+    assert manifest["coverage"]["track_runs"] == manifest["coverage"]["completed"] == 36
+    captures = read_checkpoints(tmp_path / "heldout")
+    assert {r["evidence"]["condition"]["prompt"] for r in captures} == {"baseline", "rules", "examples"}
+    assert {r["evidence"]["condition"]["interface"] for r in captures} == {"json", "native"}
+    assert len(calls) == 60  # two turns for first write/sequence checkpoint; one prepared-read turn
+    assert manifest["cleanup"]["status"] == "complete"
+
+
 def test_model_format_failures_are_measured_and_do_not_hide_coverage(tmp_path):
     def handler(request):
         return httpx.Response(200, json={"data": [{"id": "exact"}]} if request.method == "GET" else

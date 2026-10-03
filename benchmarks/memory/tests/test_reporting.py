@@ -120,3 +120,30 @@ def test_complete_fixed_smoke_cli_uses_mock_http_only(tmp_path, monkeypatch, cap
     assert len(calls) == 173
     assert result["requests"]["usage"]["prompt_tokens"] is None
     assert (path / "results.json").is_file()
+
+
+def test_phase5_report_metadata_turn_accounting_and_read_scoring(evidence, tmp_path):
+    report = write_report(evidence, tmp_path / "phase5-report")
+    assert report["turn_coverage"] == {"scheduled": 1, "executed": 1, "completed": 1, "failed": 0, "unexecuted": 0}
+    assert report["model_metadata"]["advertised"][0]["id"] == "exact"
+    assert report["model_metadata"]["missing_response_model_requests"] == 1
+    assert report["reporting"]["source_hashes"].keys() == {"reporting.py", "comparison.py"}
+    assert report["comparison_limits"]["one_repetition"]
+    assert report["comparisons"]["model"] == []
+    text = (tmp_path / "phase5-report" / "report.md").read_text(encoding="utf-8")
+    for phrase in ("Preference reason", "Historical wording retired", "Controls exercised/unexercised",
+                   "Prepared reads earn no save credit", "one repetition", "No matched comparison", "Server-effective settings: `null`"):
+        assert phrase in text
+    assert "Phase 5 remains a separate" not in text  # full run, not smoke
+
+
+def test_latency_denominators_and_nearest_rank_percentile():
+    rows = [{"kind": "inference", "usage": None, "duration_seconds": value} for value in (1, 2, 3, 4, None)]
+    summary = request_summary(rows)
+    assert summary["latency_seconds"] == {"reported_requests": 4, "missing_requests": 1,
+        "min": 1, "median": 2.5, "p90": 4, "max": 4, "p90_method": "nearest rank"}
+    assert request_summary([])["latency_seconds"]["median"] is None
+
+
+def test_sanitization_excludes_reasoning_text():
+    assert sanitized({"reasoning_content": "private text", "answer": "synthetic final"}) == {"answer": "synthetic final"}
