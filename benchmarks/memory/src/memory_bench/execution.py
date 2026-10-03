@@ -94,8 +94,10 @@ async def collect(*, base_url: str, models: list[str], output: str | Path, sched
                             before = store.snapshot()
                             projection = build_model_input(persona, conversation, condition["policy"], before, [], prompt=condition["prompt"])
                             injected = projection["memories"]
-                            messages = [{"role": "system", "content": projection["instructions"] + "\n\n" + render_state(projection)},
-                                        {"role": "system", "content": adapter_for(condition["interface"]).instructions}]
+                            common_instructions = projection["instructions"] + "\n\n" + render_state(projection)
+                            interface_envelope = adapter_for(condition["interface"]).instructions
+                            messages = [{"role": "system", "content": common_instructions +
+                                "\n\nInterface response envelope (instructions):\n" + interface_envelope}]
                             record({"type": "conversation_started", "injected_memory": injected,
                                     "context_data": projection["context"], "messages": messages, "starting_records": before})
                             dispatcher = OperationDispatcher(store, OperationContext(conversation["user_id"],

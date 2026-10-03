@@ -51,12 +51,15 @@ def test_collection_preserves_boundaries_injection_operations_and_cleanup(tmp_pa
     assert any(r["value"] == "Solace-P01" for r in sequence["C5"]["injected_memory"])
     assert sequence["C4"]["evidence"]["turns"][0]["provisional_answers"] == ["provisional"]
     first_followup = requests[1]["messages"]
-    assert len(first_followup) == 5
-    assert first_followup[2]["role"] == "user" and first_followup[3]["role"] == "assistant"
+    assert len(first_followup) == 4
+    assert first_followup[1]["role"] == "user" and first_followup[2]["role"] == "assistant"
     # All new conversations begin with only their current user turn.
     for body in requests:
-        if len(body["messages"]) == 3:
+        if len(body["messages"]) == 2:
             assert body["messages"][-1]["role"] == "user"
+        assert sum(m["role"] == "system" for m in body["messages"]) == 1
+        assert body["messages"][0]["role"] == "system"
+        assert "Interface response envelope (instructions):" in body["messages"][0]["content"]
         assert "policy_expectations" not in json.dumps(body)
         assert "permission_reply" not in json.dumps(body)
     assert all(e["usage"] is None for e in manifest["requests"])
