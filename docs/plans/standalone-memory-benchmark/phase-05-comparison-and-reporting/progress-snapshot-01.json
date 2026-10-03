@@ -1,0 +1,27 @@
+{
+  "attempt": "heldout-attempt-01",
+  "captured_at_unix": 1791033180,
+  "elapsed_hours": 1.14,
+  "manifest_status": "running",
+  "track_runs_finished": 9,
+  "track_runs_scheduled": 540,
+  "checkpoints_finalized": 111,
+  "checkpoint_statuses": {
+    "complete": 46,
+    "format_error": 65
+  },
+  "inference_responses": 143,
+  "infrastructure_http_errors": 0,
+  "collection_errors": [],
+  "active_condition": {
+    "dataset": "heldout",
+    "model": "Ornith-1.5-35B-Uncensored-Q6_K",
+    "policy": "conservative",
+    "prompt": "baseline",
+    "interface": "json",
+    "persona_id": "H04",
+    "track": "write"
+  },
+  "cleanup": "pending",
+  "report_and_replay": "pending until collection finishes"
+}

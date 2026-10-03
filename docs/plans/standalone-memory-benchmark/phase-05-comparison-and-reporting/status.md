@@ -50,6 +50,12 @@ record was written. [live-launch.json](live-launch.json) records the full comman
 and frozen identity. The rejected detached Windows launch executed no collection
 or inference; the managed CLI is the sole actual attempt.
 
+Progress snapshot 01, at 1.14 elapsed hours: nine track runs finished, 111 of 6,660
+checkpoints finalized (46 complete, 65 model format failures), 143 inference
+responses, no HTTP/collection errors. Current condition is conservative baseline
+JSON write on H04. The machine-readable [snapshot](progress-snapshot-01.json) is a
+dated progress point, not final gate evidence.
+
 An inference-free report preview on the retained Phase 4 capture verifies that the
 new presentation preserves every previous condition score and both original
 collection/scoring provenance objects. The preview remains outside Git; it is not
