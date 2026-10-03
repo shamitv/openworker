@@ -131,4 +131,4 @@ A complete run executes every scheduled conversation with no automatic reruns, v
 
 ## Recorded execution
 
-See the [full local-model report](report.md), [sanitized full results](results.json), [P01 smoke findings](smoke.md), and [execution checklist](checklist.md). The earlier model comparison remains separate in [model evaluations](../../model-evaluations/2026-10-02.md).
+See the [summary report](summary.md), [full local-model report](report.md), [sanitized full results](results.json), [P01 smoke findings](smoke.md), and [execution checklist](checklist.md). The earlier model comparison remains separate in [model evaluations](../../model-evaluations/2026-10-02.md).
