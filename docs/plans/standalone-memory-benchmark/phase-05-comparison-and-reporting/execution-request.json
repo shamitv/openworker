@@ -1,0 +1,66 @@
+{
+  "attempt": "heldout-attempt-01",
+  "authorization": {
+    "date": "2026-10-03",
+    "scope": "Full held-out matrix specified by the Phase 5 plan; prior endpoint/model/settings retained.",
+    "timezone": "Asia/Kolkata",
+    "user_request": "Implement phase 5"
+  },
+  "base_url": "http://10.42.0.202:8090/v1",
+  "collection_status": "not_started",
+  "constraints": [
+    "Sequential requests; no retries or fallback.",
+    "Fresh isolated state independent of smoke/development.",
+    "No prompt, gold, lifecycle or scorer changes after held-out observations.",
+    "A later rerun, if needed, is a new explicit attempt with retained earlier evidence."
+  ],
+  "expected": {
+    "checkpoints": 6660,
+    "persona_condition_repetitions": 180,
+    "scheduled_user_turns": 7740,
+    "track_runs": 540
+  },
+  "frozen_asset_bundle_sha256": "37673a35e7bcf37058d705133e75ab676ef73345fbc49c6a9e13284161ae24bf",
+  "frozen_scorer_sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+  "initial_schedule_sha256": "dfb39db1ed13de098888c0aac897cf25392a7cbbd680900979dd973e971c9d59",
+  "output_location": "OS temporary directory, outside Git",
+  "phase": 5,
+  "preflight": "Catalog verified the exact selected ID with zero inference requests; collection rechecks its own catalog.",
+  "prerequisites": {
+    "phase4_pushed_revision": "0a8553059d32ceae5f603f2b6b26eb29195fbc6d",
+    "phase4_status": "complete",
+    "phase5_portability": "pending new report implementation acceptance"
+  },
+  "raw_output_label": "memory-bench-heldout-20261003-attempt-01",
+  "requested": {
+    "dataset": "heldout",
+    "interfaces": [
+      "json",
+      "native"
+    ],
+    "models": [
+      "Ornith-1.5-35B-Uncensored-Q6_K"
+    ],
+    "policies": [
+      "conservative",
+      "recurring"
+    ],
+    "prompts": [
+      "baseline",
+      "rules",
+      "examples"
+    ],
+    "runs": 1,
+    "tracks": [
+      "write",
+      "read",
+      "sequence"
+    ]
+  },
+  "settings": {
+    "max_tokens": 2048,
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0
+  }
+}

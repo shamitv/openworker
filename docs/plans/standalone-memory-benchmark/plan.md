@@ -10,7 +10,7 @@ The package lives under `benchmarks/memory` and works after copying that directo
 
 Planning date: 2026-10-03 (Asia/Kolkata). Branch: `codex/standalone-memory-benchmark`, created from `feat/headless-vm-ui-serving` at `01f7ec8d89578ef98f6afec24033d78b600377a5`.
 
-The original planning delivery marked all phases **Not started**. Implementation progress on 2026-10-03 now completes **Phases 1–4**, including source/isolated-wheel acceptance and the bounded P01 smoke. The [Phase 4 status](phase-04-experiments-and-smoke/status.md) retains both explicit smoke attempts and their model/infrastructure outcomes. **Phase 5 remains Not started** and requires a later explicit request.
+The original planning delivery marked all phases **Not started**. Implementation progress on 2026-10-03 completes **Phases 1–4**, including source/isolated-wheel acceptance and the bounded P01 smoke. The [Phase 4 status](phase-04-experiments-and-smoke/status.md) retains both explicit smoke attempts and their model/infrastructure outcomes. The user subsequently requested Phase 5; it is now **In progress**, with its full requested matrix recorded before inference in the [Phase 5 status](phase-05-comparison-and-reporting/status.md).
 
 The existing [hosted corpus](../../../tests/fixtures/memory/personas_v1.json) and [local-model findings](../../memory/persona-evaluations/v1/summary.md) are development references. The earlier benchmark scripts import OpenWorker components and do not establish standalone acceptance. Their results remain historical evidence under different protocols.
 
