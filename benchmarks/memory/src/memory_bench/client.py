@@ -84,8 +84,11 @@ class LocalClient:
         try:
             if timeout <= 0:
                 raise ClientError("deadline", "whole-turn deadline expired")
-            request = (self._http.get(event["url"], timeout=timeout) if body is None else
-                       self._http.post(event["url"], json=body, timeout=timeout))
+            # An unavailable endpoint is a prerequisite failure, distinct from a
+            # model using its whole turn budget after a connection is established.
+            http_timeout = httpx.Timeout(timeout, connect=min(30, timeout), pool=min(30, timeout))
+            request = (self._http.get(event["url"], timeout=http_timeout) if body is None else
+                       self._http.post(event["url"], json=body, timeout=http_timeout))
             response = await asyncio.wait_for(request, timeout=timeout)
             event["status_code"] = response.status_code
             event["server"] = response.headers.get("server")
@@ -110,6 +113,9 @@ class LocalClient:
             event["response_id"] = data.get("id")
             event["system_fingerprint"] = data.get("system_fingerprint")
             return data
+        except (httpx.ConnectTimeout, httpx.PoolTimeout) as exc:
+            event["error"] = {"code": "api_error", "message": str(exc) or "connection prerequisite timed out"}
+            raise ClientError("api_error", event["error"]["message"]) from exc
         except (asyncio.TimeoutError, httpx.TimeoutException) as exc:
             event["error"] = {"code": "deadline", "message": str(exc) or "request exceeded remaining turn time"}
             raise ClientError("deadline", event["error"]["message"]) from exc

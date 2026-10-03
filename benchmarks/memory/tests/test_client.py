@@ -104,3 +104,24 @@ def test_timeout_is_a_single_attempt():
             assert client.events[-1]["error"]["code"] == "deadline"
     asyncio.run(scenario())
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize("error_type", [httpx.ConnectTimeout, httpx.PoolTimeout])
+def test_connection_timeout_is_prerequisite_failure_not_model_deadline(error_type):
+    calls = []
+    def handler(request):
+        calls.append(request)
+        if request.method == "GET":
+            return httpx.Response(200, json={"data": [{"id": "exact"}]})
+        assert request.extensions["timeout"]["connect"] == 30
+        assert request.extensions["timeout"]["read"] == 180
+        raise error_type("connection unavailable")
+    async def scenario():
+        async with LocalClient("http://localhost/v1", transport=httpx.MockTransport(handler)) as client:
+            await client.verify_models(["exact"])
+            with pytest.raises(ClientError) as caught:
+                await client.completion("exact", [], parameters={}, timeout=180)
+            assert caught.value.code == "api_error"
+            assert client.events[-1]["error"]["code"] == "api_error"
+    asyncio.run(scenario())
+    assert len(calls) == 2
