@@ -80,16 +80,17 @@ assert 'coworker' not in sys.modules
     cli_validation = json.loads(run([python, "-I", "-m", "memory_bench", "validate"]))
     if cli_validation != validation:
         raise RuntimeError("module CLI validation differs from guarded validation")
+    scorer = json.loads(run([python, "-I", "-c", "import json; from memory_bench.provenance import scorer_provenance; print(json.dumps(scorer_provenance()))"]))
     tests = run([python, "-m", "pytest", copied / "tests", "-c", copied / "pyproject.toml", "--confcutdir", copied / "tests", "-o", "pythonpath=", "--basetemp", work / "test-temp", "-q"])
     versions = metadata["distributions"]
     unexpected = set(versions) - {"pip", "setuptools", "wheel", "standalone-memory-bench", "httpx", "httpcore", "anyio", "certifi", "idna", "h11", "typing_extensions", "pytest", "colorama", "iniconfig", "packaging", "pluggy", "Pygments", "pygments", "exceptiongroup", "tomli"}
     if unexpected:
         raise RuntimeError(f"unexpected isolated distributions: {sorted(unexpected)}")
     wheel = next(wheels.glob("standalone_memory_bench-*.whl"))
-    report = {"status": "passed", "metadata": metadata, "validation": validation, "pytest": tests.strip(), "commands": commands, "wheel_sha256": hashlib.sha256(wheel.read_bytes()).hexdigest(), "work_directory": str(work), "installation_network": False, "inference_requests": 0}
+    report = {"status": "passed", "metadata": metadata, "validation": validation, "scorer": scorer, "pytest": tests.strip(), "commands": commands, "wheel_sha256": hashlib.sha256(wheel.read_bytes()).hexdigest(), "work_directory": str(work), "installation_network": False, "inference_requests": 0}
     output = work / "report.json"
     output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"status": report["status"], "report": str(output), "pytest": report["pytest"], "bundle_hash": validation["bundle_hash"], "wheel_sha256": report["wheel_sha256"], "openworker_available": False, "installation_network": False}, indent=2))
+    print(json.dumps({"status": report["status"], "report": str(output), "pytest": report["pytest"], "bundle_hash": validation["bundle_hash"], "scorer_sha256": scorer["sha256"], "wheel_sha256": report["wheel_sha256"], "openworker_available": False, "installation_network": False}, indent=2))
 
 
 if __name__ == "__main__":
