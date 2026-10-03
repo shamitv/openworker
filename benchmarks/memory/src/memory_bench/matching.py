@@ -7,6 +7,9 @@ import unicodedata
 
 
 def normalize(text: str) -> str:
+    # Unit spellings are frozen v1 behavior. Their current corpus coverage is
+    # P02/P13 original and corrected values; held-out canonical values have no
+    # such units. This observation does not establish their authoring origin.
     text = unicodedata.normalize("NFKC", text).casefold().replace("_", " ")
     text = re.sub(r"g\s*/\s*m(?:2|²)", "gsm", text)
     text = re.sub(r"\b(\d+)\s*gsm\b", r"\1 gsm", text)

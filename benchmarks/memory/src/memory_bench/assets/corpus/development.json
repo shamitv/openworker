@@ -15716,6 +15716,12 @@
           ],
           "value_alias_groups": [
             [
+              "summary",
+              "summaries",
+              "summarize",
+              "summarise"
+            ],
+            [
               "set",
               "sets"
             ]
@@ -31330,6 +31336,12 @@
             "preferred_format"
           ],
           "value_alias_groups": [
+            [
+              "ingredient",
+              "ingredients",
+              "ingredient quantities",
+              "recipe quantities"
+            ],
             [
               "grams",
               "gram"
@@ -46960,7 +46972,13 @@
             ],
             [
               "before",
-              "first"
+              "first",
+              "ahead of"
+            ],
+            [
+              "commentary",
+              "comments",
+              "comment"
             ]
           ],
           "scope": "global",
@@ -62580,6 +62598,10 @@
             "preferred_format"
           ],
           "value_alias_groups": [
+            [
+              "distance",
+              "distances"
+            ],
             [
               "kilometres",
               "kilometers",
@@ -86026,11 +86048,9 @@
           ],
           "value_alias_groups": [
             [
-              "cardinal",
-              "north",
-              "south",
-              "east",
-              "west"
+              "cardinal directions",
+              "compass directions",
+              "north south east west"
             ]
           ],
           "scope": "global",

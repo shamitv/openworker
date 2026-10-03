@@ -66,6 +66,16 @@ DEVELOPMENT_REASON_ALIASES = [
     ["modify them to learn", "change examples to learn"],
 ]
 
+# Targeted pre-inference corrections: alternatives within a group are OR;
+# different groups are AND. Keep distinctive short facts and controls intact.
+DEVELOPMENT_STYLE_ALIASES = {
+    "P03": [["summary", "summaries", "summarize", "summarise"], ["set", "sets"]],
+    "P05": [["ingredient", "ingredients", "ingredient quantities", "recipe quantities"], ["grams", "gram"]],
+    "P07": [["settings", "setting"], ["before", "first", "ahead of"], ["commentary", "comments", "comment"]],
+    "P09": [["distance", "distances"], ["kilometres", "kilometers", "kilometre", "kilometer", "km"]],
+    "P12": [["cardinal directions", "compass directions", "north south east west"]],
+}
+
 
 def write(name, value):
     path = ASSETS / name
@@ -192,6 +202,8 @@ def adapt_persona(source, split):
         facts[fid] = fact(old["value"], keys[fid], old["groups"], "workspace" if workspace else "global", workspace, control=fid in ("A", "B", "notebook", "temporary"))
         if fid == "reason" and split == "development":
             facts[fid]["value_alias_groups"] = [[old["value"], *DEVELOPMENT_REASON_ALIASES[int(pid[1:]) - 1]]]
+        if fid == "style" and split == "development" and pid in DEVELOPMENT_STYLE_ALIASES:
+            facts[fid]["value_alias_groups"] = copy.deepcopy(DEVELOPMENT_STYLE_ALIASES[pid])
         if fid in ("original", "corrected"):
             facts[fid]["key_aliases"] += ["context", "user_context", "recurring_context"]
         elif fid == "style":

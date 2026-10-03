@@ -185,3 +185,70 @@ def test_normalization_preserves_units_decimals_and_phrase_boundaries():
     fact = {"value_alias_groups": [["Grade 8"], ["CBSE"]]}
     assert matches_value("Grade 8, CBSE", fact)
     assert not matches_value("Grade 80 CBSE", fact)
+
+
+@pytest.mark.parametrize("split", ["development", "heldout"])
+def test_all_fact_values_are_positive_for_self_and_negative_for_siblings(split):
+    from memory_bench.assets import load_json
+
+    for p in load_json(f"corpus/{split}.json")["personas"]:
+        for fid, fact in p["facts"].items():
+            assert matches_value(fact["value"], fact), (p["id"], fid)
+            for other_id, other in p["facts"].items():
+                if other_id != fid:
+                    assert not matches_value(other["value"], fact), (p["id"], fid, other_id)
+
+
+@pytest.mark.parametrize("pid,positive,negative", [
+    ("P03", "summarize each set", "I will set out the score"),
+    ("P03", "set summaries", "The sets are ready"),
+    ("P05", "ingredients measured in grams", "I will use grams"),
+    ("P05", "recipe quantities in grams", "I weigh the parcel in grams"),
+    ("P07", "camera settings first, then commentary", "I record settings first"),
+    ("P07", "settings before comments", "Commentary first"),
+    ("P09", "route distances in km", "I will use km"),
+    ("P09", "distance in kilometers", "The parcel travelled five kilometres"),
+    ("P12", "compass directions", "Head east"),
+    ("P12", "north south east west", "My notes are in the west room"),
+])
+def test_targeted_formats_require_distinguishing_content(development, pid, positive, negative):
+    p = next(p for p in development["personas"] if p["id"] == pid)
+    assert matches_value(positive, p["facts"]["style"])
+    assert not matches_value(negative, p["facts"]["style"])
+
+
+@pytest.mark.parametrize("split", ["development", "heldout"])
+def test_validation_rejects_sibling_value_aliases(split):
+    from memory_bench.assets import load_json
+
+    corpus = load_json(f"corpus/{split}.json")
+    p = corpus["personas"][0]
+    p["facts"]["style"]["value_alias_groups"] = [[p["facts"]["style"]["value"], p["facts"]["reason"]["value"]]]
+    with pytest.raises(ValidationError, match="aliases match sibling reason"):
+        validate_corpus(corpus, split)
+
+
+@pytest.mark.parametrize("change", ["missing_primary", "tagged_c4"])
+def test_policy_difference_tag_identifies_primary_checkpoint_only(development, change):
+    p = development["personas"][0]
+    if change == "missing_primary":
+        p["conversations"][0]["coverage"].remove("policy_difference")
+    else:
+        p["conversations"][3]["coverage"].append("policy_difference")
+    with pytest.raises(ValidationError, match="policy_difference must identify C1 only"):
+        validate_corpus(development, "development")
+
+
+@pytest.mark.parametrize("split", ["development", "heldout"])
+def test_policy_coverage_counts_and_c4_convergence(split):
+    from memory_bench.assets import load_json
+
+    corpus = load_json(f"corpus/{split}.json")
+    cases = [c for p in corpus["personas"] for c in p["conversations"]]
+    assert sum("policy_difference" in c["coverage"] for c in cases) == 15
+    assert sum(c["policy_expectations"]["conservative"] != c["policy_expectations"]["recurring"] for c in cases) == 60
+    for p in corpus["personas"]:
+        c4 = p["conversations"][3]["policy_expectations"]
+        assert c4["conservative"]["expected_current_facts"] == c4["recurring"]["expected_current_facts"]
+        for expectation in c4.values():
+            assert set(expectation["required_additions"] + expectation["retained_prior_facts"]) == set(expectation["expected_current_facts"])

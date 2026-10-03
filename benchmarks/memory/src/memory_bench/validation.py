@@ -114,7 +114,11 @@ def validate_corpus(corpus: dict, split: str) -> dict:
                 value = normalize(fact["value"])
                 require(value not in controls, f"{pid}/{fid}: duplicate control")
                 controls.add(value)
-        require(not matches_value(facts["original"]["value"], facts["corrected"]) and not matches_value(facts["corrected"]["value"], facts["original"]), f"{pid}: original/corrected aliases overlap")
+        for fid, fact in facts.items():
+            for sibling_id, sibling in facts.items():
+                if sibling_id != fid:
+                    require(not matches_value(sibling["value"], fact),
+                            f"{pid}/{fid}: aliases match sibling {sibling_id}")
         require(persona["sequence_start"]["owner_records"] == [], f"{pid}: sequence owner state must be empty")
         peer = persona["sequence_start"]["peer_controls"]
         validate_snapshot(peer, persona, f"{pid}/peer controls")
@@ -124,6 +128,10 @@ def validate_corpus(corpus: dict, split: str) -> dict:
         previous = {policy: [] for policy in POLICIES}
         for c in persona["conversations"]:
             label = f"{pid}/{c['id']}"
+            # This tag denotes the primary policy decision from empty owner
+            # state, not later expectations inherited from different priors.
+            require(("policy_difference" in c["coverage"]) == (c["id"] == "C1"),
+                    f"{label}: policy_difference must identify C1 only")
             conversations += 1
             turns += len(c["messages"])
             coverage.update(c["coverage"])

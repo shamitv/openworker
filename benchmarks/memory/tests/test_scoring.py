@@ -26,6 +26,45 @@ def fact_row(p, fact_id, memory_id=1, **changes):
             "key": fact["key"], "value": fact["value"], "history": [], **changes}
 
 
+def test_reason_alone_cannot_earn_format_recall_or_storage_credit():
+    p = load_json("corpus/development.json")["personas"][6]
+    reason = p["facts"]["reason"]["value"]
+    answer = score_answer(p, "style: " + reason, {"style": ["style", "reason"]}, [])
+    assert answer["answer_format"] is True
+    assert answer["fields"]["style"]["facts"] == {"style": False, "reason": True}
+    assert answer["correct"] is False
+    storage = score_storage(p, ["style"], [fact_row(p, "style", value=reason)],
+                            track="write", starting_records=[])
+    assert (storage["tp"], storage["fp"], storage["fn"]) == (0, 1, 1)
+    valid = "style: camera settings before commentary, because " + reason
+    assert score_answer(p, valid, {"style": ["style", "reason"]}, [])["correct"] is True
+
+
+def test_unrelated_set_text_is_a_changed_prior_and_not_a_duplicate():
+    p = load_json("corpus/development.json")["personas"][2]
+    prior = fact_row(p, "style")
+    unrelated = fact_row(p, "style", 2, value="I will set out the score")
+    changed = score_storage(p, [], [unrelated], track="write", starting_records=[prior])
+    assert (changed["tp"], changed["fp"], changed["fn"]) == (0, 1, 0)
+    assert changed["unchanged"] == []
+    both = score_storage(p, ["style"], [prior, unrelated], track="sequence")
+    assert (both["tp"], both["fp"], both["fn"]) == (1, 1, 0)
+    assert both["duplicates"] == 0
+
+
+@pytest.mark.parametrize("track", ["write", "sequence"])
+def test_authorized_third_party_save_uses_owner_namespace_and_ignores_peer_controls(track):
+    p = persona()
+    assert p["facts"]["third_party_project"]["subject"] == "third_party"
+    project = fact_row(p, "third_party_project")
+    peers = p["sequence_start"]["peer_controls"]
+    result = score_storage(p, ["third_party_project"], [project] + peers,
+                           track=track, starting_records=peers)
+    assert (result["tp"], result["fp"], result["fn"]) == (1, 0, 0)
+    empty = score_storage(p, [], peers, track=track, starting_records=peers)
+    assert (empty["tp"], empty["fp"], empty["fn"]) == (0, 0, 0)
+
+
 def captured(c, track, before, after, *, events=None, answers=None, status="complete", condition=None):
     indices = c["tracks"][track]["message_indices"]
     turns = [{"message_index": i, "answer": (answers or {}).get(i, "Done."), "status": "complete", "operations": events or [] if i == 0 else []} for i in indices]
