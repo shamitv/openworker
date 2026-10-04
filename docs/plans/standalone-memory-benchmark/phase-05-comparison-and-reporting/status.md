@@ -1,84 +1,31 @@
 # Phase 5 status
 
-Status: In progress — software accepted; full held-out attempt 01 collecting
+Status: In progress — attempt 03 collecting with the user-selected advertised model.
 
-Planning date: 2026-10-03 (Asia/Kolkata). Dependencies: Phases 1–4 and a later explicit full-sweep request.
+Planning date: 2026-10-03 (Asia/Kolkata). Dependencies: Phases 1–4 and explicit full-sweep request. The user asked to delete the prior short-limit run, start over, and then explicitly selected the available model when the previously selected ID was absent.
 
-On 2026-10-03 the user requested increasing the output limit from 2k to 12k.
-The source client and current requested settings now use `max_tokens=12288`,
-up from 2048. The already installed wheel used for attempt 01 retains its original
-2048 limit; this source change does not alter that process or its recorded evidence.
-A collection with the increased limit requires the rebuilt package and a separately
-identified attempt. The earlier acceptance and launch hashes below describe the
-original package.
+Attempt 03 is the full matrix: 15 held-out personas, both policies, three prompt variants, both interfaces, all three tracks, once each. This is 180 persona-condition repetitions, 540 track runs, 6,660 checkpoints and 7,740 scheduled user turns. The complete schedule hash `368722b0f71611dd51c61918ea08ad6335ebd91da18fb42e42d9052e0e58c310` was computed and recorded before inference. Effective requested settings are `max_tokens=12288`, `temperature=0`, `reasoning_effort=low`, `stream=false`.
 
-The user explicitly requested **“Implement phase 5”** after the completed Phase 4
-delivery and an explanation of the full held-out matrix. This authorizes the Phase 5
-sweep. [execution-request.json](execution-request.json) records the selections and
-initial schedule hash before inference: one exact model, fifteen held-out personas,
-both policies, three variants, both interfaces, all three tracks and one repetition.
-This is 180 persona-condition repetitions, 540 track runs, 6,660 checkpoints and
-7,740 scheduled user turns. The complete initial schedule was committed before
-inference. Collection started at Unix time 1791029079.02329; its captured schedule
-matches the committed SHA-256
-`dfb39db1ed13de098888c0aac897cf25392a7cbbd680900979dd973e971c9d59`.
+Attempt 03 uses the exact model `Ornith-1.5-35B-A3B-Q4_K_M`, which was advertised by the fresh catalog check. It runs from the rebuilt standalone package in an unrelated working directory; initial manifest confirms the selected model, settings, 540 scheduled track runs and 6,660 checkpoints. Raw output label: `memory-bench-heldout-20261003-attempt-03` in the OS temporary directory, outside Git. See [live launch](live-launch.json).
 
-Phase 4 acceptance is complete and normally pushed at 0a85530. Its source and
-installed-wheel suites pass 345 tests. A fresh direct catalog check verified the
-selected `Ornith-1.5-35B-Uncensored-Q6_K` at `http://10.42.0.202:8090/v1` without
-inference. Collection will verify its own catalog again. Corpus, instruction,
-policy, lifecycle and scorer hashes remain frozen; report-only changes add
-controlled comparisons, detailed denominators, turn coverage and server metadata.
-The Phase 5 source and independently installed-wheel suites each pass **359 tests**
-(157.00 and 155.20 seconds). The installed tests run from an unrelated directory
-with source fallback disabled, OpenWorker absent and offline dependencies; validation
-and tests make no network/inference requests. Forty source/test/tool files pass
-Python 3.10 syntax checks; runtime acceptance uses Python 3.14.2 on Windows 11,
-httpx 0.28.1 and pytest 9.1.1. Full environment, source/asset/scorer/reporting hashes
-and commands are recorded in [offline-acceptance.json](offline-acceptance.json).
+The package wheel SHA-256 is `e929272f2d1f41154f09afb02aca53bf385ceadb5178c3d5274f18b183b749bf`. Offline portability validation and 359 tests passed; Python 3.14.2, httpx 0.28.1 and pytest 9.1.1; OpenWorker absent and no network used for installation. Frozen asset bundle SHA-256 is `37673a35e7bcf37058d705133e75ab676ef73345fbc49c6a9e13284161ae24bf`; scorer SHA-256 is `f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e`.
 
-An earlier offline run had 354 passes and one transient Windows atomic-manifest
-sharing failure. The correction retries only publication of an already-written
-manifest, at most four attempts with 175 milliseconds total delay; persistent and
-non-Windows failures still surface. It never repeats model requests, SQLite mutations
-or appended evidence. Focused tests and both complete suites passed before inference.
+Attempt 01 used `max_tokens=2048` and failed with an API error after 128 complete and 159 failed checkpoints; the user requested its private output be deleted, and it was deleted. Attempt 02 used the prior model selection, but the ID was no longer advertised; it failed catalog preflight with zero inference requests and all 6,660 checkpoints unexecuted. Its private preflight evidence remains outside Git.
 
-The comparison/report implementation is committed at 14964e4 and normally pushed;
-its accepted wheel SHA-256 is
-`671768c23ec356d74695f11b731900b4375eb69e8ab121257de0eeb9712aa905`.
-Collection hash: `4f417fd9a4ea45cbc0246ee8afda6baa98b23e87ddacdef795dac7acf0877253`.
-Frozen scorer hash: `f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e`.
-Reporting hash: `9b162ef7340457b6df43a2682ea6746e3739f532edab20357bccc05f2d813df8`.
+## Progress at 2026-10-04 15:51 IST
 
-The direct `run` command is active in managed terminal session **1333**, using that
-wheel under `build/portability-ytaar7zd` from its unrelated working directory. Its
-fresh catalog check advertised the exact selected model. First checkpoints retain
-model format failures; no infrastructure failure had occurred when this launch
-record was written. [live-launch.json](live-launch.json) records the full command
-and frozen identity. The rejected detached Windows launch executed no collection
-or inference; the managed CLI is the sole actual attempt.
+[Snapshot 07](progress-snapshot-07.json) records 3,392 of 6,660 checkpoints finalized and 276 of 540 track runs started, 18.99 hours in. All six `conservative` conditions are complete and `recurring` has just begun. Native finished 1,664 of 1,665 finalized checkpoints; JSON completed 70 of 1,727. Thirteen requests hit the 180-second whole-turn deadline and there are no collection errors. Extrapolating the six completed conditions, the run should finish around 2026-10-05 10:00–11:00 IST.
 
-Progress snapshot 01, at 1.14 elapsed hours: nine track runs finished, 111 of 6,660
-checkpoints finalized (46 complete, 65 model format failures), 143 inference
-responses, no HTTP/collection errors. Current condition is conservative baseline
-JSON write on H04. The machine-readable [snapshot](progress-snapshot-01.json) is a
-dated progress point, not final gate evidence.
+## Interim findings
 
-An inference-free report preview on the retained Phase 4 capture verifies that the
-new presentation preserves every previous condition score and both original
-collection/scoring provenance objects. The preview remains outside Git; it is not
-held-out evidence and is not pooled with this run.
+The [interim report](interim-report-01.md) consolidates authorization, coverage, the JSON findings and the remaining acceptance work. The material result is that the JSON arm measures envelope adherence rather than memory capability. Not one of 150 sampled failing JSON responses was a JSON object or a near miss, and applying the frozen answer scorer to the text those rejected turns actually delivered shows 50 of 56 would have been fully correct, against 23 of 34 accepted control turns. The rejected text would have scored better than the accepted text. See [sampled response shapes](json-interface-response-shapes-01.md).
 
-Only the already selected model is used. The run can compare policies/instructions
-with interfaces kept separate; it cannot establish a comparison between models.
-Existing historical benchmarks remain separate. At the smoke's observed throughput,
-the complete sequential collection may take roughly sixty hours; actual throughput
-and failures will be recorded rather than changing the matrix or requested settings.
+One evidence-model finding matters for the final deliverable: a failing response is absent from the turn transcript because the adapter raises before the assistant message is appended, so representative failures can only be quoted from the durable request journal, not from `checkpoints.jsonl`.
 
-Raw collection will live outside Git in the OS temporary directory with label
-`memory-bench-heldout-20261003-attempt-01`. Final reports, replay, reviewed synthetic
-exports, cleanup and normal push are required before marking Phase 5 complete.
-The active CLI automatically generates raw results/report and cleans its owned
-stores when collection ends. Offline replay, manual review/export and final commits
-remain pending until the full live run completes. Do not silently rerun, change
-prompts/gold/settings or call this completed while it is collecting.
+Two JSON pass rates are both correct and must always carry their denominator: 20.5% of received JSON responses passed the adapter contract at 11:15 IST, while 4.1% of finalized JSON checkpoints completed at 15:51 IST.
+
+An [attempt 03 offline acceptance](offline-acceptance.json) block now records the rebuilt package: collection `8a142dbd402db5c759bfc6f49b6f2236f7d387d252aa046584a986feed949e1c`, whose only source difference from the accepted attempt 02 package is one line in `client.py` raising `max_tokens` to 12288, with the scorer and all assets unchanged. Collection and scorer identities were recomputed and matched, and 383 source tests pass. The rebuilt wheel's own SHA-256 and a clean-environment portability run could not be repeated from the recording context and are recorded as still open rather than as verified.
+
+Final coverage, model misses, API failures, usage and latency, replay, reviewed synthetic reports, cleanup and delivery remain pending until attempt 03 completes. Do not combine this result with historical hosted/model benchmarks. One selected model supports instruction/policy comparisons, not model-to-model comparisons.
+
+An inference-free [interim quality analysis](interim-quality-analysis-01.md) uses a private snapshot at 2026-10-04 11:15 IST and the frozen installed scorer. It contains 186 finished track runs and 2,294 unique finalized checkpoints, with complete conservative baseline/rules persona coverage. Its key-matching diagnostic is explicitly exploratory and leaves frozen scores unchanged. This partial analysis does not satisfy final coverage or Phase 5 acceptance.

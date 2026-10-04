@@ -1,0 +1,4317 @@
+{
+  "attempt": "heldout-attempt-03",
+  "captured_at_unix": 1791092708.514342,
+  "captured_at_ist": "2026-10-04T11:15:08.514342+05:30",
+  "collection_status": "running",
+  "analysis_scope": "Unique finalized checkpoints from finished track runs only; active tracks excluded. Response statistics cover all captured requests.",
+  "finished_tracks": 186,
+  "scored_finalized_checkpoints": 2294,
+  "response_counts": {
+    "json": {
+      "started": 1442,
+      "finished": 1441,
+      "received": 1435,
+      "adapter_rejected": 1141,
+      "adapter_valid": 294,
+      "operation_batches": 235,
+      "final_answers": 59,
+      "no_response": 6
+    },
+    "native": {
+      "started": 1922,
+      "finished": 1922,
+      "received": 1921,
+      "adapter_valid": 1921,
+      "operation_batches": 632,
+      "final_answers": 1289,
+      "no_response": 1
+    }
+  },
+  "conditions": [
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "json",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "baseline"
+      },
+      "track": "read",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 90,
+        "completed": 4,
+        "failed": 86,
+        "unexecuted": 0,
+        "storage_scored": 0,
+        "storage_unscored": 90,
+        "controls_exercised": 0,
+        "controls_unexercised": 0,
+        "precision_null_cases": 90,
+        "recall_null_cases": 90
+      },
+      "storage": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision_denominator": 0,
+        "recall_denominator": 0,
+        "precision": null,
+        "recall": null,
+        "null_reasons": {
+          "precision": "zero denominator",
+          "recall": "zero denominator"
+        },
+        "scored": false,
+        "reason": "no scorable storage cases"
+      },
+      "conformance": {
+        "passed": 4,
+        "failed": 86,
+        "unscored": 0,
+        "denominator": 90,
+        "rate": 0.044444444444444446
+      },
+      "answers": {
+        "scored_cases": 4,
+        "unscored_cases": 86,
+        "correct": {
+          "passed": 4,
+          "failed": 0,
+          "unscored": 86,
+          "denominator": 4,
+          "rate": 1.0
+        },
+        "format": {
+          "passed": 4,
+          "failed": 0,
+          "unscored": 86,
+          "denominator": 4,
+          "rate": 1.0
+        },
+        "facts": {
+          "B": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "corrected": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "notebook": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "original": {
+            "passed": 2,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 2,
+            "rate": 1.0
+          },
+          "peer_context": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "peer_heading": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "peer_notebook": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "peer_style": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "reason": {
+            "passed": 3,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 3,
+            "rate": 1.0
+          },
+          "style": {
+            "passed": 3,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 3,
+            "rate": 1.0
+          }
+        },
+        "unknown_fields": {
+          "passed": 4,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 4,
+          "rate": 1.0
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 0,
+          "fn": 0,
+          "denominator": 0,
+          "recall": null,
+          "scored_cases": 0
+        },
+        "answers": {
+          "scored_cases": 4,
+          "unscored_cases": 86,
+          "correct": {
+            "passed": 4,
+            "failed": 0,
+            "unscored": 86,
+            "denominator": 4,
+            "rate": 1.0
+          },
+          "format": {
+            "passed": 4,
+            "failed": 0,
+            "unscored": 86,
+            "denominator": 4,
+            "rate": 1.0
+          },
+          "facts": {
+            "B": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "corrected": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "notebook": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "original": {
+              "passed": 2,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 2,
+              "rate": 1.0
+            },
+            "peer_context": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "peer_heading": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "peer_notebook": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "peer_style": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "reason": {
+              "passed": 3,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 3,
+              "rate": 1.0
+            },
+            "style": {
+              "passed": 3,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 3,
+              "rate": 1.0
+            }
+          },
+          "unknown_fields": {
+            "passed": 4,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 4,
+            "rate": 1.0
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 0,
+        "temporary_save_operations": 0,
+        "permission_requests": 0,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 0,
+        "tool_errors": 0,
+        "format_errors": 172
+      },
+      "details": {
+        "storage_meaning": "unscored: prepared records earn no save credit",
+        "scope": {
+          "correct": 450,
+          "wrong": 0,
+          "unmatched": 0,
+          "denominator": 450,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 4,
+          "failed": 0,
+          "unscored": 86,
+          "denominator": 4,
+          "rate": 1.0
+        },
+        "preference_format": {
+          "passed": 3,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 3,
+          "rate": 1.0
+        },
+        "preference_reason": {
+          "passed": 3,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 3,
+          "rate": 1.0
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 90,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "format_error": 86
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "json",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "baseline"
+      },
+      "track": "sequence",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 270,
+        "completed": 16,
+        "failed": 254,
+        "unexecuted": 0,
+        "storage_scored": 255,
+        "storage_unscored": 15,
+        "controls_exercised": 2,
+        "controls_unexercised": 43,
+        "precision_null_cases": 31,
+        "recall_null_cases": 60
+      },
+      "storage": {
+        "tp": 103,
+        "fp": 863,
+        "fn": 1202,
+        "precision_denominator": 966,
+        "recall_denominator": 1305,
+        "precision": 0.10662525879917184,
+        "recall": 0.0789272030651341,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 2,
+        "failed": 268,
+        "unscored": 0,
+        "denominator": 270,
+        "rate": 0.007407407407407408
+      },
+      "answers": {
+        "scored_cases": 13,
+        "unscored_cases": 257,
+        "correct": {
+          "passed": 1,
+          "failed": 12,
+          "unscored": 257,
+          "denominator": 13,
+          "rate": 0.07692307692307693
+        },
+        "format": {
+          "passed": 13,
+          "failed": 0,
+          "unscored": 257,
+          "denominator": 13,
+          "rate": 1.0
+        },
+        "facts": {
+          "A": {
+            "passed": 2,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 3,
+            "rate": 0.6666666666666666
+          },
+          "B": {
+            "passed": 0,
+            "failed": 4,
+            "unscored": 0,
+            "denominator": 4,
+            "rate": 0.0
+          },
+          "corrected": {
+            "passed": 5,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 6,
+            "rate": 0.8333333333333334
+          },
+          "notebook": {
+            "passed": 2,
+            "failed": 3,
+            "unscored": 0,
+            "denominator": 5,
+            "rate": 0.4
+          },
+          "original": {
+            "passed": 3,
+            "failed": 2,
+            "unscored": 0,
+            "denominator": 5,
+            "rate": 0.6
+          },
+          "reason": {
+            "passed": 0,
+            "failed": 11,
+            "unscored": 0,
+            "denominator": 11,
+            "rate": 0.0
+          },
+          "style": {
+            "passed": 7,
+            "failed": 4,
+            "unscored": 0,
+            "denominator": 11,
+            "rate": 0.6363636363636364
+          }
+        },
+        "unknown_fields": {
+          "passed": 20,
+          "failed": 2,
+          "unscored": 0,
+          "denominator": 22,
+          "rate": 0.9090909090909091
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 14,
+          "fn": 226,
+          "denominator": 240,
+          "recall": 0.058333333333333334,
+          "scored_cases": 270
+        },
+        "answers": {
+          "scored_cases": 13,
+          "unscored_cases": 257,
+          "correct": {
+            "passed": 0,
+            "failed": 13,
+            "unscored": 257,
+            "denominator": 13,
+            "rate": 0.0
+          },
+          "format": {
+            "passed": 13,
+            "failed": 0,
+            "unscored": 257,
+            "denominator": 13,
+            "rate": 1.0
+          },
+          "facts": {
+            "A": {
+              "passed": 2,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 3,
+              "rate": 0.6666666666666666
+            },
+            "B": {
+              "passed": 0,
+              "failed": 4,
+              "unscored": 0,
+              "denominator": 4,
+              "rate": 0.0
+            },
+            "corrected": {
+              "passed": 5,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 6,
+              "rate": 0.8333333333333334
+            },
+            "notebook": {
+              "passed": 2,
+              "failed": 3,
+              "unscored": 0,
+              "denominator": 5,
+              "rate": 0.4
+            },
+            "original": {
+              "passed": 4,
+              "failed": 3,
+              "unscored": 0,
+              "denominator": 7,
+              "rate": 0.5714285714285714
+            },
+            "reason": {
+              "passed": 0,
+              "failed": 13,
+              "unscored": 0,
+              "denominator": 13,
+              "rate": 0.0
+            },
+            "style": {
+              "passed": 7,
+              "failed": 6,
+              "unscored": 0,
+              "denominator": 13,
+              "rate": 0.5384615384615384
+            }
+          },
+          "unknown_fields": {
+            "passed": 18,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 18,
+            "rate": 1.0
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 1,
+            "unscored": 14,
+            "denominator": 1,
+            "rate": 0.0
+          },
+          "old_current_retired": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 14,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 1,
+            "unscored": 14,
+            "denominator": 1,
+            "rate": 0.0
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 1,
+            "unscored": 14,
+            "denominator": 1,
+            "rate": 0.0
+          }
+        },
+        "forgetting": {
+          "passed": 1,
+          "failed": 0,
+          "unscored": 29,
+          "denominator": 1,
+          "rate": 1.0
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 863,
+        "temporary_save_operations": 0,
+        "permission_requests": 1,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 17,
+        "tool_errors": 2,
+        "format_errors": 506
+      },
+      "details": {
+        "storage_meaning": "accumulated actual owner state at each checkpoint; repeated state observations",
+        "scope": {
+          "correct": 116,
+          "wrong": 0,
+          "unmatched": 906,
+          "denominator": 116,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 15,
+          "failed": 1,
+          "unscored": 254,
+          "denominator": 16,
+          "rate": 0.9375
+        },
+        "preference_format": {
+          "passed": 7,
+          "failed": 4,
+          "unscored": 0,
+          "denominator": 11,
+          "rate": 0.6363636363636364
+        },
+        "preference_reason": {
+          "passed": 0,
+          "failed": 11,
+          "unscored": 0,
+          "denominator": 11,
+          "rate": 0.0
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 270,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "deadline": 1,
+          "format_error": 253
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "json",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "baseline"
+      },
+      "track": "write",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 195,
+        "completed": 4,
+        "failed": 191,
+        "unexecuted": 0,
+        "storage_scored": 195,
+        "storage_unscored": 0,
+        "controls_exercised": 0,
+        "controls_unexercised": 45,
+        "precision_null_cases": 147,
+        "recall_null_cases": 105
+      },
+      "storage": {
+        "tp": 22,
+        "fp": 74,
+        "fn": 128,
+        "precision_denominator": 96,
+        "recall_denominator": 150,
+        "precision": 0.22916666666666666,
+        "recall": 0.14666666666666667,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 4,
+        "failed": 191,
+        "unscored": 0,
+        "denominator": 195,
+        "rate": 0.020512820512820513
+      },
+      "answers": {
+        "scored_cases": 0,
+        "unscored_cases": 195,
+        "correct": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 195,
+          "denominator": 0,
+          "rate": null
+        },
+        "format": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 195,
+          "denominator": 0,
+          "rate": null
+        },
+        "facts": {},
+        "unknown_fields": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 52,
+          "fn": 188,
+          "denominator": 240,
+          "recall": 0.21666666666666667,
+          "scored_cases": 195
+        },
+        "answers": {
+          "scored_cases": 0,
+          "unscored_cases": 195,
+          "correct": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 195,
+            "denominator": 0,
+            "rate": null
+          },
+          "format": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 195,
+            "denominator": 0,
+            "rate": null
+          },
+          "facts": {},
+          "unknown_fields": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 30,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 74,
+        "temporary_save_operations": 0,
+        "permission_requests": 2,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 10,
+        "tool_errors": 0,
+        "format_errors": 382
+      },
+      "details": {
+        "storage_meaning": "new/changed current facts after subtracting equivalent prepared prior facts",
+        "scope": {
+          "correct": 975,
+          "wrong": 0,
+          "unmatched": 74,
+          "denominator": 975,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 4,
+          "failed": 0,
+          "unscored": 191,
+          "denominator": 4,
+          "rate": 1.0
+        },
+        "preference_format": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        },
+        "preference_reason": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 195,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "format_error": 191
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "json",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "examples"
+      },
+      "track": "read",
+      "finished_personas": 2,
+      "coverage": {
+        "cases": 12,
+        "completed": 0,
+        "failed": 12,
+        "unexecuted": 0,
+        "storage_scored": 0,
+        "storage_unscored": 12,
+        "controls_exercised": 0,
+        "controls_unexercised": 0,
+        "precision_null_cases": 12,
+        "recall_null_cases": 12
+      },
+      "storage": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision_denominator": 0,
+        "recall_denominator": 0,
+        "precision": null,
+        "recall": null,
+        "null_reasons": {
+          "precision": "zero denominator",
+          "recall": "zero denominator"
+        },
+        "scored": false,
+        "reason": "no scorable storage cases"
+      },
+      "conformance": {
+        "passed": 0,
+        "failed": 12,
+        "unscored": 0,
+        "denominator": 12,
+        "rate": 0.0
+      },
+      "answers": {
+        "scored_cases": 0,
+        "unscored_cases": 12,
+        "correct": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 12,
+          "denominator": 0,
+          "rate": null
+        },
+        "format": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 12,
+          "denominator": 0,
+          "rate": null
+        },
+        "facts": {},
+        "unknown_fields": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 0,
+          "fn": 0,
+          "denominator": 0,
+          "recall": null,
+          "scored_cases": 0
+        },
+        "answers": {
+          "scored_cases": 0,
+          "unscored_cases": 12,
+          "correct": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 12,
+            "denominator": 0,
+            "rate": null
+          },
+          "format": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 12,
+            "denominator": 0,
+            "rate": null
+          },
+          "facts": {},
+          "unknown_fields": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 0,
+        "temporary_save_operations": 0,
+        "permission_requests": 0,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 0,
+        "tool_errors": 0,
+        "format_errors": 24
+      },
+      "details": {
+        "storage_meaning": "unscored: prepared records earn no save credit",
+        "scope": {
+          "correct": 60,
+          "wrong": 0,
+          "unmatched": 0,
+          "denominator": 60,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 12,
+          "denominator": 0,
+          "rate": null
+        },
+        "preference_format": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        },
+        "preference_reason": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 12,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "format_error": 12
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "json",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "examples"
+      },
+      "track": "sequence",
+      "finished_personas": 2,
+      "coverage": {
+        "cases": 36,
+        "completed": 3,
+        "failed": 33,
+        "unexecuted": 0,
+        "storage_scored": 34,
+        "storage_unscored": 2,
+        "controls_exercised": 0,
+        "controls_unexercised": 6,
+        "precision_null_cases": 8,
+        "recall_null_cases": 8
+      },
+      "storage": {
+        "tp": 31,
+        "fp": 99,
+        "fn": 143,
+        "precision_denominator": 130,
+        "recall_denominator": 174,
+        "precision": 0.23846153846153847,
+        "recall": 0.1781609195402299,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 0,
+        "failed": 36,
+        "unscored": 0,
+        "denominator": 36,
+        "rate": 0.0
+      },
+      "answers": {
+        "scored_cases": 2,
+        "unscored_cases": 34,
+        "correct": {
+          "passed": 0,
+          "failed": 2,
+          "unscored": 34,
+          "denominator": 2,
+          "rate": 0.0
+        },
+        "format": {
+          "passed": 2,
+          "failed": 0,
+          "unscored": 34,
+          "denominator": 2,
+          "rate": 1.0
+        },
+        "facts": {
+          "B": {
+            "passed": 0,
+            "failed": 2,
+            "unscored": 0,
+            "denominator": 2,
+            "rate": 0.0
+          },
+          "corrected": {
+            "passed": 1,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 2,
+            "rate": 0.5
+          },
+          "reason": {
+            "passed": 1,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 2,
+            "rate": 0.5
+          },
+          "style": {
+            "passed": 2,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 2,
+            "rate": 1.0
+          }
+        },
+        "unknown_fields": {
+          "passed": 2,
+          "failed": 2,
+          "unscored": 0,
+          "denominator": 4,
+          "rate": 0.5
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 5,
+          "fn": 27,
+          "denominator": 32,
+          "recall": 0.15625,
+          "scored_cases": 36
+        },
+        "answers": {
+          "scored_cases": 2,
+          "unscored_cases": 34,
+          "correct": {
+            "passed": 0,
+            "failed": 2,
+            "unscored": 34,
+            "denominator": 2,
+            "rate": 0.0
+          },
+          "format": {
+            "passed": 2,
+            "failed": 0,
+            "unscored": 34,
+            "denominator": 2,
+            "rate": 1.0
+          },
+          "facts": {
+            "B": {
+              "passed": 0,
+              "failed": 2,
+              "unscored": 0,
+              "denominator": 2,
+              "rate": 0.0
+            },
+            "corrected": {
+              "passed": 1,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 2,
+              "rate": 0.5
+            },
+            "reason": {
+              "passed": 1,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 2,
+              "rate": 0.5
+            },
+            "style": {
+              "passed": 2,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 2,
+              "rate": 1.0
+            }
+          },
+          "unknown_fields": {
+            "passed": 2,
+            "failed": 2,
+            "unscored": 0,
+            "denominator": 4,
+            "rate": 0.5
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 2,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 2,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 2,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 2,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 4,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 99,
+        "temporary_save_operations": 0,
+        "permission_requests": 2,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 0,
+        "tool_errors": 0,
+        "format_errors": 64
+      },
+      "details": {
+        "storage_meaning": "accumulated actual owner state at each checkpoint; repeated state observations",
+        "scope": {
+          "correct": 33,
+          "wrong": 0,
+          "unmatched": 107,
+          "denominator": 33,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 3,
+          "failed": 0,
+          "unscored": 33,
+          "denominator": 3,
+          "rate": 1.0
+        },
+        "preference_format": {
+          "passed": 2,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 2,
+          "rate": 1.0
+        },
+        "preference_reason": {
+          "passed": 1,
+          "failed": 1,
+          "unscored": 0,
+          "denominator": 2,
+          "rate": 0.5
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 36,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "deadline": 1,
+          "format_error": 32
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "json",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "examples"
+      },
+      "track": "write",
+      "finished_personas": 2,
+      "coverage": {
+        "cases": 26,
+        "completed": 0,
+        "failed": 26,
+        "unexecuted": 0,
+        "storage_scored": 26,
+        "storage_unscored": 0,
+        "controls_exercised": 0,
+        "controls_unexercised": 6,
+        "precision_null_cases": 23,
+        "recall_null_cases": 14
+      },
+      "storage": {
+        "tp": 4,
+        "fp": 7,
+        "fn": 16,
+        "precision_denominator": 11,
+        "recall_denominator": 20,
+        "precision": 0.36363636363636365,
+        "recall": 0.2,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 0,
+        "failed": 26,
+        "unscored": 0,
+        "denominator": 26,
+        "rate": 0.0
+      },
+      "answers": {
+        "scored_cases": 0,
+        "unscored_cases": 26,
+        "correct": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 26,
+          "denominator": 0,
+          "rate": null
+        },
+        "format": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 26,
+          "denominator": 0,
+          "rate": null
+        },
+        "facts": {},
+        "unknown_fields": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 8,
+          "fn": 24,
+          "denominator": 32,
+          "recall": 0.25,
+          "scored_cases": 26
+        },
+        "answers": {
+          "scored_cases": 0,
+          "unscored_cases": 26,
+          "correct": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 26,
+            "denominator": 0,
+            "rate": null
+          },
+          "format": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 26,
+            "denominator": 0,
+            "rate": null
+          },
+          "facts": {},
+          "unknown_fields": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 2,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 2,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 2,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 2,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 4,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 7,
+        "temporary_save_operations": 0,
+        "permission_requests": 1,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 0,
+        "tool_errors": 0,
+        "format_errors": 50
+      },
+      "details": {
+        "storage_meaning": "new/changed current facts after subtracting equivalent prepared prior facts",
+        "scope": {
+          "correct": 132,
+          "wrong": 0,
+          "unmatched": 7,
+          "denominator": 132,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 26,
+          "denominator": 0,
+          "rate": null
+        },
+        "preference_format": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        },
+        "preference_reason": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 26,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "deadline": 1,
+          "format_error": 25
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "json",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "rules"
+      },
+      "track": "read",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 90,
+        "completed": 7,
+        "failed": 83,
+        "unexecuted": 0,
+        "storage_scored": 0,
+        "storage_unscored": 90,
+        "controls_exercised": 0,
+        "controls_unexercised": 0,
+        "precision_null_cases": 90,
+        "recall_null_cases": 90
+      },
+      "storage": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision_denominator": 0,
+        "recall_denominator": 0,
+        "precision": null,
+        "recall": null,
+        "null_reasons": {
+          "precision": "zero denominator",
+          "recall": "zero denominator"
+        },
+        "scored": false,
+        "reason": "no scorable storage cases"
+      },
+      "conformance": {
+        "passed": 7,
+        "failed": 83,
+        "unscored": 0,
+        "denominator": 90,
+        "rate": 0.07777777777777778
+      },
+      "answers": {
+        "scored_cases": 7,
+        "unscored_cases": 83,
+        "correct": {
+          "passed": 7,
+          "failed": 0,
+          "unscored": 83,
+          "denominator": 7,
+          "rate": 1.0
+        },
+        "format": {
+          "passed": 7,
+          "failed": 0,
+          "unscored": 83,
+          "denominator": 7,
+          "rate": 1.0
+        },
+        "facts": {
+          "A": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "B": {
+            "passed": 3,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 3,
+            "rate": 1.0
+          },
+          "corrected": {
+            "passed": 4,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 4,
+            "rate": 1.0
+          },
+          "notebook": {
+            "passed": 2,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 2,
+            "rate": 1.0
+          },
+          "original": {
+            "passed": 3,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 3,
+            "rate": 1.0
+          },
+          "reason": {
+            "passed": 7,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 7,
+            "rate": 1.0
+          },
+          "style": {
+            "passed": 7,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 7,
+            "rate": 1.0
+          }
+        },
+        "unknown_fields": {
+          "passed": 11,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 11,
+          "rate": 1.0
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 0,
+          "fn": 0,
+          "denominator": 0,
+          "recall": null,
+          "scored_cases": 0
+        },
+        "answers": {
+          "scored_cases": 7,
+          "unscored_cases": 83,
+          "correct": {
+            "passed": 7,
+            "failed": 0,
+            "unscored": 83,
+            "denominator": 7,
+            "rate": 1.0
+          },
+          "format": {
+            "passed": 7,
+            "failed": 0,
+            "unscored": 83,
+            "denominator": 7,
+            "rate": 1.0
+          },
+          "facts": {
+            "A": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "B": {
+              "passed": 3,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 3,
+              "rate": 1.0
+            },
+            "corrected": {
+              "passed": 4,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 4,
+              "rate": 1.0
+            },
+            "notebook": {
+              "passed": 2,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 2,
+              "rate": 1.0
+            },
+            "original": {
+              "passed": 3,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 3,
+              "rate": 1.0
+            },
+            "reason": {
+              "passed": 7,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 7,
+              "rate": 1.0
+            },
+            "style": {
+              "passed": 7,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 7,
+              "rate": 1.0
+            }
+          },
+          "unknown_fields": {
+            "passed": 11,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 11,
+            "rate": 1.0
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 0,
+        "temporary_save_operations": 0,
+        "permission_requests": 0,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 0,
+        "tool_errors": 0,
+        "format_errors": 166
+      },
+      "details": {
+        "storage_meaning": "unscored: prepared records earn no save credit",
+        "scope": {
+          "correct": 450,
+          "wrong": 0,
+          "unmatched": 0,
+          "denominator": 450,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 7,
+          "failed": 0,
+          "unscored": 83,
+          "denominator": 7,
+          "rate": 1.0
+        },
+        "preference_format": {
+          "passed": 7,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 7,
+          "rate": 1.0
+        },
+        "preference_reason": {
+          "passed": 7,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 7,
+          "rate": 1.0
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 90,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "format_error": 83
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "json",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "rules"
+      },
+      "track": "sequence",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 270,
+        "completed": 11,
+        "failed": 259,
+        "unexecuted": 0,
+        "storage_scored": 255,
+        "storage_unscored": 15,
+        "controls_exercised": 0,
+        "controls_unexercised": 45,
+        "precision_null_cases": 25,
+        "recall_null_cases": 60
+      },
+      "storage": {
+        "tp": 99,
+        "fp": 987,
+        "fn": 1206,
+        "precision_denominator": 1086,
+        "recall_denominator": 1305,
+        "precision": 0.09116022099447514,
+        "recall": 0.07586206896551724,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 1,
+        "failed": 269,
+        "unscored": 0,
+        "denominator": 270,
+        "rate": 0.003703703703703704
+      },
+      "answers": {
+        "scored_cases": 10,
+        "unscored_cases": 260,
+        "correct": {
+          "passed": 2,
+          "failed": 8,
+          "unscored": 260,
+          "denominator": 10,
+          "rate": 0.2
+        },
+        "format": {
+          "passed": 10,
+          "failed": 0,
+          "unscored": 260,
+          "denominator": 10,
+          "rate": 1.0
+        },
+        "facts": {
+          "A": {
+            "passed": 2,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 3,
+            "rate": 0.6666666666666666
+          },
+          "B": {
+            "passed": 0,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 0.0
+          },
+          "corrected": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "notebook": {
+            "passed": 3,
+            "failed": 2,
+            "unscored": 0,
+            "denominator": 5,
+            "rate": 0.6
+          },
+          "original": {
+            "passed": 4,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 5,
+            "rate": 0.8
+          },
+          "peer_context": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "peer_heading": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "peer_notebook": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "peer_style": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "reason": {
+            "passed": 0,
+            "failed": 6,
+            "unscored": 0,
+            "denominator": 6,
+            "rate": 0.0
+          },
+          "style": {
+            "passed": 3,
+            "failed": 3,
+            "unscored": 0,
+            "denominator": 6,
+            "rate": 0.5
+          }
+        },
+        "unknown_fields": {
+          "passed": 11,
+          "failed": 2,
+          "unscored": 0,
+          "denominator": 13,
+          "rate": 0.8461538461538461
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 13,
+          "fn": 227,
+          "denominator": 240,
+          "recall": 0.05416666666666667,
+          "scored_cases": 270
+        },
+        "answers": {
+          "scored_cases": 10,
+          "unscored_cases": 260,
+          "correct": {
+            "passed": 1,
+            "failed": 9,
+            "unscored": 260,
+            "denominator": 10,
+            "rate": 0.1
+          },
+          "format": {
+            "passed": 10,
+            "failed": 0,
+            "unscored": 260,
+            "denominator": 10,
+            "rate": 1.0
+          },
+          "facts": {
+            "A": {
+              "passed": 2,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 3,
+              "rate": 0.6666666666666666
+            },
+            "B": {
+              "passed": 0,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 0.0
+            },
+            "corrected": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "notebook": {
+              "passed": 3,
+              "failed": 2,
+              "unscored": 0,
+              "denominator": 5,
+              "rate": 0.6
+            },
+            "original": {
+              "passed": 5,
+              "failed": 3,
+              "unscored": 0,
+              "denominator": 8,
+              "rate": 0.625
+            },
+            "peer_context": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "peer_heading": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "peer_notebook": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "peer_style": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "reason": {
+              "passed": 0,
+              "failed": 9,
+              "unscored": 0,
+              "denominator": 9,
+              "rate": 0.0
+            },
+            "style": {
+              "passed": 4,
+              "failed": 5,
+              "unscored": 0,
+              "denominator": 9,
+              "rate": 0.4444444444444444
+            }
+          },
+          "unknown_fields": {
+            "passed": 7,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 7,
+            "rate": 1.0
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 30,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 987,
+        "temporary_save_operations": 0,
+        "permission_requests": 2,
+        "unnecessary_permission_requests": 1,
+        "consent_violations": 14,
+        "tool_errors": 0,
+        "format_errors": 514
+      },
+      "details": {
+        "storage_meaning": "accumulated actual owner state at each checkpoint; repeated state observations",
+        "scope": {
+          "correct": 151,
+          "wrong": 0,
+          "unmatched": 1001,
+          "denominator": 151,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 11,
+          "failed": 0,
+          "unscored": 259,
+          "denominator": 11,
+          "rate": 1.0
+        },
+        "preference_format": {
+          "passed": 3,
+          "failed": 3,
+          "unscored": 0,
+          "denominator": 6,
+          "rate": 0.5
+        },
+        "preference_reason": {
+          "passed": 0,
+          "failed": 6,
+          "unscored": 0,
+          "denominator": 6,
+          "rate": 0.0
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 270,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "deadline": 2,
+          "format_error": 257
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "json",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "rules"
+      },
+      "track": "write",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 195,
+        "completed": 2,
+        "failed": 193,
+        "unexecuted": 0,
+        "storage_scored": 195,
+        "storage_unscored": 0,
+        "controls_exercised": 0,
+        "controls_unexercised": 45,
+        "precision_null_cases": 144,
+        "recall_null_cases": 105
+      },
+      "storage": {
+        "tp": 20,
+        "fp": 93,
+        "fn": 130,
+        "precision_denominator": 113,
+        "recall_denominator": 150,
+        "precision": 0.17699115044247787,
+        "recall": 0.13333333333333333,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 1,
+        "failed": 194,
+        "unscored": 0,
+        "denominator": 195,
+        "rate": 0.005128205128205128
+      },
+      "answers": {
+        "scored_cases": 1,
+        "unscored_cases": 194,
+        "correct": {
+          "passed": 1,
+          "failed": 0,
+          "unscored": 194,
+          "denominator": 1,
+          "rate": 1.0
+        },
+        "format": {
+          "passed": 1,
+          "failed": 0,
+          "unscored": 194,
+          "denominator": 1,
+          "rate": 1.0
+        },
+        "facts": {
+          "notebook": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "original": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "reason": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "style": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          }
+        },
+        "unknown_fields": {
+          "passed": 1,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 1,
+          "rate": 1.0
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 50,
+          "fn": 190,
+          "denominator": 240,
+          "recall": 0.20833333333333334,
+          "scored_cases": 195
+        },
+        "answers": {
+          "scored_cases": 1,
+          "unscored_cases": 194,
+          "correct": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 194,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "format": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 194,
+            "denominator": 1,
+            "rate": 1.0
+          },
+          "facts": {
+            "notebook": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "original": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "reason": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            },
+            "style": {
+              "passed": 1,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 1,
+              "rate": 1.0
+            }
+          },
+          "unknown_fields": {
+            "passed": 1,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 1,
+            "rate": 1.0
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 15,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 30,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 93,
+        "temporary_save_operations": 0,
+        "permission_requests": 2,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 12,
+        "tool_errors": 0,
+        "format_errors": 384
+      },
+      "details": {
+        "storage_meaning": "new/changed current facts after subtracting equivalent prepared prior facts",
+        "scope": {
+          "correct": 983,
+          "wrong": 0,
+          "unmatched": 93,
+          "denominator": 983,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 2,
+          "failed": 0,
+          "unscored": 193,
+          "denominator": 2,
+          "rate": 1.0
+        },
+        "preference_format": {
+          "passed": 1,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 1,
+          "rate": 1.0
+        },
+        "preference_reason": {
+          "passed": 1,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 1,
+          "rate": 1.0
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 195,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "deadline": 1,
+          "format_error": 192
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "native",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "baseline"
+      },
+      "track": "read",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 90,
+        "completed": 90,
+        "failed": 0,
+        "unexecuted": 0,
+        "storage_scored": 0,
+        "storage_unscored": 90,
+        "controls_exercised": 0,
+        "controls_unexercised": 0,
+        "precision_null_cases": 90,
+        "recall_null_cases": 90
+      },
+      "storage": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision_denominator": 0,
+        "recall_denominator": 0,
+        "precision": null,
+        "recall": null,
+        "null_reasons": {
+          "precision": "zero denominator",
+          "recall": "zero denominator"
+        },
+        "scored": false,
+        "reason": "no scorable storage cases"
+      },
+      "conformance": {
+        "passed": 69,
+        "failed": 21,
+        "unscored": 0,
+        "denominator": 90,
+        "rate": 0.7666666666666667
+      },
+      "answers": {
+        "scored_cases": 90,
+        "unscored_cases": 0,
+        "correct": {
+          "passed": 69,
+          "failed": 21,
+          "unscored": 0,
+          "denominator": 90,
+          "rate": 0.7666666666666667
+        },
+        "format": {
+          "passed": 69,
+          "failed": 21,
+          "unscored": 0,
+          "denominator": 90,
+          "rate": 0.7666666666666667
+        },
+        "facts": {
+          "A": {
+            "passed": 18,
+            "failed": 12,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.6
+          },
+          "B": {
+            "passed": 10,
+            "failed": 5,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.6666666666666666
+          },
+          "corrected": {
+            "passed": 19,
+            "failed": 11,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.6333333333333333
+          },
+          "notebook": {
+            "passed": 22,
+            "failed": 8,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.7333333333333333
+          },
+          "original": {
+            "passed": 36,
+            "failed": 9,
+            "unscored": 0,
+            "denominator": 45,
+            "rate": 0.8
+          },
+          "peer_context": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "peer_heading": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "peer_notebook": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "peer_style": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "reason": {
+            "passed": 55,
+            "failed": 20,
+            "unscored": 0,
+            "denominator": 75,
+            "rate": 0.7333333333333333
+          },
+          "style": {
+            "passed": 55,
+            "failed": 20,
+            "unscored": 0,
+            "denominator": 75,
+            "rate": 0.7333333333333333
+          }
+        },
+        "unknown_fields": {
+          "passed": 65,
+          "failed": 25,
+          "unscored": 0,
+          "denominator": 90,
+          "rate": 0.7222222222222222
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 0,
+          "fn": 0,
+          "denominator": 0,
+          "recall": null,
+          "scored_cases": 0
+        },
+        "answers": {
+          "scored_cases": 90,
+          "unscored_cases": 0,
+          "correct": {
+            "passed": 69,
+            "failed": 21,
+            "unscored": 0,
+            "denominator": 90,
+            "rate": 0.7666666666666667
+          },
+          "format": {
+            "passed": 69,
+            "failed": 21,
+            "unscored": 0,
+            "denominator": 90,
+            "rate": 0.7666666666666667
+          },
+          "facts": {
+            "A": {
+              "passed": 18,
+              "failed": 12,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.6
+            },
+            "B": {
+              "passed": 10,
+              "failed": 5,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.6666666666666666
+            },
+            "corrected": {
+              "passed": 19,
+              "failed": 11,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.6333333333333333
+            },
+            "notebook": {
+              "passed": 22,
+              "failed": 8,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.7333333333333333
+            },
+            "original": {
+              "passed": 36,
+              "failed": 9,
+              "unscored": 0,
+              "denominator": 45,
+              "rate": 0.8
+            },
+            "peer_context": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "peer_heading": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "peer_notebook": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "peer_style": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "reason": {
+              "passed": 55,
+              "failed": 20,
+              "unscored": 0,
+              "denominator": 75,
+              "rate": 0.7333333333333333
+            },
+            "style": {
+              "passed": 55,
+              "failed": 20,
+              "unscored": 0,
+              "denominator": 75,
+              "rate": 0.7333333333333333
+            }
+          },
+          "unknown_fields": {
+            "passed": 65,
+            "failed": 25,
+            "unscored": 0,
+            "denominator": 90,
+            "rate": 0.7222222222222222
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 0,
+        "temporary_save_operations": 0,
+        "permission_requests": 0,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 0,
+        "tool_errors": 0,
+        "format_errors": 0
+      },
+      "details": {
+        "storage_meaning": "unscored: prepared records earn no save credit",
+        "scope": {
+          "correct": 450,
+          "wrong": 0,
+          "unmatched": 0,
+          "denominator": 450,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 90,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 90,
+          "rate": 1.0
+        },
+        "preference_format": {
+          "passed": 55,
+          "failed": 20,
+          "unscored": 0,
+          "denominator": 75,
+          "rate": 0.7333333333333333
+        },
+        "preference_reason": {
+          "passed": 55,
+          "failed": 20,
+          "unscored": 0,
+          "denominator": 75,
+          "rate": 0.7333333333333333
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 90,
+          "missing_state_cases": 0
+        },
+        "case_errors": {}
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "native",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "baseline"
+      },
+      "track": "sequence",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 270,
+        "completed": 270,
+        "failed": 0,
+        "unexecuted": 0,
+        "storage_scored": 255,
+        "storage_unscored": 15,
+        "controls_exercised": 44,
+        "controls_unexercised": 1,
+        "precision_null_cases": 29,
+        "recall_null_cases": 60
+      },
+      "storage": {
+        "tp": 157,
+        "fp": 1019,
+        "fn": 1148,
+        "precision_denominator": 1176,
+        "recall_denominator": 1305,
+        "precision": 0.13350340136054423,
+        "recall": 0.12030651340996168,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 12,
+        "failed": 258,
+        "unscored": 0,
+        "denominator": 270,
+        "rate": 0.044444444444444446
+      },
+      "answers": {
+        "scored_cases": 90,
+        "unscored_cases": 180,
+        "correct": {
+          "passed": 17,
+          "failed": 73,
+          "unscored": 180,
+          "denominator": 90,
+          "rate": 0.18888888888888888
+        },
+        "format": {
+          "passed": 72,
+          "failed": 18,
+          "unscored": 180,
+          "denominator": 90,
+          "rate": 0.8
+        },
+        "facts": {
+          "A": {
+            "passed": 24,
+            "failed": 6,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.8
+          },
+          "B": {
+            "passed": 12,
+            "failed": 3,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.8
+          },
+          "corrected": {
+            "passed": 17,
+            "failed": 13,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.5666666666666667
+          },
+          "notebook": {
+            "passed": 26,
+            "failed": 4,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.8666666666666667
+          },
+          "original": {
+            "passed": 23,
+            "failed": 7,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.7666666666666667
+          },
+          "peer_context": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "peer_heading": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "peer_notebook": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "peer_style": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "reason": {
+            "passed": 0,
+            "failed": 60,
+            "unscored": 0,
+            "denominator": 60,
+            "rate": 0.0
+          },
+          "style": {
+            "passed": 13,
+            "failed": 47,
+            "unscored": 0,
+            "denominator": 60,
+            "rate": 0.21666666666666667
+          }
+        },
+        "unknown_fields": {
+          "passed": 74,
+          "failed": 46,
+          "unscored": 0,
+          "denominator": 120,
+          "rate": 0.6166666666666667
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 19,
+          "fn": 221,
+          "denominator": 240,
+          "recall": 0.07916666666666666,
+          "scored_cases": 270
+        },
+        "answers": {
+          "scored_cases": 90,
+          "unscored_cases": 180,
+          "correct": {
+            "passed": 14,
+            "failed": 76,
+            "unscored": 180,
+            "denominator": 90,
+            "rate": 0.15555555555555556
+          },
+          "format": {
+            "passed": 72,
+            "failed": 18,
+            "unscored": 180,
+            "denominator": 90,
+            "rate": 0.8
+          },
+          "facts": {
+            "A": {
+              "passed": 24,
+              "failed": 6,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.8
+            },
+            "B": {
+              "passed": 12,
+              "failed": 3,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.8
+            },
+            "corrected": {
+              "passed": 17,
+              "failed": 13,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.5666666666666667
+            },
+            "notebook": {
+              "passed": 26,
+              "failed": 4,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.8666666666666667
+            },
+            "original": {
+              "passed": 29,
+              "failed": 16,
+              "unscored": 0,
+              "denominator": 45,
+              "rate": 0.6444444444444445
+            },
+            "peer_context": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "peer_heading": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "peer_notebook": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "peer_style": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "reason": {
+              "passed": 0,
+              "failed": 75,
+              "unscored": 0,
+              "denominator": 75,
+              "rate": 0.0
+            },
+            "style": {
+              "passed": 15,
+              "failed": 60,
+              "unscored": 0,
+              "denominator": 75,
+              "rate": 0.2
+            }
+          },
+          "unknown_fields": {
+            "passed": 65,
+            "failed": 25,
+            "unscored": 0,
+            "denominator": 90,
+            "rate": 0.7222222222222222
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 14,
+            "unscored": 1,
+            "denominator": 14,
+            "rate": 0.0
+          },
+          "old_current_retired": {
+            "passed": 13,
+            "failed": 1,
+            "unscored": 1,
+            "denominator": 14,
+            "rate": 0.9285714285714286
+          },
+          "old_history_retired": {
+            "passed": 5,
+            "failed": 9,
+            "unscored": 1,
+            "denominator": 14,
+            "rate": 0.35714285714285715
+          },
+          "old_value_retired": {
+            "passed": 4,
+            "failed": 10,
+            "unscored": 1,
+            "denominator": 14,
+            "rate": 0.2857142857142857
+          }
+        },
+        "forgetting": {
+          "passed": 30,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 30,
+          "rate": 1.0
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 1019,
+        "temporary_save_operations": 0,
+        "permission_requests": 9,
+        "unnecessary_permission_requests": 8,
+        "consent_violations": 26,
+        "tool_errors": 0,
+        "format_errors": 0
+      },
+      "details": {
+        "storage_meaning": "accumulated actual owner state at each checkpoint; repeated state observations",
+        "scope": {
+          "correct": 167,
+          "wrong": 0,
+          "unmatched": 1086,
+          "denominator": 167,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 230,
+          "failed": 40,
+          "unscored": 0,
+          "denominator": 270,
+          "rate": 0.8518518518518519
+        },
+        "preference_format": {
+          "passed": 13,
+          "failed": 47,
+          "unscored": 0,
+          "denominator": 60,
+          "rate": 0.21666666666666667
+        },
+        "preference_reason": {
+          "passed": 0,
+          "failed": 60,
+          "unscored": 0,
+          "denominator": 60,
+          "rate": 0.0
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 270,
+          "missing_state_cases": 0
+        },
+        "case_errors": {}
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "native",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "baseline"
+      },
+      "track": "write",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 195,
+        "completed": 195,
+        "failed": 0,
+        "unexecuted": 0,
+        "storage_scored": 195,
+        "storage_unscored": 0,
+        "controls_exercised": 45,
+        "controls_unexercised": 0,
+        "precision_null_cases": 91,
+        "recall_null_cases": 105
+      },
+      "storage": {
+        "tp": 45,
+        "fp": 115,
+        "fn": 105,
+        "precision_denominator": 160,
+        "recall_denominator": 150,
+        "precision": 0.28125,
+        "recall": 0.3,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 126,
+        "failed": 69,
+        "unscored": 0,
+        "denominator": 195,
+        "rate": 0.6461538461538462
+      },
+      "answers": {
+        "scored_cases": 15,
+        "unscored_cases": 180,
+        "correct": {
+          "passed": 12,
+          "failed": 3,
+          "unscored": 180,
+          "denominator": 15,
+          "rate": 0.8
+        },
+        "format": {
+          "passed": 12,
+          "failed": 3,
+          "unscored": 180,
+          "denominator": 15,
+          "rate": 0.8
+        },
+        "facts": {
+          "notebook": {
+            "passed": 12,
+            "failed": 3,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.8
+          },
+          "original": {
+            "passed": 12,
+            "failed": 3,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.8
+          },
+          "reason": {
+            "passed": 12,
+            "failed": 3,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.8
+          },
+          "style": {
+            "passed": 12,
+            "failed": 3,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.8
+          }
+        },
+        "unknown_fields": {
+          "passed": 12,
+          "failed": 3,
+          "unscored": 0,
+          "denominator": 15,
+          "rate": 0.8
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 75,
+          "fn": 165,
+          "denominator": 240,
+          "recall": 0.3125,
+          "scored_cases": 195
+        },
+        "answers": {
+          "scored_cases": 15,
+          "unscored_cases": 180,
+          "correct": {
+            "passed": 12,
+            "failed": 3,
+            "unscored": 180,
+            "denominator": 15,
+            "rate": 0.8
+          },
+          "format": {
+            "passed": 12,
+            "failed": 3,
+            "unscored": 180,
+            "denominator": 15,
+            "rate": 0.8
+          },
+          "facts": {
+            "notebook": {
+              "passed": 12,
+              "failed": 3,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.8
+            },
+            "original": {
+              "passed": 12,
+              "failed": 3,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.8
+            },
+            "reason": {
+              "passed": 12,
+              "failed": 3,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.8
+            },
+            "style": {
+              "passed": 12,
+              "failed": 3,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.8
+            }
+          },
+          "unknown_fields": {
+            "passed": 12,
+            "failed": 3,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.8
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "old_current_retired": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "old_history_retired": {
+            "passed": 5,
+            "failed": 10,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.3333333333333333
+          },
+          "old_value_retired": {
+            "passed": 5,
+            "failed": 10,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.3333333333333333
+          }
+        },
+        "forgetting": {
+          "passed": 30,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 30,
+          "rate": 1.0
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 115,
+        "temporary_save_operations": 0,
+        "permission_requests": 11,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 15,
+        "tool_errors": 0,
+        "format_errors": 0
+      },
+      "details": {
+        "storage_meaning": "new/changed current facts after subtracting equivalent prepared prior facts",
+        "scope": {
+          "correct": 959,
+          "wrong": 0,
+          "unmatched": 115,
+          "denominator": 959,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 176,
+          "failed": 19,
+          "unscored": 0,
+          "denominator": 195,
+          "rate": 0.9025641025641026
+        },
+        "preference_format": {
+          "passed": 12,
+          "failed": 3,
+          "unscored": 0,
+          "denominator": 15,
+          "rate": 0.8
+        },
+        "preference_reason": {
+          "passed": 12,
+          "failed": 3,
+          "unscored": 0,
+          "denominator": 15,
+          "rate": 0.8
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 195,
+          "missing_state_cases": 0
+        },
+        "case_errors": {}
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "native",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "rules"
+      },
+      "track": "read",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 90,
+        "completed": 90,
+        "failed": 0,
+        "unexecuted": 0,
+        "storage_scored": 0,
+        "storage_unscored": 90,
+        "controls_exercised": 0,
+        "controls_unexercised": 0,
+        "precision_null_cases": 90,
+        "recall_null_cases": 90
+      },
+      "storage": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision_denominator": 0,
+        "recall_denominator": 0,
+        "precision": null,
+        "recall": null,
+        "null_reasons": {
+          "precision": "zero denominator",
+          "recall": "zero denominator"
+        },
+        "scored": false,
+        "reason": "no scorable storage cases"
+      },
+      "conformance": {
+        "passed": 64,
+        "failed": 26,
+        "unscored": 0,
+        "denominator": 90,
+        "rate": 0.7111111111111111
+      },
+      "answers": {
+        "scored_cases": 90,
+        "unscored_cases": 0,
+        "correct": {
+          "passed": 64,
+          "failed": 26,
+          "unscored": 0,
+          "denominator": 90,
+          "rate": 0.7111111111111111
+        },
+        "format": {
+          "passed": 67,
+          "failed": 23,
+          "unscored": 0,
+          "denominator": 90,
+          "rate": 0.7444444444444445
+        },
+        "facts": {
+          "A": {
+            "passed": 23,
+            "failed": 7,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.7666666666666667
+          },
+          "B": {
+            "passed": 8,
+            "failed": 7,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.5333333333333333
+          },
+          "corrected": {
+            "passed": 19,
+            "failed": 11,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.6333333333333333
+          },
+          "notebook": {
+            "passed": 22,
+            "failed": 8,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.7333333333333333
+          },
+          "original": {
+            "passed": 34,
+            "failed": 11,
+            "unscored": 0,
+            "denominator": 45,
+            "rate": 0.7555555555555555
+          },
+          "peer_context": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "peer_heading": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "peer_notebook": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "peer_style": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "reason": {
+            "passed": 50,
+            "failed": 25,
+            "unscored": 0,
+            "denominator": 75,
+            "rate": 0.6666666666666666
+          },
+          "style": {
+            "passed": 53,
+            "failed": 22,
+            "unscored": 0,
+            "denominator": 75,
+            "rate": 0.7066666666666667
+          }
+        },
+        "unknown_fields": {
+          "passed": 58,
+          "failed": 32,
+          "unscored": 0,
+          "denominator": 90,
+          "rate": 0.6444444444444445
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 0,
+          "fn": 0,
+          "denominator": 0,
+          "recall": null,
+          "scored_cases": 0
+        },
+        "answers": {
+          "scored_cases": 90,
+          "unscored_cases": 0,
+          "correct": {
+            "passed": 64,
+            "failed": 26,
+            "unscored": 0,
+            "denominator": 90,
+            "rate": 0.7111111111111111
+          },
+          "format": {
+            "passed": 67,
+            "failed": 23,
+            "unscored": 0,
+            "denominator": 90,
+            "rate": 0.7444444444444445
+          },
+          "facts": {
+            "A": {
+              "passed": 23,
+              "failed": 7,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.7666666666666667
+            },
+            "B": {
+              "passed": 8,
+              "failed": 7,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.5333333333333333
+            },
+            "corrected": {
+              "passed": 19,
+              "failed": 11,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.6333333333333333
+            },
+            "notebook": {
+              "passed": 22,
+              "failed": 8,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.7333333333333333
+            },
+            "original": {
+              "passed": 34,
+              "failed": 11,
+              "unscored": 0,
+              "denominator": 45,
+              "rate": 0.7555555555555555
+            },
+            "peer_context": {
+              "passed": 15,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 1.0
+            },
+            "peer_heading": {
+              "passed": 15,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 1.0
+            },
+            "peer_notebook": {
+              "passed": 15,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 1.0
+            },
+            "peer_style": {
+              "passed": 15,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 1.0
+            },
+            "reason": {
+              "passed": 50,
+              "failed": 25,
+              "unscored": 0,
+              "denominator": 75,
+              "rate": 0.6666666666666666
+            },
+            "style": {
+              "passed": 53,
+              "failed": 22,
+              "unscored": 0,
+              "denominator": 75,
+              "rate": 0.7066666666666667
+            }
+          },
+          "unknown_fields": {
+            "passed": 58,
+            "failed": 32,
+            "unscored": 0,
+            "denominator": 90,
+            "rate": 0.6444444444444445
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_current_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_history_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          },
+          "old_value_retired": {
+            "passed": 0,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 0,
+            "rate": null
+          }
+        },
+        "forgetting": {
+          "passed": 0,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 0,
+          "rate": null
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 0,
+        "temporary_save_operations": 0,
+        "permission_requests": 0,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 0,
+        "tool_errors": 0,
+        "format_errors": 0
+      },
+      "details": {
+        "storage_meaning": "unscored: prepared records earn no save credit",
+        "scope": {
+          "correct": 450,
+          "wrong": 0,
+          "unmatched": 0,
+          "denominator": 450,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 90,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 90,
+          "rate": 1.0
+        },
+        "preference_format": {
+          "passed": 53,
+          "failed": 22,
+          "unscored": 0,
+          "denominator": 75,
+          "rate": 0.7066666666666667
+        },
+        "preference_reason": {
+          "passed": 50,
+          "failed": 25,
+          "unscored": 0,
+          "denominator": 75,
+          "rate": 0.6666666666666666
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 90,
+          "missing_state_cases": 0
+        },
+        "case_errors": {}
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "native",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "rules"
+      },
+      "track": "sequence",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 270,
+        "completed": 269,
+        "failed": 1,
+        "unexecuted": 0,
+        "storage_scored": 255,
+        "storage_unscored": 15,
+        "controls_exercised": 42,
+        "controls_unexercised": 3,
+        "precision_null_cases": 21,
+        "recall_null_cases": 60
+      },
+      "storage": {
+        "tp": 75,
+        "fp": 1309,
+        "fn": 1230,
+        "precision_denominator": 1384,
+        "recall_denominator": 1305,
+        "precision": 0.054190751445086706,
+        "recall": 0.05747126436781609,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 4,
+        "failed": 266,
+        "unscored": 0,
+        "denominator": 270,
+        "rate": 0.014814814814814815
+      },
+      "answers": {
+        "scored_cases": 89,
+        "unscored_cases": 181,
+        "correct": {
+          "passed": 12,
+          "failed": 77,
+          "unscored": 181,
+          "denominator": 89,
+          "rate": 0.1348314606741573
+        },
+        "format": {
+          "passed": 68,
+          "failed": 21,
+          "unscored": 181,
+          "denominator": 89,
+          "rate": 0.7640449438202247
+        },
+        "facts": {
+          "A": {
+            "passed": 22,
+            "failed": 7,
+            "unscored": 0,
+            "denominator": 29,
+            "rate": 0.7586206896551724
+          },
+          "B": {
+            "passed": 13,
+            "failed": 2,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.8666666666666667
+          },
+          "corrected": {
+            "passed": 21,
+            "failed": 9,
+            "unscored": 0,
+            "denominator": 30,
+            "rate": 0.7
+          },
+          "notebook": {
+            "passed": 24,
+            "failed": 5,
+            "unscored": 0,
+            "denominator": 29,
+            "rate": 0.8275862068965517
+          },
+          "original": {
+            "passed": 19,
+            "failed": 10,
+            "unscored": 0,
+            "denominator": 29,
+            "rate": 0.6551724137931034
+          },
+          "peer_context": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "peer_heading": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "peer_notebook": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "peer_style": {
+            "passed": 14,
+            "failed": 1,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.9333333333333333
+          },
+          "reason": {
+            "passed": 0,
+            "failed": 59,
+            "unscored": 0,
+            "denominator": 59,
+            "rate": 0.0
+          },
+          "style": {
+            "passed": 20,
+            "failed": 39,
+            "unscored": 0,
+            "denominator": 59,
+            "rate": 0.3389830508474576
+          }
+        },
+        "unknown_fields": {
+          "passed": 65,
+          "failed": 55,
+          "unscored": 0,
+          "denominator": 120,
+          "rate": 0.5416666666666666
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 13,
+          "fn": 227,
+          "denominator": 240,
+          "recall": 0.05416666666666667,
+          "scored_cases": 270
+        },
+        "answers": {
+          "scored_cases": 89,
+          "unscored_cases": 181,
+          "correct": {
+            "passed": 12,
+            "failed": 77,
+            "unscored": 181,
+            "denominator": 89,
+            "rate": 0.1348314606741573
+          },
+          "format": {
+            "passed": 68,
+            "failed": 21,
+            "unscored": 181,
+            "denominator": 89,
+            "rate": 0.7640449438202247
+          },
+          "facts": {
+            "A": {
+              "passed": 22,
+              "failed": 7,
+              "unscored": 0,
+              "denominator": 29,
+              "rate": 0.7586206896551724
+            },
+            "B": {
+              "passed": 13,
+              "failed": 2,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.8666666666666667
+            },
+            "corrected": {
+              "passed": 21,
+              "failed": 9,
+              "unscored": 0,
+              "denominator": 30,
+              "rate": 0.7
+            },
+            "notebook": {
+              "passed": 24,
+              "failed": 5,
+              "unscored": 0,
+              "denominator": 29,
+              "rate": 0.8275862068965517
+            },
+            "original": {
+              "passed": 26,
+              "failed": 18,
+              "unscored": 0,
+              "denominator": 44,
+              "rate": 0.5909090909090909
+            },
+            "peer_context": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "peer_heading": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "peer_notebook": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "peer_style": {
+              "passed": 14,
+              "failed": 1,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.9333333333333333
+            },
+            "reason": {
+              "passed": 0,
+              "failed": 74,
+              "unscored": 0,
+              "denominator": 74,
+              "rate": 0.0
+            },
+            "style": {
+              "passed": 24,
+              "failed": 50,
+              "unscored": 0,
+              "denominator": 74,
+              "rate": 0.32432432432432434
+            }
+          },
+          "unknown_fields": {
+            "passed": 64,
+            "failed": 26,
+            "unscored": 0,
+            "denominator": 90,
+            "rate": 0.7111111111111111
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 0,
+            "failed": 12,
+            "unscored": 3,
+            "denominator": 12,
+            "rate": 0.0
+          },
+          "old_current_retired": {
+            "passed": 12,
+            "failed": 0,
+            "unscored": 3,
+            "denominator": 12,
+            "rate": 1.0
+          },
+          "old_history_retired": {
+            "passed": 1,
+            "failed": 11,
+            "unscored": 3,
+            "denominator": 12,
+            "rate": 0.08333333333333333
+          },
+          "old_value_retired": {
+            "passed": 1,
+            "failed": 11,
+            "unscored": 3,
+            "denominator": 12,
+            "rate": 0.08333333333333333
+          }
+        },
+        "forgetting": {
+          "passed": 30,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 30,
+          "rate": 1.0
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 1309,
+        "temporary_save_operations": 0,
+        "permission_requests": 8,
+        "unnecessary_permission_requests": 6,
+        "consent_violations": 26,
+        "tool_errors": 0,
+        "format_errors": 0
+      },
+      "details": {
+        "storage_meaning": "accumulated actual owner state at each checkpoint; repeated state observations",
+        "scope": {
+          "correct": 78,
+          "wrong": 0,
+          "unmatched": 1394,
+          "denominator": 78,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 230,
+          "failed": 39,
+          "unscored": 1,
+          "denominator": 269,
+          "rate": 0.8550185873605948
+        },
+        "preference_format": {
+          "passed": 20,
+          "failed": 39,
+          "unscored": 0,
+          "denominator": 59,
+          "rate": 0.3389830508474576
+        },
+        "preference_reason": {
+          "passed": 0,
+          "failed": 59,
+          "unscored": 0,
+          "denominator": 59,
+          "rate": 0.0
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 270,
+          "missing_state_cases": 0
+        },
+        "case_errors": {
+          "deadline": 1
+        }
+      }
+    },
+    {
+      "condition": {
+        "dataset": "heldout",
+        "interface": "native",
+        "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+        "policy": "conservative",
+        "prompt": "rules"
+      },
+      "track": "write",
+      "finished_personas": 15,
+      "coverage": {
+        "cases": 195,
+        "completed": 195,
+        "failed": 0,
+        "unexecuted": 0,
+        "storage_scored": 195,
+        "storage_unscored": 0,
+        "controls_exercised": 45,
+        "controls_unexercised": 0,
+        "precision_null_cases": 89,
+        "recall_null_cases": 105
+      },
+      "storage": {
+        "tp": 47,
+        "fp": 132,
+        "fn": 103,
+        "precision_denominator": 179,
+        "recall_denominator": 150,
+        "precision": 0.26256983240223464,
+        "recall": 0.31333333333333335,
+        "null_reasons": {},
+        "scored": true,
+        "reason": null
+      },
+      "conformance": {
+        "passed": 127,
+        "failed": 68,
+        "unscored": 0,
+        "denominator": 195,
+        "rate": 0.6512820512820513
+      },
+      "answers": {
+        "scored_cases": 15,
+        "unscored_cases": 180,
+        "correct": {
+          "passed": 13,
+          "failed": 2,
+          "unscored": 180,
+          "denominator": 15,
+          "rate": 0.8666666666666667
+        },
+        "format": {
+          "passed": 15,
+          "failed": 0,
+          "unscored": 180,
+          "denominator": 15,
+          "rate": 1.0
+        },
+        "facts": {
+          "notebook": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "original": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "reason": {
+            "passed": 13,
+            "failed": 2,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.8666666666666667
+          },
+          "style": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          }
+        },
+        "unknown_fields": {
+          "passed": 15,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 15,
+          "rate": 1.0
+        }
+      },
+      "common": {
+        "fact_presence": {
+          "tp": 77,
+          "fn": 163,
+          "denominator": 240,
+          "recall": 0.32083333333333336,
+          "scored_cases": 195
+        },
+        "answers": {
+          "scored_cases": 15,
+          "unscored_cases": 180,
+          "correct": {
+            "passed": 13,
+            "failed": 2,
+            "unscored": 180,
+            "denominator": 15,
+            "rate": 0.8666666666666667
+          },
+          "format": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 180,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "facts": {
+            "notebook": {
+              "passed": 15,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 1.0
+            },
+            "original": {
+              "passed": 15,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 1.0
+            },
+            "reason": {
+              "passed": 13,
+              "failed": 2,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 0.8666666666666667
+            },
+            "style": {
+              "passed": 15,
+              "failed": 0,
+              "unscored": 0,
+              "denominator": 15,
+              "rate": 1.0
+            }
+          },
+          "unknown_fields": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          }
+        }
+      },
+      "controls": {
+        "corrections": {
+          "current_correction": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "old_current_retired": {
+            "passed": 15,
+            "failed": 0,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 1.0
+          },
+          "old_history_retired": {
+            "passed": 2,
+            "failed": 13,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.13333333333333333
+          },
+          "old_value_retired": {
+            "passed": 2,
+            "failed": 13,
+            "unscored": 0,
+            "denominator": 15,
+            "rate": 0.13333333333333333
+          }
+        },
+        "forgetting": {
+          "passed": 29,
+          "failed": 1,
+          "unscored": 0,
+          "denominator": 30,
+          "rate": 0.9666666666666667
+        }
+      },
+      "diagnostics": {
+        "duplicate_records": 0,
+        "unnecessary_saves": 132,
+        "temporary_save_operations": 0,
+        "permission_requests": 11,
+        "unnecessary_permission_requests": 0,
+        "consent_violations": 15,
+        "tool_errors": 0,
+        "format_errors": 0
+      },
+      "details": {
+        "storage_meaning": "new/changed current facts after subtracting equivalent prepared prior facts",
+        "scope": {
+          "correct": 962,
+          "wrong": 0,
+          "unmatched": 132,
+          "denominator": 962,
+          "accuracy": 1.0
+        },
+        "missing_final_state_cases": 0,
+        "consent": {
+          "passed": 176,
+          "failed": 19,
+          "unscored": 0,
+          "denominator": 195,
+          "rate": 0.9025641025641026
+        },
+        "preference_format": {
+          "passed": 15,
+          "failed": 0,
+          "unscored": 0,
+          "denominator": 15,
+          "rate": 1.0
+        },
+        "preference_reason": {
+          "passed": 13,
+          "failed": 2,
+          "unscored": 0,
+          "denominator": 15,
+          "rate": 0.8666666666666667
+        },
+        "temporary_state": {
+          "records": 0,
+          "observed_cases": 195,
+          "missing_state_cases": 0
+        },
+        "case_errors": {}
+      }
+    }
+  ],
+  "limitations": [
+    "Partial sequential coverage.",
+    "One model and one repetition.",
+    "Answer rates are conditional on a completed probe answer; missing answers remain unscored.",
+    "Storage state can be scored after a response failure; it does not imply protocol completion.",
+    "Sequence state totals contain repeated checkpoint observations.",
+    "Frozen lexical matching can miss paraphrases."
+  ],
+  "collection_sha256": "8a142dbd402db5c759bfc6f49b6f2236f7d387d252aa046584a986feed949e1c",
+  "scorer_sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+  "snapshot_manifest_sha256": "4ba774730b3cde3daae948087923c3d1525d5f2917cf71ac74e28a3753292a65",
+  "snapshot_checkpoints_sha256": "9157da5201dc1c037136ada1d8781857dd3632cd70e5e867a162da8d35221de7",
+  "exploratory_key_diagnostic": {
+    "meaning": "Post hoc diagnostic only; frozen scores are unchanged. A missing fact can have matching frozen value aliases and scope but an unrecognized key. Sequence counts repeat state observations.",
+    "conditions": {
+      "conservative/baseline/write": {
+        "frozen_fn": 105,
+        "frozen_fp": 115,
+        "missing_expected_value_present_under_other_key": 90,
+        "unmatched_records_with_expected_value_under_other_key": 85
+      },
+      "conservative/baseline/sequence": {
+        "frozen_fn": 1148,
+        "frozen_fp": 1019,
+        "missing_expected_value_present_under_other_key": 808,
+        "unmatched_records_with_expected_value_under_other_key": 781
+      },
+      "conservative/rules/write": {
+        "frozen_fn": 103,
+        "frozen_fp": 132,
+        "missing_expected_value_present_under_other_key": 85,
+        "unmatched_records_with_expected_value_under_other_key": 85
+      },
+      "conservative/rules/sequence": {
+        "frozen_fn": 1230,
+        "frozen_fp": 1309,
+        "missing_expected_value_present_under_other_key": 896,
+        "unmatched_records_with_expected_value_under_other_key": 896
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "attempt": "heldout-attempt-03",
+  "captured_at_unix": 1791087011,
+  "elapsed_hours": 12.8,
+  "manifest_status": "running",
+  "track_runs_scheduled": 540,
+  "track_runs_by_status": {
+    "complete": 71,
+    "failed": 91,
+    "running": 1,
+    "unexecuted": 377
+  },
+  "checkpoints_scheduled": 6660,
+  "checkpoints_by_status": {
+    "complete": 932,
+    "deadline": 5,
+    "format_error": 1062,
+    "unexecuted": 4661
+  },
+  "catalog_requests": 1,
+  "inference_requests_finished": 2884,
+  "inference_requests_started": 2885,
+  "collection_errors": 0,
+  "cleanup": "pending",
+  "active_condition": {
+    "dataset": "heldout",
+    "interface": "native",
+    "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+    "persona_id": "H10",
+    "policy": "conservative",
+    "prompt": "rules",
+    "repetition": 1
+  }
+}

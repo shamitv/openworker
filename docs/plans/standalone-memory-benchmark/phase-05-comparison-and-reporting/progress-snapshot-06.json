@@ -1,0 +1,47 @@
+{
+  "attempt": "heldout-attempt-03",
+  "captured_at_unix": 1791104532.5126457,
+  "captured_at_ist": "2026-10-04T14:32:12.512646+05:30",
+  "elapsed_hours": 17.67,
+  "manifest_status": "running",
+  "finished_at": null,
+  "track_runs_scheduled": 540,
+  "tracks_by_status": {
+    "failed": 136,
+    "complete": 118,
+    "running": 1,
+    "unexecuted": 285
+  },
+  "checkpoints_by_status": {
+    "format_error": 1587,
+    "complete": 1527,
+    "deadline": 13,
+    "unexecuted": 3533
+  },
+  "inference": {
+    "started": 4509,
+    "finished": 4508,
+    "responses_received": 4495,
+    "requests_with_errors": 13
+  },
+  "responses_by_interface": {
+    "json": 1981,
+    "native": 2514
+  },
+  "in_flight": 1,
+  "last_finished_request_age_seconds": 4.8,
+  "collection_errors": [],
+  "cleanup": "pending",
+  "active_condition": [
+    {
+      "dataset": "heldout",
+      "interface": "native",
+      "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+      "persona_id": "H10",
+      "policy": "conservative",
+      "prompt": "examples",
+      "repetition": 1,
+      "track": "sequence"
+    }
+  ]
+}
