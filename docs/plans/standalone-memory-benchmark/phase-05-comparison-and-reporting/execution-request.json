@@ -1,18 +1,18 @@
 {
-  "attempt": "heldout-attempt-01",
+  "attempt": "heldout-attempt-03",
   "authorization": {
     "date": "2026-10-03",
-    "scope": "Full held-out matrix specified by the Phase 5 plan; prior endpoint/model retained, max_tokens updated to 12288 by the later user request.",
     "timezone": "Asia/Kolkata",
-    "user_request": "Implement phase 5"
+    "scope": "Full held-out matrix; user explicitly selected the currently advertised model.",
+    "user_request": "Use available model"
   },
   "base_url": "http://10.42.0.202:8090/v1",
-  "collection_status": "not_started",
+  "collection_status": "running",
   "constraints": [
     "Sequential requests; no retries or fallback.",
-    "Fresh isolated state independent of smoke/development.",
+    "Fresh isolated state independent of smoke/development and prior attempts.",
     "No prompt, gold, lifecycle or scorer changes after held-out observations.",
-    "A later rerun, if needed, is a new explicit attempt with retained earlier evidence."
+    "Every failed or unexecuted condition remains accounted for."
   ],
   "expected": {
     "checkpoints": 6660,
@@ -22,16 +22,16 @@
   },
   "frozen_asset_bundle_sha256": "37673a35e7bcf37058d705133e75ab676ef73345fbc49c6a9e13284161ae24bf",
   "frozen_scorer_sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
-  "initial_schedule_sha256": "dfb39db1ed13de098888c0aac897cf25392a7cbbd680900979dd973e971c9d59",
+  "initial_schedule_sha256": "368722b0f71611dd51c61918ea08ad6335ebd91da18fb42e42d9052e0e58c310",
   "output_location": "OS temporary directory, outside Git",
   "phase": 5,
-  "preflight": "Catalog verified the exact selected ID with zero inference requests; collection rechecks its own catalog.",
+  "preflight": "Fresh /models check advertised the explicitly selected exact ID; zero inference requests during preflight.",
   "prerequisites": {
     "phase4_pushed_revision": "0a8553059d32ceae5f603f2b6b26eb29195fbc6d",
     "phase4_status": "complete",
-    "phase5_portability": "pending new report implementation acceptance"
+    "phase5_portability": "passed; rebuilt wheel e929272f2d1f41154f09afb02aca53bf385ceadb5178c3d5274f18b183b749bf"
   },
-  "raw_output_label": "memory-bench-heldout-20261003-attempt-01",
+  "raw_output_label": "memory-bench-heldout-20261003-attempt-03",
   "requested": {
     "dataset": "heldout",
     "interfaces": [
@@ -39,7 +39,7 @@
       "native"
     ],
     "models": [
-      "Ornith-1.5-35B-Uncensored-Q6_K"
+      "Ornith-1.5-35B-A3B-Q4_K_M"
     ],
     "policies": [
       "conservative",
@@ -63,10 +63,26 @@
     "stream": false,
     "temperature": 0
   },
-  "settings_update": {
-    "date": "2026-10-03",
-    "previous_max_tokens": 2048,
-    "user_request": "Modify max tokens to 12k (from current 2k).",
-    "applies_to": "Subsequent collections using the rebuilt package; heldout-attempt-01 was launched with max_tokens=2048."
-  }
+  "catalog_preflight": {
+    "advertised_ids": [
+      "Ornith-1.5-35B-A3B-Q4_K_M"
+    ],
+    "checked_at_unix": 1791040875.0,
+    "inference_requests": 0
+  },
+  "prior_attempts": [
+    {
+      "attempt": "heldout-attempt-01",
+      "status": "failed_api_error",
+      "output_deleted_by_user_request": true,
+      "max_tokens": 2048
+    },
+    {
+      "attempt": "heldout-attempt-02",
+      "status": "failed_preflight",
+      "model": "Ornith-1.5-35B-Uncensored-Q6_K",
+      "inference_requests": 0,
+      "output_retained_outside_git": true
+    }
+  ]
 }

@@ -1,5 +1,68 @@
 {
   "asset_bundle_sha256": "37673a35e7bcf37058d705133e75ab676ef73345fbc49c6a9e13284161ae24bf",
+  "attempt_03": {
+    "applies_to": "heldout-attempt-03, the collection launched at revision 53ef1c2 with max_tokens=12288",
+    "delta_from_attempt_02": {
+      "changed_source_files": 1,
+      "client.py": "ddb881c1d9b0b312f10fb74203d3d8e8114fd6bbb9ee2c702c2bfcfd8da9f8b3 -> 21b17f12c0b3ebcb86339fa26a8f5021f016107af14d084ab96b606e5b8310ca",
+      "change": "One line: SETTINGS max_tokens 2048 -> 12288",
+      "revision": "53ef1c2af3c0d54ab6ff6418b1cdbd75bdaeb3f7",
+      "scorer_modules_changed": 0,
+      "assets_changed": 0,
+      "frozen_scorer_sha256_unchanged": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+      "frozen_asset_bundle_sha256_unchanged": "37673a35e7bcf37058d705133e75ab676ef73345fbc49c6a9e13284161ae24bf"
+    },
+    "collection_sha256": "8a142dbd402db5c759bfc6f49b6f2236f7d387d252aa046584a986feed949e1c",
+    "initial_schedule_sha256": "368722b0f71611dd51c61918ea08ad6335ebd91da18fb42e42d9052e0e58c310",
+    "installed_wheel_sha256_claimed": "e929272f2d1f41154f09afb02aca53bf385ceadb5178c3d5274f18b183b749bf",
+    "verification_performed_2026_10_04": {
+      "note": "Recorded from a separate, inference-free context while the collection was running. Nothing here was taken on trust from the launching context: the two provenance identities below were recomputed and compared.",
+      "installed_source_equals_captured_collection": true,
+      "installed_scorer_sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+      "captured_scorer_sha256": "f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e",
+      "installed_collection_sha256": "8a142dbd402db5c759bfc6f49b6f2236f7d387d252aa046584a986feed949e1c",
+      "captured_collection_sha256": "8a142dbd402db5c759bfc6f49b6f2236f7d387d252aa046584a986feed949e1c",
+      "method": "memory_bench.provenance.scorer_provenance() and collection_provenance() over benchmarks/memory/src at revision 53ef1c2, compared with manifest.collection_scoring and manifest.collection of the live capture.",
+      "conclusion": "The frozen scorer, the frozen assets and the full runner source used by this analysis are byte-identical to those the running collection recorded. The token-limit change is isolated to client.py and did not touch scoring, assets or the runner."
+    },
+    "source_tests": {
+      "command": "C:\\work\\openworker\\.venv\\Scripts\\python.exe -m pytest -c pyproject.toml --confcutdir=tests --basetemp build/p5-source-03 --junitxml build/phase05-source-tests-03.xml -q -p no:cacheprovider",
+      "cwd": "benchmarks/memory",
+      "inference_requests": 0,
+      "passed": 383,
+      "of_which_new": 24,
+      "seconds": 249.11,
+      "date": "2026-10-04",
+      "note": "383 = the 359 tests accepted for attempt 02 plus 24 covering tools/analyze_json_response_shapes.py. No pre-existing test changed behaviour."
+    },
+    "environment": {
+      "python": "3.14.2",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "httpx": "0.28.1",
+      "pytest": "9.1.1",
+      "anyio": "4.15.1",
+      "h11": "0.16.0",
+      "httpcore": "1.0.9",
+      "certifi": "2026.7.22",
+      "idna": "3.20",
+      "iniconfig": "2.3.0",
+      "packaging": "26.3",
+      "pluggy": "1.6.0",
+      "Pygments": "2.21.0",
+      "colorama": "0.4.6",
+      "setuptools": "84.0.0",
+      "wheel": "0.48.0",
+      "typing_extensions": "4.16.0",
+      "pip": "26.2.1",
+      "note": "This is the verification environment, not the collection environment. pip differs from the attempt 02 record (25.3) because these are different interpreters; no inference ran here."
+    },
+    "not_verified_here": [
+      "The installed wheel's own SHA-256 e929272f2d1f41154f09afb02aca53bf385ceadb5178c3d5274f18b183b749bf was not recomputed: the disposable portability environment that holds it is not readable from this context, and the memory-bench wheel is not present in build/wheelhouse. The value stands as recorded in live-launch.json and status.md.",
+      "Clean-environment portability was not re-run for the rebuilt wheel. The attempt 02 portability result covers the pre-change wheel only.",
+      "Python 3.10 syntax acceptance was not re-run for the rebuilt wheel."
+    ],
+    "consequence_for_acceptance": "Attempt 03 executes the intended post-change code, verified by hash identity and by the source suite. It is not covered by a clean-environment portability run for this exact wheel, so the portability acceptance item remains open until that is redone or explicitly accepted as inherited from attempt 02 plus the hash identity above."
+  },
   "catalog_preflight": {
     "checked_at_unix": 1791027708.4969072,
     "inference_requests": 0,
