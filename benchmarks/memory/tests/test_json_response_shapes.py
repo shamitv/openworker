@@ -231,5 +231,53 @@ def test_markdown_names_the_evidence_source_and_the_limits(analyzer):
     assert "## Limits" in text
     assert "| Track |" in text
     assert "What the rejected text would have scored" in text
+    assert "Would satisfy fields requiring UNKNOWN" in text
+    assert "fully UNKNOWN" not in text
+    assert "control turns without a format error" in text
+    assert "do not establish superiority" in text
+    assert "whether the server applied a grammar" in text
     for shape in analyzer.SHAPES:
         assert f"`{shape}`" in text
+
+
+def test_scheduled_coverage_uses_the_selected_matrix(analyzer):
+    manifest = {"schedule": [
+        {"condition": {"dataset": "heldout"}, "checkpoints": [{}, {}]},
+        {"condition": {"dataset": "heldout"}, "checkpoints": [{}]}]}
+    assert analyzer.scheduled_coverage(manifest) == {
+        "checkpoints_scheduled": 3, "track_runs_scheduled": 2}
+    manifest["schedule"][0]["condition"]["dataset"] = "development"
+    with pytest.raises(ValueError, match="held-out"):
+        analyzer.scheduled_coverage(manifest)
+
+
+@pytest.mark.parametrize("label", ["../capture/manifest", "..\\capture\\manifest", "/absolute", "C:\\capture", ""])
+def test_output_paths_reject_labels_that_escape_the_output(analyzer, tmp_path, label):
+    with pytest.raises(ValueError, match="label"):
+        analyzer.output_paths(tmp_path / "capture", tmp_path / "reports", label)
+    assert not (tmp_path / "reports").exists()
+
+
+def test_output_paths_protect_capture_and_accept_a_sibling(analyzer, tmp_path):
+    capture = tmp_path / "capture"
+    for output in (capture, capture / "reports"):
+        with pytest.raises(ValueError, match="capture"):
+            analyzer.output_paths(capture, output, "sample-01")
+    output = tmp_path / "reports"
+    assert analyzer.output_paths(capture, output, "sample-01") == [
+        (output / "sample-01.json").resolve(), (output / "sample-01.md").resolve()]
+
+
+def test_output_paths_reject_an_existing_file_link_to_capture(analyzer, tmp_path):
+    capture, output = tmp_path / "capture", tmp_path / "reports"
+    capture.mkdir()
+    output.mkdir()
+    target = capture / "manifest.json"
+    target.write_text("untouched", encoding="utf-8")
+    try:
+        (output / "sample-01.json").symlink_to(target)
+    except OSError:
+        pytest.skip("file symlinks are unavailable in this environment")
+    with pytest.raises(ValueError, match="output files"):
+        analyzer.output_paths(capture, output, "sample-01")
+    assert target.read_text(encoding="utf-8") == "untouched"

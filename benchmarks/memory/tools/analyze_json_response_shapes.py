@@ -227,9 +227,30 @@ def file_state(path):
     return {"name": path.name, "bytes": stat.st_size, "modified_unix": stat.st_mtime}
 
 
+def scheduled_coverage(manifest):
+    schedule = manifest["schedule"]
+    if any(entry["condition"]["dataset"] != "heldout" for entry in schedule):
+        raise ValueError("response-shape analysis requires a held-out capture")
+    return {"checkpoints_scheduled": sum(len(entry["checkpoints"]) for entry in schedule),
+            "track_runs_scheduled": len(schedule)}
+
+
+def output_paths(capture, output, label):
+    capture, output = Path(capture).resolve(), Path(output).resolve()
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", label):
+        raise ValueError("label must contain only letters, digits, underscores or hyphens")
+    paths = [(output / f"{label}.{extension}").resolve() for extension in ("json", "md")]
+    if output == capture or capture in output.parents:
+        raise ValueError("output directory must not be inside the capture directory")
+    if any(path.parent != output or path == capture or capture in path.parents for path in paths):
+        raise ValueError("output files must stay inside the output directory and outside the capture")
+    return paths
+
+
 def analyze(capture, sample_size, interface="json", policies=None):
     capture = Path(capture)
     manifest, rows = load_capture(capture)
+    coverage = scheduled_coverage(manifest)
     diagnostics = capture / "diagnostics.jsonl"
     if not diagnostics.is_file():
         raise ValueError("capture has no diagnostics journal")
@@ -371,7 +392,7 @@ def analyze(capture, sample_size, interface="json", policies=None):
             "Responses here are the last finished inference request of each sampled turn, read from the durable "
             "request journal. A representative failing JSON response therefore cannot be quoted from "
             "checkpoints.jsonl."),
-        "coverage": {"checkpoints_scheduled": 6660, "track_runs_scheduled": 540,
+        "coverage": {**coverage,
                      "checkpoints_finalized": sum(1 for row in rows if row["evidence"].get("status") in FINALIZED),
                      "interface": interface, "interface_turns_total": len(turns),
                      "interface_turns_format_error": len(failing), "interface_turns_other": len(control)},
@@ -431,7 +452,7 @@ def markdown(report):
         "## Sample",
         "",
         f"- {sample['selected']} failing turns sampled from the {coverage['interface_turns_format_error']} "
-        f"`format_error` turns, plus {sample['control_selected']} non-failing control turns.",
+        f"`format_error` turns, plus {sample['control_selected']} control turns without a format error.",
         f"- Stratification: {sample['stratification']}.",
         f"- Turns without a readable finished response: {sample['unmatched_responses']}.",
         "",
@@ -487,7 +508,7 @@ def markdown(report):
         f"{control['with_answer_probe']['would_be_correct']} |",
         f"| Would have had valid probe format | {sampled['with_answer_probe']['would_have_valid_format']} | "
         f"{control['with_answer_probe']['would_have_valid_format']} |",
-        f"| Would have been fully UNKNOWN | {sampled['with_answer_probe']['would_be_unknown']} | "
+        f"| Would satisfy fields requiring UNKNOWN | {sampled['with_answer_probe']['would_be_unknown']} | "
         f"{control['with_answer_probe']['would_be_unknown']} |",
         f"| Would have leaked an excluded fact | "
         f"{sampled['with_answer_probe']['would_include_excluded_fact']} | "
@@ -527,11 +548,11 @@ def markdown(report):
         "`no_response_returned` rather than as an answer shape.",
         "- Presence counts are an unassigned upper bound, not a score, and are not comparable to frozen storage "
         "precision or recall.",
-        "- A control turn is not a matched sample: it shares policies and personas but was not drawn by the "
-        "failing-turn procedure.",
+        "- Controls use the same quota procedure but are not matched to failing turns. Empty or small strata "
+        "can leave quotas unfilled. Differences between these samples do not establish superiority.",
         "- Shapes describe this model, server, policy, prompt and interface combination at one repetition. They do "
-        "not establish the cause of JSON-mode failure, and the harness requests a JSON object without server-side "
-        "grammar enforcement.",
+        "not establish the cause of JSON-mode failure. The harness requests response_format: json_object; "
+        "the capture does not establish whether the server applied a grammar.",
         "",
     ]
     return "\n".join(lines)
@@ -550,12 +571,14 @@ def main():
         parser.error("--sample must be positive")
     capture = args.capture.resolve()
     output = args.output_dir.resolve()
-    if output == capture or capture in output.parents:
-        parser.error("--output-dir must not be inside the capture directory")
+    try:
+        json_path, markdown_path = output_paths(capture, output, args.label)
+    except ValueError as exc:
+        parser.error(str(exc))
     report = analyze(capture, args.sample, args.interface, args.policies)
     output.mkdir(parents=True, exist_ok=True)
-    (output / f"{args.label}.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    (output / f"{args.label}.md").write_text(markdown(report), encoding="utf-8")
+    json_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    markdown_path.write_text(markdown(report), encoding="utf-8")
     print(f"{args.label}: sampled {report['sample']['selected']} of "
           f"{report['coverage']['interface_turns_format_error']} failing turns; "
           f"shapes {report['shape_counts_sampled']}")
