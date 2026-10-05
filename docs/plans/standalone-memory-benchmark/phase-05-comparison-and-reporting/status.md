@@ -1,6 +1,6 @@
 # Phase 5 status
 
-Status: In progress — attempt 03 collecting with the user-selected advertised model.
+Status: In progress — attempt 03 collection and offline replay complete; final reviewed report publication remains pending.
 
 Planning date: 2026-10-03 (Asia/Kolkata). Dependencies: Phases 1–4 and explicit full-sweep request. The user asked to delete the prior short-limit run, start over, and then explicitly selected the available model when the previously selected ID was absent.
 
@@ -18,14 +18,14 @@ Attempt 01 used `max_tokens=2048` and failed with an API error after 128 complet
 
 ## Interim findings
 
-The [interim report](interim-report-01.md) consolidates authorization, coverage, the JSON findings and the remaining acceptance work. The material result is that the JSON arm measures envelope adherence rather than memory capability. Not one of 150 sampled failing JSON responses was a JSON object or a near miss, and applying the frozen answer scorer to the text those rejected turns actually delivered shows 50 of 56 would have been fully correct, against 23 of 34 accepted control turns. The rejected text would have scored better than the accepted text. See [sampled response shapes](json-interface-response-shapes-01.md).
+The [interim report](interim-report-01.md) consolidates authorization, coverage and JSON findings. None of 150 sampled failures parsed as JSON; 13 contained braces in prose. Exploratory answer scoring found 50 of 56 rejected answers and 23 of 34 control answers fully correct. The samples are unmatched and do not establish superiority. Format failures limit conclusions about memory behavior, and the capture does not establish whether the server applied a grammar. See [sampled response shapes](json-interface-response-shapes-01.md).
 
 One evidence-model finding matters for the final deliverable: a failing response is absent from the turn transcript because the adapter raises before the assistant message is appended, so representative failures can only be quoted from the durable request journal, not from `checkpoints.jsonl`.
 
 Two JSON pass rates are both correct and must always carry their denominator: 20.5% of received JSON responses passed the adapter contract at 11:15 IST, while 4.1% of finalized JSON checkpoints completed at 15:51 IST.
 
-An [attempt 03 offline acceptance](offline-acceptance.json) block now records the rebuilt package: collection `8a142dbd402db5c759bfc6f49b6f2236f7d387d252aa046584a986feed949e1c`, whose only source difference from the accepted attempt 02 package is one line in `client.py` raising `max_tokens` to 12288, with the scorer and all assets unchanged. Collection and scorer identities were recomputed and matched, and 383 source tests pass. The rebuilt wheel's own SHA-256 and a clean-environment portability run could not be repeated from the recording context and are recorded as still open rather than as verified.
+The [attempt 03 offline acceptance](offline-acceptance.json) block records collection `8a142dbd402db5c759bfc6f49b6f2236f7d387d252aa046584a986feed949e1c`, whose only source difference from attempt 02 is the 12288 token limit, with scorer and assets unchanged. The recording context could not locate portability evidence. Review on 2026-10-05 found the exact wheel, recomputed its matching hash, and verified the existing isolated report records validation and 359 passing tests. The earlier context's access limitation is retained as history; portability acceptance is resolved.
 
-Final coverage, model misses, API failures, usage and latency, replay, reviewed synthetic reports, cleanup and delivery remain pending until attempt 03 completes. Do not combine this result with historical hosted/model benchmarks. One selected model supports instruction/policy comparisons, not model-to-model comparisons.
+At the [final collection snapshot](progress-snapshot-08.json), all 540 tracks and 6,660 checkpoints are accounted for: 269 complete and 271 failed tracks; 3,458 complete checkpoints, 3,181 format errors and 21 deadlines; zero unexecuted. There were 9,707 inference requests and 9,686 returned responses. Collection errors are empty and cleanup is complete. Offline replay completed with zero inference requests and the unchanged frozen scorer. Final report review/publication and delivery remain pending. Keep these results separate from historical benchmarks; one selected model supports instruction/policy comparisons.
 
 An inference-free [interim quality analysis](interim-quality-analysis-01.md) uses a private snapshot at 2026-10-04 11:15 IST and the frozen installed scorer. It contains 186 finished track runs and 2,294 unique finalized checkpoints, with complete conservative baseline/rules persona coverage. Its key-matching diagnostic is explicitly exploratory and leaves frozen scores unchanged. This partial analysis does not satisfy final coverage or Phase 5 acceptance.

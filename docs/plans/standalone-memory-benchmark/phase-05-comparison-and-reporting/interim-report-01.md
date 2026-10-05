@@ -61,21 +61,21 @@ Of the 150 sampled failing responses:
 | Prose using memory-operation vocabulary | 49 |
 | Prose with no memory vocabulary | 88 |
 
-Not one failing response was a JSON object, and none was even a near miss such as a code fence.
+None of the 150 sampled failures parsed as JSON or used a code fence. Thirteen contained a brace in prose; the shape heuristic does not establish whether those contained a usable embedded envelope.
 
 The decisive check applies the frozen `score_answer` to the answer text those rejected turns actually delivered:
 
-| Measure | Rejected `format_error` turns | Accepted control turns |
+| Measure | Rejected `format_error` turns | Controls without a format error |
 |---|---:|---:|
 | Responses with an answer probe | 56 | 34 |
 | Would have had valid probe format | 56 | 34 |
 | Would have been fully correct | 50 | 23 |
-| Would have been fully `UNKNOWN` | 53 | 28 |
+| Would satisfy fields requiring `UNKNOWN` | 53 | 28 |
 | Would have leaked an excluded fact | 3 | 1 |
 
-**The rejected text would have scored better than the accepted text.** On the read track, 195 of 195 expected answer values were present in the failing responses. One inspected failure was already in the required `field: value` probe format with correct values and no excluded fact, and failed only because the adapter requires the entire response to be one JSON object.
+The exploratory scorer marked 50 of 56 rejected answers and 23 of 34 control answers fully correct. These are unmatched samples with different case mixtures, so the counts do not establish superiority. The overall control sample also contains 11 timeouts without responses; those are excluded from scored-answer counts. The `UNKNOWN` measure checks fields expected to be unknown, rather than requiring the whole answer to be unknown. On the read track, 195 of 195 expected answer values were present in the sampled failing responses. One inspected failure was already in the required `field: value` probe format with correct values and no excluded fact, and failed because the adapter requires the entire response to be one JSON object.
 
-The harness requests `response_format: json_object` but the server enforces no grammar, so this is unconstrained instruction-following by a 35B model rather than a decoding failure. The honest reading is that the JSON arm measures **envelope adherence, not memory capability**, and its near-zero frozen scores must not be presented as the model failing to remember.
+The harness requests `response_format: json_object`. The capture does not establish whether the server applied a grammar or why prose was returned. JSON outcomes include envelope adherence and subsequent memory behavior. Format failures limit what the frozen scores reveal about memory behavior; the separately labelled text analysis provides additional descriptive evidence.
 
 ## Scoring caveats that survive completion
 
@@ -87,6 +87,6 @@ The harness requests `response_format: json_object` but the server enforces no g
 
 ## Remaining acceptance work
 
-Collection of the `recurring` conditions; final coverage accounting including failed and unexecuted items; replay-based rescoring; the sanitized JSON and Markdown report with TP/FP/FN, denominators, zero-denominator nulls, latency, request counts and provenance; review of published evidence for credentials; removal of owned temporary stores; and a separate sanitized results commit. Clean-environment portability for the rebuilt wheel is also still open, as recorded in `attempt_03`.
+At this historical snapshot, remaining work was collection of the `recurring` conditions; final coverage accounting; offline replay; reviewed reports; cleanup; and a separate sanitized results commit. Review on 2026-10-05 located the exact rebuilt wheel and its existing clean-environment acceptance report, resolving the portability uncertainty recorded by the other context. See [review decisions](parallel-agent-review-01.md) for current collection and replay evidence.
 
 Open checklist items in [todo.md](todo.md): 7, 8, 10, 11, 12, 14, 15.

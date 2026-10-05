@@ -1,45 +1,86 @@
 {
+  "active_or_last_condition": {
+    "dataset": "heldout",
+    "interface": "native",
+    "model": "Ornith-1.5-35B-A3B-Q4_K_M",
+    "persona_id": "H12",
+    "policy": "conservative",
+    "prompt": "examples",
+    "repetition": 1
+  },
   "attempt": "heldout-attempt-03",
-  "captured_at_unix": 1791133346.9399695,
-  "captured_at_ist": "2026-10-04T22:32:26.939970+05:30",
-  "elapsed_hours": 25.67,
-  "status": "running",
-  "tracks": {
-    "failed": 186,
-    "complete": 179,
-    "running": 1,
-    "unexecuted": 174
+  "captured_at_ist": "2026-10-04T15:51:42.088204+05:30",
+  "captured_at_unix": 1791109302.088199,
+  "checkpoints_by_status": {
+    "complete": 1734,
+    "deadline": 13,
+    "failed": 1658,
+    "format_error": 1645,
+    "unexecuted": 3268
   },
-  "checkpoints": {
-    "format_error": 2167,
-    "complete": 2313,
-    "deadline": 16,
-    "unexecuted": 2164
+  "checkpoints_finalized": 3392,
+  "checkpoints_scheduled": 6660,
+  "cleanup": {
+    "files": [],
+    "status": "pending"
   },
-  "inference": {
-    "started": 6541,
-    "finished": 6540,
-    "responses_received": 6524,
-    "requests_with_errors": 16
-  },
-  "responses_by_interface": {
-    "json": 2717,
-    "native": 3807
-  },
-  "in_flight": 1,
-  "last_finished_request_age_seconds": 2.2,
   "collection_errors": [],
-  "cleanup": "pending",
-  "active_condition": [
-    {
-      "dataset": "heldout",
-      "interface": "json",
-      "model": "Ornith-1.5-35B-A3B-Q4_K_M",
-      "persona_id": "H02",
-      "policy": "recurring",
-      "prompt": "rules",
-      "repetition": 1,
-      "track": "sequence"
+  "conditions_by_status": {
+    "json/conservative/baseline": {
+      "complete": 24,
+      "deadline": 1,
+      "format_error": 530
+    },
+    "json/conservative/examples": {
+      "complete": 22,
+      "deadline": 8,
+      "format_error": 525
+    },
+    "json/conservative/rules": {
+      "complete": 20,
+      "deadline": 3,
+      "format_error": 532
+    },
+    "json/recurring/baseline": {
+      "complete": 4,
+      "format_error": 58
+    },
+    "native/conservative/baseline": {
+      "complete": 555
+    },
+    "native/conservative/examples": {
+      "complete": 555
+    },
+    "native/conservative/rules": {
+      "complete": 554,
+      "deadline": 1
     }
-  ]
+  },
+  "conditions_complete": [
+    "json/conservative/baseline",
+    "json/conservative/examples",
+    "json/conservative/rules",
+    "native/conservative/baseline",
+    "native/conservative/examples",
+    "native/conservative/rules"
+  ],
+  "conditions_started": 7,
+  "elapsed_hours": 18.99,
+  "finished_at": null,
+  "in_flight": 0,
+  "inference": {
+    "finished": 4939,
+    "requests_with_errors": {
+      "deadline": 13
+    },
+    "responses_received_by_interface": {
+      "json": 2071,
+      "native": 2867
+    },
+    "started": 4940
+  },
+  "manifest_status": "running",
+  "method": "Latest record per checkpoint id, matching read_checkpoints. Request counts from one sequential pass over diagnostics.jsonl. A condition is complete at 555 finalized checkpoints.",
+  "track_runs_scheduled": 540,
+  "track_runs_started": 276
 }

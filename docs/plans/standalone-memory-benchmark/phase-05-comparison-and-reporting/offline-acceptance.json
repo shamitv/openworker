@@ -61,7 +61,22 @@
       "Clean-environment portability was not re-run for the rebuilt wheel. The attempt 02 portability result covers the pre-change wheel only.",
       "Python 3.10 syntax acceptance was not re-run for the rebuilt wheel."
     ],
-    "consequence_for_acceptance": "Attempt 03 executes the intended post-change code, verified by hash identity and by the source suite. It is not covered by a clean-environment portability run for this exact wheel, so the portability acceptance item remains open until that is redone or explicitly accepted as inherited from attempt 02 plus the hash identity above."
+    "consequence_for_acceptance": "The 2026-10-04 context could not locate exact-wheel portability evidence. Review on 2026-10-05 located the wheel and existing isolated acceptance report, verified the matching wheel hash and installed 12288-token code, and confirmed validation and 359 tests passed without OpenWorker. Exact-wheel portability acceptance is resolved. Earlier not_verified_here statements describe the prior context only.",
+    "verification_followup_2026_10_05": {
+      "wheel_sha256_recomputed": "e929272f2d1f41154f09afb02aca53bf385ceadb5178c3d5274f18b183b749bf",
+      "private_wheel": "benchmarks/memory/build/portability-nzzdizy3/wheels/standalone_memory_bench-0.1.0-py3-none-any.whl",
+      "private_report": "benchmarks/memory/build/portability-nzzdizy3/report.json",
+      "existing_report_status": "passed",
+      "existing_report_tests_passed": 359,
+      "installed_max_tokens": 12288,
+      "openworker_available": false,
+      "installation_network": false,
+      "inference_requests": 0,
+      "method": "Read the existing portability report, recompute SHA-256 of its wheel, and inspect installed client.py. No new portability test run or inference.",
+      "remaining_unverified": [
+        "Python 3.10 syntax acceptance was not re-run in this review."
+      ]
+    }
   },
   "catalog_preflight": {
     "checked_at_unix": 1791027708.4969072,

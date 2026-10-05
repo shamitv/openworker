@@ -15,7 +15,7 @@ A failing response is not present in the turn transcript. The adapter raises bef
 
 ## Sample
 
-- 150 failing turns sampled from the 1636 `format_error` turns, plus 71 non-failing control turns.
+- 150 failing turns sampled from the 1636 `format_error` turns, plus 71 control turns without a format error.
 - Stratification: prompt x track, round-robin personas inside each stratum, sorted deterministic order.
 - Turns without a readable finished response: 0.
 
@@ -60,7 +60,7 @@ Exploratory only. The frozen score_answer function is applied to the answer text
 | Responses with an answer probe | 56 | 34 |
 | Would have been fully correct | 50 | 23 |
 | Would have had valid probe format | 56 | 34 |
-| Would have been fully UNKNOWN | 53 | 28 |
+| Would satisfy fields requiring UNKNOWN | 53 | 28 |
 | Would have leaked an excluded fact | 3 | 1 |
 
 A rejected response that is already in the required `field: value` probe format, with correct values and no excluded fact, failed only because the JSON adapter requires the whole response to be one JSON object. That is the clearest separation this sample offers between memory behaviour and envelope adherence.
@@ -78,5 +78,5 @@ A rejected response that is already in the required `field: value` probe format,
 - Write-track presence is naturally low because the turn asks a question rather than a restatement; a low count there is not evidence of a lost fact.
 - Control turns are not all successful answers: 11 of 71 are `deadline` turns whose request returned nothing, reported as `no_response_returned` rather than as an answer shape.
 - Presence counts are an unassigned upper bound, not a score, and are not comparable to frozen storage precision or recall.
-- A control turn is not a matched sample: it shares policies and personas but was not drawn by the failing-turn procedure.
-- Shapes describe this model, server, policy, prompt and interface combination at one repetition. They do not establish the cause of JSON-mode failure, and the harness requests a JSON object without server-side grammar enforcement.
+- Controls use the same quota procedure but are not matched to failing turns. Empty or small strata can leave quotas unfilled. Differences between these samples do not establish superiority.
+- Shapes describe this model, server, policy, prompt and interface combination at one repetition. They do not establish the cause of JSON-mode failure. The harness requests response_format: json_object; the capture does not establish whether the server applied a grammar.
