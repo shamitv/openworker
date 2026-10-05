@@ -1,0 +1,31 @@
+{
+  "attempt": "heldout-attempt-03",
+  "captured_at_unix": 1791179246.6781251,
+  "captured_at_ist": "2026-10-05T11:17:26.678125+05:30",
+  "elapsed_hours": 38.42,
+  "status": "complete",
+  "tracks": {
+    "failed": 271,
+    "complete": 269
+  },
+  "checkpoints": {
+    "format_error": 3181,
+    "complete": 3458,
+    "deadline": 21
+  },
+  "inference": {
+    "started": 9707,
+    "finished": 9707,
+    "responses_received": 9686,
+    "requests_with_errors": 21
+  },
+  "responses_by_interface": {
+    "json": 3974,
+    "native": 5712
+  },
+  "in_flight": 0,
+  "last_finished_request_age_seconds": 8924.2,
+  "collection_errors": [],
+  "cleanup": "complete",
+  "active_condition": []
+}
