@@ -1,5 +1,10 @@
 # Host the full OpenWorker UI on one VM
 
+Linux is the current deployment and testing target for the hosted UI. Use a Linux
+VM with OpenShell for sandboxed tools. WSL can be used for Linux development and
+tests when its dependencies are installed, but it does not by itself establish
+deployment acceptance. Native Windows sandbox live verification remains pending.
+
 This deployment serves the built GUI over HTTPS to at most 20 administrator-provisioned accounts, using supervised temporary internet access through Cloudflare Quick Tunnel. One loopback engine per enabled account retains its own state, keys, sessions, and workspaces. Browser logout revokes the browser session; scheduled work continues in that account's engine. The gateway and engines run under one OS identity, so a code-execution compromise of the backend can still cross homes. Place the gateway and the user homes on a dedicated VM.
 
 ## Build and install
