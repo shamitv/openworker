@@ -50,6 +50,12 @@ REPO = Path(__file__).resolve().parents[1]
         ("zai:glm-5.2", 1_000_000),
         ("openrouter:z-ai/glm-5.2", 1_048_576),
         ("fireworks:accounts/fireworks/models/glm-5p2", 1_040_000),
+        # openrouter.ai models API, read 2026-10-01 (OPE-215). Ultra: the endpoint's own
+        # context_length (202,800), not the model-level 262,144 the catalog shows.
+        ("openrouter:nvidia/nemotron-3-ultra-550b-a55b", 202_800),
+        ("openrouter:nvidia/nemotron-3.5-lightning", 262_144),
+        # openrouter.ai endpoints API, read 2026-10-01 (OPE-215): the Z.AI host's window.
+        ("openrouter:z-ai/glm-5.3", 1_048_576),
     ],
 )
 def test_current_models_have_verified_windows(model, window):
@@ -76,11 +82,12 @@ _KNOWN_UNVERIFIED_RECOMMENDATIONS = {"minimax:MiniMax-M2.5", "meta:muse-spark-1.
 
 def test_every_recommended_model_is_in_the_matrix():
     """The Settings pane suggests each provider's `recommended_model`; every one must be a
-    curated row (Ollama excepted: a user-local model name, not a vendor catalog id)."""
+    curated row (local servers excepted: Ollama and LM Studio recommend a model the user
+    downloads, named as that app names it, not a vendor catalog id)."""
     missing = [
         _matrix_key(d.name, d.recommended_model)
         for d in DESCRIPTORS
-        if d.name != "ollama" and d.recommended_model
+        if d.kind != "local" and d.recommended_model
         and _matrix_key(d.name, d.recommended_model) not in MATRIX
     ]
     assert not missing, f"recommended models without a matrix row: {missing}"
@@ -93,7 +100,7 @@ def test_recommended_models_without_a_window_are_exactly_the_known_set():
     without = {
         _matrix_key(d.name, d.recommended_model)
         for d in DESCRIPTORS
-        if d.name != "ollama" and d.recommended_model
+        if d.kind != "local" and d.recommended_model
         and _matrix_key(d.name, d.recommended_model) not in windows
     }
     assert without == _KNOWN_UNVERIFIED_RECOMMENDATIONS

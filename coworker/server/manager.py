@@ -8,6 +8,7 @@ sessions span folders.
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import threading
 import json
 import logging
@@ -21,7 +22,9 @@ import time
 import uuid
 from pathlib import Path
 from typing import Any, Optional
+from urllib.parse import urlsplit
 
+from .. import model_config as _model_config
 from ..agent import build_engine
 from ..agents import get_agent
 from ..connections import (
@@ -29,7 +32,7 @@ from ..connections import (
     SessionConnectionStore,
     effective as effective_connections,
 )
-from ..inbox import VIS_INBOX, InboxStore, args_preview
+from ..inbox import KIND_APPROVAL, VIS_INBOX, InboxStore, args_preview
 from ..inbox_routing import InboxRouting
 from ..personas import PersonaRegistry
 from ..personas.registry import set_registry as set_persona_registry
@@ -84,9 +87,13 @@ from ..providers import (
     ProviderRouter,
     descriptor_configured,
     get_descriptor,
+    is_custom_provider,
+    is_removed_custom_provider,
     provider_descriptors,
     verify_provider_key,
 )
+from ..providers.local_server import LOCAL_SERVERS
+from ..providers.registry import CUSTOM_PROVIDERS_PROFILE, DEFAULT_OLLAMA_URL
 from ..secrets import SecretStore, state_dir
 from ..sessions import SessionRecord, usage_totals
 from ..teams import Actor as TeamActor
@@ -115,6 +122,28 @@ _SCOPES = {s.value for s in Scope}
 logger = logging.getLogger("coworker.manager")
 
 
+def _custom_endpoint_error(url: str) -> Optional[str]:
+    """Allow HTTPS everywhere; plaintext HTTP only for an explicitly local gateway."""
+    try:
+        parsed = urlsplit((url or "").strip())
+    except ValueError:
+        return "Enter a valid HTTPS endpoint."
+    if parsed.scheme == "https" and parsed.hostname:
+        return None
+    if parsed.scheme != "http" or not parsed.hostname:
+        return "Endpoint must be an HTTPS URL (for example, https://gateway.example/v1)."
+    host = parsed.hostname.lower()
+    if host == "localhost":
+        return None
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return "HTTP endpoints are allowed only for localhost or a private IP address."
+    if address.is_loopback or address.is_private:
+        return None
+    return "HTTP endpoints are allowed only for localhost or a private IP address."
+
+
 def _grants_of(engine) -> dict[str, Any]:
     """The engine's session-scoped "Always allow" approvals, in persistable shape."""
     tools = sorted(getattr(engine.permissions, "session_allow_tools", None) or ())
@@ -129,6 +158,10 @@ def _grants_of(engine) -> dict[str, Any]:
         if threads:
             out["threads"] = threads  # spec §11.4: origin threads this session may answer
     return out
+
+
+# Tools whose approval can change the session's allowed sites (the chip refreshes after one).
+_SITE_TOOLS = {"request_network_access", "web_fetch", "web_search", "browser_open_url"}
 
 
 def _grant_offered(outcome, request) -> bool:
@@ -146,6 +179,7 @@ def _grant_offered(outcome, request) -> bool:
     - ALWAYS_DOMAIN only means anything for a tool carrying a url.
     """
     from ..engine import ApprovalOutcome
+    from ..permissions import NETWORK_ACCESS_TOOL
     from ..risk import RiskClass, classify
 
     name = getattr(request, "tool_name", "")
@@ -153,10 +187,18 @@ def _grant_offered(outcome, request) -> bool:
     args = getattr(request, "arguments", None) or {}
     risk = classify(name, metadata)
 
+    if name == NETWORK_ACCESS_TOOL:
+        # OPE-219: the network-access card offers this session (sent as the domain grant)
+        # and "Always allow"; nothing tool-wide, so each new site gets its own card.
+        return outcome in (ApprovalOutcome.ALWAYS_DOMAIN, ApprovalOutcome.ALWAYS_SITE)
     if outcome is ApprovalOutcome.ALWAYS_COMMAND:
         return risk is RiskClass.EXEC
     if outcome is ApprovalOutcome.ALWAYS_DOMAIN:
         return risk is RiskClass.EGRESS and bool(args.get("url"))
+    if outcome is ApprovalOutcome.ALWAYS_SITE:
+        # OPE-219: only the allowed-sites card offers it, and only egress tools raise it.
+        # (The engine applies it only when the wall named a site for this call.)
+        return risk is RiskClass.EGRESS
     if outcome is ApprovalOutcome.ALWAYS_TRUST:
         # OPE-136 §4: durable per-tool trust is the MCP family's sanctioned lever —
         # the coarsest grant knowledge allows there, and offered nowhere else
@@ -177,6 +219,17 @@ def _grant_offered(outcome, request) -> bool:
             return False
         return name != "save_skill"
     return True
+
+
+def _reply_hint(item, buttons) -> str:
+    """How to answer this item in a chat that can't draw buttons. Naming the words the
+    reply parser accepts is the difference between a prompt and a dead end."""
+    if not buttons:
+        return "(Open the app to respond.)"
+    if getattr(item, "kind", "") == KIND_APPROVAL:
+        return "Reply `approve` or `deny`, keeping the tag below."
+    labels = ", ".join(b.label for b in buttons)
+    return f"Reply with one of: {labels} — keeping the tag below."
 
 
 def _approval_body(request) -> str:
@@ -308,6 +361,13 @@ class SessionManager:
         self.model = model
         self.mode = mode
         self.provider = provider
+        # The dangerous mode is never offered by the desktop app: a session may run in it
+        # only when this server was started with it enabled (`openworker-server
+        # --allow-dangerous-mode`, or the environment switch the CLI's one-shot `run`
+        # sets). Stored sessions in that mode fall back to plain bypass otherwise.
+        self.allow_dangerous_mode = (
+            os.environ.get("COWORKER_ALLOW_DANGEROUS_MODE", "").strip() == "1"
+        )
 
         if data_dir is not None:
             base = Path(data_dir).expanduser()
@@ -818,6 +878,7 @@ class SessionManager:
             for root in record.extra_roots or []:
                 ensure_under_base(str(root.get("path", "")), "saved workspace root")
             model, mode, messages = record.model, Mode(record.mode), record.messages
+            mode = self.permitted_mode(mode)
         else:
             ws = self.resolve_workspace(workspace)
             # A coworker with a `models:` list starts on the first entry this machine
@@ -881,6 +942,9 @@ class SessionManager:
             model=model,
             mode=mode,
             provider=self.provider,
+            # The model's saved settings (or its maker's recommendation): longest reply,
+            # sampling, thinking. Read at build time.
+            model_settings=_model_config.model_settings_for(model),
             # Memory off (§4.3) = stop LEARNING, not amnesia: saved facts still inject
             # and stay usable, only the write tools go. Read at build time; running
             # sessions finish under the mode they started with.
@@ -944,6 +1008,7 @@ class SessionManager:
             # the next session build without a config.toml edit.
             auto_approve=self.auto_approve(),
             auto_approve_shadow=self.auto_approve_shadow(),
+            auto_approve_reviewer=self.auto_approve_reviewer(),
         )
         engine.delegated_approval = lambda args: self.worker_review_context(session_id, args)
         engine.reviewer_context = lambda: self.approval_context(session_id)
@@ -1144,6 +1209,14 @@ class SessionManager:
                 )
         return granted
 
+    def permitted_mode(self, mode: Mode) -> Mode:
+        """The mode a session may actually run in on this server: the dangerous mode
+        needs the start-up switch; without it the session runs as plain bypass (the same
+        checks minus the cleared floors) rather than failing to open."""
+        if mode is Mode.DANGEROUSLY_BYPASS_APPROVALS and not self.allow_dangerous_mode:
+            return Mode.BYPASS_APPROVALS
+        return mode
+
     @staticmethod
     def _mode_value(raw: str) -> Optional[Mode]:
         """A stored mode string → Mode, accepting the legacy "auto" for bypass."""
@@ -1215,7 +1288,8 @@ class SessionManager:
         Does not resolve parked prompts or reset the per-turn denial guard.
         """
         live, shadow = self.auto_approve(), self.auto_approve_shadow()
-        key = (live, shadow, engine.permissions.mode)
+        choice = self.auto_approve_reviewer()
+        key = (live, shadow, engine.permissions.mode, choice)
         if engine.reviewer_settings_key != key:
             engine.reviewer_settings_epoch += 1
             engine.reviewer_settings_key = key
@@ -1224,12 +1298,13 @@ class SessionManager:
         engine.reviewer_shadow = shadow
         if not live and not shadow:
             engine.reviewer = None
-        elif engine.reviewer is None:
-            from ..reviewer import Reviewer
-            engine.reviewer = Reviewer(
-                provider=engine.provider, model=engine.model,
+        elif engine.reviewer is None or getattr(engine, "reviewer_choice", "session") != choice:
+            from ..decision_reviewer import make_auto_reviewer
+            engine.reviewer = make_auto_reviewer(
+                choice, provider=engine.provider, model=engine.model,
                 known_world=(engine.session_facts.world.render() if engine.session_facts else "") + "\nRUNTIME FACTS (availability, not access grants)\n" + json.dumps(getattr(engine, "runtime_facts", {})),
             )
+            engine.reviewer_choice = choice
 
     def sync_cached_reviewers(self) -> None:
         for sid, engine in list(self._engines.items()):
@@ -1840,12 +1915,21 @@ class SessionManager:
 
     def inbox_plan_approver(self, session_id: str, agent: str):
         async def approve(args, tool_call_id=None):
+            body = str(args.get("plan", ""))
+            steps = args.get("steps") if isinstance(args.get("steps"), list) else None
+            if steps:
+                # OPE-237 (auto-approve): the steps the user is approving, in the body the
+                # Inbox card and its Slack mirror show.
+                from ..plan_steps import steps_text
+
+                body = "\n\n".join(part for part in (body, steps_text(steps)) if part)
             item = self.inbox.add_plan(
                 session_id,
                 "Approve the plan?",
-                body=str(args.get("plan", "")),
+                body=body,
                 inbox=self.inbox_routing.route_for(session_id, agent),
                 tool_call_id=tool_call_id,
+                **({"data": {"steps": steps}} if steps else {}),
             )
             if item.state == "pending":
                 self.persist_session(session_id)
@@ -2503,9 +2587,10 @@ class SessionManager:
         session_id: Optional[str] = None,
         connector: Optional[str] = None,
         tool: Optional[str] = None,
+        call_id: Optional[str] = None,
     ) -> list[dict[str, Any]]:
         return self.audit_store.list(
-            limit=limit, session_id=session_id, connector=connector, tool=tool
+            limit=limit, session_id=session_id, connector=connector, tool=tool, call_id=call_id
         )
 
     def browser_state(self) -> dict[str, Any]:
@@ -4019,40 +4104,147 @@ class SessionManager:
         return {"ok": True}
 
     # -- web search -------------------------------------------------------------
-    def get_web_search(self) -> dict[str, Any]:
+    # Settings ▸ Customization ▸ Web search. The profile `web_search:default` holds the
+    # active provider, one key per provider (`keys`) and the fetch-through-provider switch;
+    # `coworker.web.tool.load_profile` reads the pre-Customization `{provider, api_key}`
+    # shape too, and the first write here lands the new one.
+    def _web_profile(self) -> dict[str, Any]:
+        from ..web.tool import PROFILE, load_profile
+
+        raw = self.secrets.get(PROFILE) or {}
+        profile = load_profile(self.secrets)
+        if raw and ("api_key" in raw or "keys" not in raw):
+            self.secrets.put(PROFILE, profile)  # one-time migration of the legacy shape
+        return profile
+
+    def _save_web_profile(self, profile: dict[str, Any]) -> None:
+        from ..web.tool import PROFILE
+
+        self.secrets.put(PROFILE, profile)
+
+    def _active_web_provider(self, profile: dict[str, Any]) -> str:
         from ..config import load_config
-        from ..web import provider_names
 
-        profile = self.secrets.get("web_search:default") or {}
-        provider = (
-            profile.get("provider") or load_config().web_search_provider or "duckduckgo"
-        )
-        return {
-            "provider": provider,
-            "has_key": bool(profile.get("api_key")),
-            "providers": provider_names(),
-        }
+        return profile.get("provider") or load_config().web_search_provider or "duckduckgo"
 
-    def set_web_search(
-        self, provider: str, api_key: Optional[str] = None
-    ) -> dict[str, Any]:
-        from ..web import provider_names
-
-        if provider not in provider_names():
-            return {"ok": False, "error": f"unknown provider: {provider}"}
-        before = self.get_web_search()["provider"]
-        profile: dict[str, Any] = {"provider": provider}
-        if api_key:
-            profile["api_key"] = api_key
-        self.secrets.put("web_search:default", profile)
+    def _forget_search_grants(self) -> None:
         # §1.9: "Always allow searches this session" is consent to a NAMED destination —
         # the card says which provider the queries go to. A new provider is a new
         # destination, so every live session's grant dies with the old one. (Scheduled
         # tasks that name-allow web_search are unaffected: their approver re-allows.)
+        for engine in self._engines.values():
+            engine.permissions.session_allow_tools.discard("web_search")
+
+    def get_web_search(self) -> dict[str, Any]:
+        """The Web search section: the active provider, the fetch switch, and every provider
+        with its key state. Never the keys themselves."""
+        from ..web import provider_names
+        from ..web.providers import provider_class
+        from ..web.tool import env_key_var, stored_key
+
+        profile = self._web_profile()
+        rows: list[dict[str, Any]] = []
+        for name in provider_names():  # registry order; duckduckgo first
+            cls = provider_class(name)
+            assert cls is not None
+            stored = bool(stored_key(profile, name))
+            var = None if stored else env_key_var(name)
+            rows.append(
+                {
+                    "name": name,
+                    "display_name": cls.display_name,
+                    "key_mode": cls.key_mode,
+                    "key_url": cls.key_url,
+                    "has_key": stored or bool(var),
+                    "key_source": "store" if stored else ("env" if var else None),
+                    "key_env": var or "",
+                    "supports_fetch": cls.supports_fetch,
+                }
+            )
+        return {
+            "provider": self._active_web_provider(profile),
+            "fetch_via_provider": bool(profile.get("fetch_via_provider")),
+            "providers": rows,
+        }
+
+    def _web_key_at_hand(self, profile: dict[str, Any], name: str) -> bool:
+        from ..web.tool import env_key_var, stored_key
+
+        return bool(stored_key(profile, name) or env_key_var(name))
+
+    def set_web_search(self, provider: str) -> dict[str, Any]:
+        """Make `provider` the active search service. A service that needs a key cannot be
+        chosen until one is stored or in the environment."""
+        from ..web import provider_names
+        from ..web.providers import provider_class
+
+        cls = provider_class(provider)
+        if provider not in provider_names() or cls is None:
+            return {"ok": False, "error": f"unknown provider: {provider}"}
+        profile = self._web_profile()
+        if cls.key_mode == "required" and not self._web_key_at_hand(profile, provider):
+            return {
+                "ok": False,
+                "error": f"{cls.display_name} needs an API key before it can be chosen. Add one first.",
+            }
+        before = self._active_web_provider(profile)
+        profile["provider"] = provider
+        self._save_web_profile(profile)
         if provider != before:
-            for engine in self._engines.values():
-                engine.permissions.session_allow_tools.discard("web_search")
-        return {"ok": True, "provider": provider}
+            self._forget_search_grants()
+        return {"ok": True, **self.get_web_search()}
+
+    def set_web_search_key(self, name: str, api_key: str) -> dict[str, Any]:
+        """"Test and save": one search with the key, then store it under that provider.
+        Other providers' keys are untouched."""
+        from ..web.providers import provider_class, verify_key
+
+        cls = provider_class(name)
+        if cls is None:
+            return {"ok": False, "error": f"unknown provider: {name}"}
+        if cls.key_mode == "none":
+            return {"ok": False, "error": f"{cls.display_name} does not take a key."}
+        api_key = (api_key or "").strip()
+        if not api_key:
+            return {"ok": False, "error": "api_key required"}
+        error = verify_key(name, api_key)
+        if error:
+            return {"ok": False, "error": error}
+        profile = self._web_profile()
+        profile.setdefault("keys", {})[name] = api_key
+        self._save_web_profile(profile)
+        return {"ok": True, **self.get_web_search()}
+
+    def clear_web_search_key(self, name: str) -> dict[str, Any]:
+        """Forget a stored key. If that leaves the active provider with no key at all, the
+        keyless default takes over rather than every search failing."""
+        from ..web.providers import provider_class
+
+        cls = provider_class(name)
+        if cls is None:
+            return {"ok": False, "error": f"unknown provider: {name}"}
+        profile = self._web_profile()
+        profile.get("keys", {}).pop(name, None)
+        active = self._active_web_provider(profile)
+        if (
+            active == name
+            and cls.key_mode == "required"
+            and not self._web_key_at_hand(profile, name)
+        ):
+            profile["provider"] = "duckduckgo"
+            self._save_web_profile(profile)
+            self._forget_search_grants()
+        else:
+            self._save_web_profile(profile)
+        return {"ok": True, **self.get_web_search()}
+
+    def set_fetch_via_provider(self, enabled: bool) -> dict[str, Any]:
+        """"Fetch pages through the search service" — honoured only while the active
+        provider offers it (`coworker.web.tool.fetch_provider`)."""
+        profile = self._web_profile()
+        profile["fetch_via_provider"] = bool(enabled)
+        self._save_web_profile(profile)
+        return {"ok": True, **self.get_web_search()}
 
     # -- model providers (OpenAI, Ollama, …) ------------------------------------
     def get_providers(self) -> list[dict[str, Any]]:
@@ -4060,7 +4252,7 @@ class SessionManager:
         non-secret field values (e.g. the Ollama base URL) ARE returned so the form can prefill.
         """
         out: list[dict[str, Any]] = []
-        for d in provider_descriptors():
+        for d in provider_descriptors(self.secrets):
             profile = self.secrets.get(f"provider:{d.name}") or {}
             configured = descriptor_configured(d, profile)
             values = {
@@ -4068,10 +4260,17 @@ class SessionManager:
                 for f in d.fields
                 if not f.secret and profile.get(f.key)
             }
+            env_var = d.env_key if (d.env_key and os.environ.get(d.env_key)) else None
             row = {
                 **d.to_dict(),
                 "configured": configured,
                 "values": values,
+                # Where the key comes from: a key saved in Settings ("store"), the
+                # provider's environment variable ("env"), or nowhere. A stored key wins
+                # over the variable, as resolve_api_key does. The Settings card uses this
+                # to hide "Remove key" for a key it cannot remove (#742).
+                "key_source": "store" if profile.get("api_key") else ("env" if env_var else None),
+                "env_key": env_var,
                 "suggested_models": self._suggested_models(d.name),
                 # Key hygiene for the Settings pane: when the key was saved (date, stamped
                 # by set_provider) and when the provider last served a completion (epoch,
@@ -4080,7 +4279,20 @@ class SessionManager:
                 "last_used_at": (self._prefs.get("provider_last_used") or {}).get(
                     d.name
                 ),
+                "is_custom": is_custom_provider(d.name, self.secrets),
             }
+            if d.kind == "local":
+                # A keyless server is "connected" when it answers (cached probes), not
+                # when a form was saved; the page groups connected providers first.
+                row["alive"] = self._ollama_alive() if d.name == "ollama" else self._local_server_alive(d.name)
+            if d.name == "llamacpp":
+                # UX-057: OpenWorker can set it up and run it here (Mac for now).
+                from ..providers import llamacpp_setup
+
+                if llamacpp_setup.supported():
+                    st = self.llamacpp_runner().state()
+                    row["setup_here"] = True
+                    row["managed"] = {"phase": st["phase"], "model": (st["model"] or {}).get("name")}
             if d.auth == "oauth":
                 # Sign-in state instead of key state; the token values themselves
                 # never leave the SecretStore.
@@ -4093,6 +4305,51 @@ class SessionManager:
                     row["last_error"] = self._codex_error
             out.append(row)
         return out
+
+    def create_custom_provider(
+        self, name: str, title: str, fields: Optional[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Create a named OpenAI-compatible provider, then save its first credentials.
+
+        The short slug is the stable model-route prefix (``slug:model-id``), so it is
+        deliberately immutable and restricted to a transport-safe subset.
+        """
+        name = (name or "").strip().lower()
+        title = (title or "").strip()
+        if not re.fullmatch(r"[a-z][a-z0-9_-]{0,31}", name):
+            return {
+                "ok": False,
+                "error": "Route prefix must start with a letter and use only lowercase letters, numbers, - or _.",
+            }
+        if not title or len(title) > 80:
+            return {"ok": False, "error": "Enter a provider name (up to 80 characters)."}
+        if get_descriptor(name) is not None or is_custom_provider(name, self.secrets):
+            return {"ok": False, "error": "That route prefix is already in use."}
+        fields = fields or {}
+        base_url = str(fields.get("base_url") or "").strip()
+        endpoint_error = _custom_endpoint_error(base_url)
+        if endpoint_error:
+            return {"ok": False, "error": endpoint_error}
+        if not str(fields.get("api_key") or "").strip():
+            return {"ok": False, "error": "Enter an API key."}
+
+        index = dict(self.secrets.get(CUSTOM_PROVIDERS_PROFILE) or {})
+        providers = dict(index.get("providers") or {})
+        removed = dict(index.get("removed") or {})
+        previous_removed = dict(removed)
+        providers[name] = title
+        removed.pop(name, None)  # re-creating a route clears its fail-closed tombstone
+        self.secrets.put(
+            CUSTOM_PROVIDERS_PROFILE, {"providers": providers, "removed": removed}
+        )
+        saved = self.set_provider(name, fields)
+        if not saved.get("ok"):
+            providers.pop(name, None)
+            self.secrets.put(
+                CUSTOM_PROVIDERS_PROFILE,
+                {"providers": providers, "removed": previous_removed},
+            )
+        return saved
 
     def pick_native_folder(self) -> dict[str, Any]:
         """Open the OS folder picker FROM THE SIDECAR — the browser GUI can't obtain absolute
@@ -4159,6 +4416,19 @@ class SessionManager:
         "qwen": ["qwen3-max", "qwen3-coder-plus", "qwen-plus"],
         "xai": ["grok-4.3", "grok-4"],
         "mistral": ["mistral-large-latest", "mistral-small-latest"],
+        # NIM ids carry their own `vendor/model` namespace (integrate.api.nvidia.com/v1/models,
+        # read 2026-10-25).
+        "nvidia": [
+            "nvidia/nemotron-3-super-120b-a12b",
+            "nvidia/nemotron-3-ultra-550b-a55b",
+        ],
+        "atlascloud": ["zai-org/glm-5.2"],
+        "upstage": ["solar-pro4", "solar-mini4"],
+        # Verified 2026-10-26 (sources in providers/matrix.py).
+        "cerebras": ["gpt-oss-120b"],
+        "huggingface": ["zai-org/GLM-5.2"],
+        "cohere": ["command-a-plus-05-2026"],
+        "siliconflow": ["zai-org/GLM-5.2"],
     }
 
     def _suggested_models(self, name: str) -> list[str]:
@@ -4167,6 +4437,8 @@ class SessionManager:
         topped up with the compat-vendor extras the matrix doesn't vouch for."""
         if name == "ollama":
             return [m.split(":", 1)[-1] for m in self._ollama_models()]
+        if name in LOCAL_SERVERS:
+            return [m.split(":", 1)[-1] for m in self._local_server_models(name)]
         from ..providers.matrix import models_for_provider
 
         return list(
@@ -4180,9 +4452,11 @@ class SessionManager:
     ) -> dict[str, Any]:
         """Store a provider's config in its `provider:<name>` SecretStore profile and rebuild
         its cached client. Merges provided fields into any existing profile."""
-        d = get_descriptor(name)
+        d = get_descriptor(name, self.secrets)
         if d is None:
             return {"ok": False, "error": f"unknown provider: {name}"}
+        if is_removed_custom_provider(name, self.secrets):
+            return {"ok": False, "error": "provider was removed; create it again first"}
         fields = fields or {}
         profile = dict(self.secrets.get(f"provider:{name}") or {})
         for f in d.fields:
@@ -4198,6 +4472,10 @@ class SessionManager:
         missing = [f.label for f in d.fields if f.required and not profile.get(f.key)]
         if missing:
             return {"ok": False, "error": "missing: " + ", ".join(missing)}
+        if is_custom_provider(name, self.secrets):
+            endpoint_error = _custom_endpoint_error(str(profile.get("base_url") or ""))
+            if endpoint_error:
+                return {"ok": False, "error": endpoint_error}
         # A (re)pasted key stamps its save date — Settings shows "key added <date>" so stale
         # keys are visible. Endpoint-only saves keep the original stamp.
         if isinstance(fields.get("api_key"), str) and fields["api_key"].strip():
@@ -4216,7 +4494,7 @@ class SessionManager:
         fresh-sandbox gpt-5.6-sol case; owner-hit on a sandbox 2026-09-02).
         A default that already works is never stolen. Returns the model
         adopted, if any."""
-        d = get_descriptor(name)
+        d = get_descriptor(name, self.secrets)
         if d is None:
             return None
         self._refresh_provider(name)
@@ -4224,11 +4502,17 @@ class SessionManager:
         # the curated list so it shows up in the composer right after configuring the provider.
         rec = d.recommended_model
         added: Optional[str] = None
-        if rec and rec in self._suggested_models(name):
+        suggested = self._suggested_models(name)
+        if rec and rec in suggested:
             # OpenAI models stay bare (the router's default); others carry their prefix.
             added = rec if name == "openai" else f"{name}:{rec}"
+        elif (name == "ollama" or name in LOCAL_SERVERS) and suggested:
+            # A local server offers whatever the user loaded — the recommended model may
+            # not be one.
+            added = f"{name}:{suggested[0]}"
+        if added:
             self.add_model(added)
-        if added and not self._provider_configured(self._model_provider(self.model)):
+        if added and not self.model_selectable(self.model):
             self.set_default_model(added)
             return added
         return None
@@ -4237,12 +4521,57 @@ class SessionManager:
         """Forget a provider's stored config (Settings ▸ Models "Remove key"). The whole
         `provider:<name>` profile goes — key, endpoint, key_set_at — so the provider reads
         as never configured. Curated models stay; they just gray out until a new key."""
-        d = get_descriptor(name)
+        d = get_descriptor(name, self.secrets)
         if d is None:
             return {"ok": False, "error": f"unknown provider: {name}"}
+        env_var = d.env_key if (d.env_key and os.environ.get(d.env_key)) else None
+        stored = bool((self.secrets.get(f"provider:{name}") or {}).get("api_key"))
+        if env_var and not stored:
+            # Nothing of ours to remove: the key is the environment variable, which only
+            # the user can unset. Say so instead of reporting a removal that changes
+            # nothing (#742).
+            return {
+                "ok": False,
+                "provider": name,
+                "env_key": env_var,
+                "error": (
+                    f"The {d.title} key comes from {env_var} in the server's environment. "
+                    "Unset it and restart the server to remove it."
+                ),
+            }
         self.secrets.delete(f"provider:{name}")
+        if is_custom_provider(name, self.secrets):
+            index = dict(self.secrets.get(CUSTOM_PROVIDERS_PROFILE) or {})
+            providers = dict(index.get("providers") or {})
+            removed = dict(index.get("removed") or {})
+            title = providers.pop(name, d.title)
+            removed[name] = title
+            self.secrets.put(
+                CUSTOM_PROVIDERS_PROFILE,
+                {"providers": providers, "removed": removed},
+            )
+            # A deleted custom route must not remain selectable and accidentally fall
+            # through to the default OpenAI provider as an unknown ``prefix:model``.
+            prefix = name + ":"
+            self._prefs["models"] = [
+                m for m in self._prefs.get("models", []) if not str(m).startswith(prefix)
+            ]
+            self._prefs["hidden_models"] = [
+                m
+                for m in self._prefs.get("hidden_models", [])
+                if not str(m).startswith(prefix)
+            ]
+            if str(self.model).startswith(prefix):
+                self.model = "gpt-5.6-sol"
+                self._prefs["default_model"] = self.model
+            self._save_prefs()
         self._refresh_provider(name)
-        return {"ok": True, "provider": name}
+        out: dict[str, Any] = {"ok": True, "provider": name}
+        if env_var:
+            # The stored key is gone but the variable still configures the provider.
+            out["env_key"] = env_var
+            out["configured"] = True
+        return out
 
     # -- ChatGPT-subscription provider (OAuth, no key) ---------------------------
     def begin_codex_signin(self) -> None:
@@ -4304,7 +4633,7 @@ class SessionManager:
         a field blank (e.g. testing an already-configured provider)."""
         import os
 
-        d = get_descriptor(name)
+        d = get_descriptor(name, self.secrets)
         if d is None:
             return {"ok": False, "error": f"unknown provider: {name}"}
         if d.auth == "oauth":
@@ -4333,20 +4662,27 @@ class SessionManager:
             missing = [f.label for f in d.fields if f.required and not merged.get(f.key)]
             if missing:
                 return {"ok": False, "error": "missing: " + ", ".join(missing)}
+        # A verification call sends the key to the supplied endpoint too. Apply the
+        # same transport policy as Save so an unsaved edit cannot accidentally
+        # send a credential over plaintext to a remote host.
+        if is_custom_provider(name, self.secrets):
+            endpoint_error = _custom_endpoint_error(merged.get("base_url", ""))
+            if endpoint_error:
+                return {"ok": False, "error": endpoint_error}
         return verify_provider_key(
-            name, api_key=api_key, base_url=merged.get("base_url", ""), fields=merged
+            name, api_key=api_key, base_url=merged.get("base_url", ""), fields=merged, descriptor=d
         )
 
     def _model_provider(self, model: str) -> str:
         """The provider a model string routes to (known `prefix:` or the OpenAI default)."""
         if ":" in (model or ""):
             prefix = model.split(":", 1)[0]
-            if get_descriptor(prefix) is not None:
+            if get_descriptor(prefix, self.secrets) is not None:
                 return prefix
         return "openai"
 
     def _provider_configured(self, name: str) -> bool:
-        d = get_descriptor(name)
+        d = get_descriptor(name, self.secrets)
         if d is None:
             return False
         return descriptor_configured(d, self.secrets.get(f"provider:{name}") or {})
@@ -4395,7 +4731,7 @@ class SessionManager:
         if cached and now - cached[0] < 30:
             return cached[1]
         profile = self.secrets.get("provider:ollama") or {}
-        base = (profile.get("base_url") or "http://localhost:11434").strip().rstrip("/")
+        base = (profile.get("base_url") or DEFAULT_OLLAMA_URL).strip().rstrip("/")
         if base.endswith("/v1"):
             base = base[: -len("/v1")]
         try:
@@ -4409,23 +4745,158 @@ class SessionManager:
 
     def _ollama_models(self) -> list[str]:
         """Live list of models pulled into the configured Ollama server (via its native
-        `/api/tags`), as `ollama:<name>` so they're directly selectable. Empty if Ollama isn't
-        configured or unreachable — best-effort, never raises."""
-        profile = self.secrets.get("provider:ollama")
-        if not profile:
-            return []
-        base = (profile.get("base_url") or "http://localhost:11434").strip().rstrip("/")
-        if base.endswith("/v1"):
-            base = base[: -len("/v1")]
-        try:
-            import httpx
+        `/api/tags`), as `ollama:<name>` so they're directly selectable. Empty if Ollama is
+        unreachable — best-effort, never raises. No stored profile → the default 127.0.0.1
+        endpoint, same as `_ollama_alive` (keyless Ollama needs no saved form)."""
+        from ..providers import ollama_facts
 
-            data = httpx.get(base + "/api/tags", timeout=2.0).json()
-            return [
-                f"ollama:{m['name']}" for m in data.get("models", []) if m.get("name")
-            ]
-        except Exception:
-            return []
+        profile = self.secrets.get("provider:ollama") or {}
+        # Only models that can use tools: a coworker cannot work with the others, so
+        # they stay off the picker (the settings page still lists them, greyed). A
+        # server that does not say (an older Ollama) keeps every model in.
+        return [
+            row["model"]
+            for row in ollama_facts.model_facts(profile.get("base_url"))
+            if row.get("tools") is not False
+        ]
+
+    def local_model_facts(self, name: str) -> dict[str, Any]:
+        """The models a local provider has, with size, tool support, thinking, context
+        and how each sits on this machine. Ollama lists what it pulled; llama.cpp and
+        vLLM report the model they serve."""
+        from ..providers import local_server, ollama_facts
+
+        if name == "ollama":
+            profile = self.secrets.get("provider:ollama") or {}
+            rows = ollama_facts.model_facts(profile.get("base_url"), fresh=True)
+            return {"provider": name, "models": rows, "alive": self._ollama_alive()}
+        if name in local_server.LOCAL_SERVERS:
+            profile = self.secrets.get(f"provider:{name}") or {}
+            rows = local_server.model_facts(name, profile.get("base_url"), profile.get("api_key"), fresh=True)
+            return {"provider": name, "models": rows, "alive": self._local_server_alive(name)}
+        if is_custom_provider(name, self.secrets):
+            return self._custom_provider_models(name)
+        return {"provider": name, "models": [], "error": "no local model list for this provider"}
+
+    def _custom_provider_models(self, name: str) -> dict[str, Any]:
+        """The ids a user-added OpenAI-compatible provider lists at GET /models, as rows the
+        settings page can tick ("Fetch from server"). A server without /models is not a
+        broken provider — Chat Completions does not require the listing — so that case
+        comes back as a note, and the user types the ids instead."""
+        import httpx
+
+        profile = self.secrets.get(f"provider:{name}") or {}
+        base = str(profile.get("base_url") or "").strip().rstrip("/")
+        key = str(profile.get("api_key") or "").strip()
+        if not base:
+            return {"provider": name, "models": [], "error": "No endpoint saved for this provider."}
+        try:
+            resp = httpx.get(
+                base + "/models",
+                headers={"Authorization": f"Bearer {key}"} if key else {},
+                timeout=8.0,
+            )
+        except Exception as exc:  # noqa: BLE001 - a listing never raises into the route
+            return {
+                "provider": name,
+                "models": [],
+                "alive": False,
+                "error": f"Could not reach {base}: {exc.__class__.__name__}.",
+            }
+        if resp.status_code in (404, 405):
+            return {
+                "provider": name,
+                "models": [],
+                "alive": True,
+                "error": "This server does not list its models (no /models). Type the model ids by hand.",
+            }
+        if resp.status_code >= 300:
+            return {"provider": name, "models": [], "alive": True, "error": f"HTTP {resp.status_code} from {base}/models."}
+        try:
+            data = resp.json()
+        except ValueError:
+            return {"provider": name, "models": [], "alive": True, "error": f"{base}/models did not answer with JSON."}
+        items = data.get("data") if isinstance(data, dict) else data
+        ids = [str(it["id"]) for it in items if isinstance(it, dict) and it.get("id")] if isinstance(items, list) else []
+        rows = [
+            {
+                "model": f"{name}:{mid}", "name": mid, "size_bytes": None, "tools": None,
+                "thinking": None, "vision": None, "remote": True, "parameter_size": None,
+                "quantization": None, "context_max": None, "context": None,
+                "context_from": "server", "fit": "cloud", "recommendation": None,
+            }
+            for mid in ids
+        ]
+        return {"provider": name, "models": rows, "alive": True}
+
+    def _local_server_alive(self, name: str) -> bool:
+        """Best-effort liveness of an OpenAI-compatible local server (local_server.LOCAL_SERVERS), cached 30 s like Ollama's."""
+        import time
+
+        from ..providers import local_server
+
+        now = time.monotonic()
+        cache = getattr(self, "_local_alive_cache", None) or {}
+        hit = cache.get(name)
+        if hit and now - hit[0] < 30:
+            return hit[1]
+        profile = self.secrets.get(f"provider:{name}") or {}
+        alive = local_server.alive(name, profile.get("base_url"), profile.get("api_key"))
+        cache[name] = (now, alive)
+        self._local_alive_cache = cache
+        return alive
+
+    def _local_server_models(self, name: str) -> list[str]:
+        """The model ids a local server (local_server.LOCAL_SERVERS) serves, as `<name>:<id>`; empty when
+        it does not answer or was started without tool calling."""
+        from ..providers import local_server
+
+        profile = self.secrets.get(f"provider:{name}") or {}
+        return [
+            row["model"]
+            for row in local_server.model_facts(name, profile.get("base_url"), profile.get("api_key"))
+            if row.get("tools") is not False
+        ]
+
+    def system_facts(self) -> dict[str, Any]:
+        """This machine, for the "Your system" section: processor, graphics, memory,
+        storage, and the largest model file that runs well here."""
+        from ..providers import local_machine
+
+        return local_machine.system_facts()
+
+    def llamacpp_runner(self):
+        """The llama-server OpenWorker runs (UX-057), wired to point the `llamacpp`
+        provider at it and tick its model once it answers."""
+        from ..providers import llamacpp_setup
+
+        runner = llamacpp_setup.runner()
+        if runner.on_running is None:
+            runner.on_running = self._llamacpp_running
+        return runner
+
+    def llamacpp_stop(self) -> dict[str, Any]:
+        from ..providers import local_server
+
+        result = self.llamacpp_runner().stop()
+        # The cached probe would say "running" for up to 30 s after the server is gone.
+        local_server.forget_all()
+        self._local_alive_cache = {}
+        return result
+
+    def _llamacpp_running(self, base_url: str, alias: str) -> None:
+        from ..providers import local_server
+
+        local_server.forget_all()
+        self._local_alive_cache = {}
+        model = f"llamacpp:{alias}"
+        # Switching models: the one it served before is gone, so it leaves the picker.
+        previous = self._prefs.get("llamacpp_managed_model")
+        if previous and previous != model:
+            self.remove_model(previous)
+        self._prefs["llamacpp_managed_model"] = model
+        self.set_provider("llamacpp", {"base_url": base_url})
+        self.add_model(model)
 
     def model_selectable(self, model: str) -> bool:
         """Can this machine run `model` right now? Its provider has a key — or, for the
@@ -4433,6 +4904,8 @@ class SessionManager:
         provider = self._model_provider(model)
         if provider == "ollama":
             return self._ollama_alive()
+        if provider in LOCAL_SERVERS:
+            return self._local_server_alive(provider)
         return self._provider_configured(provider)
 
     def persona_models(self, persona_id: str) -> list[str]:
@@ -4661,6 +5134,12 @@ class SessionManager:
         # Ollama is keyless, so "configured" is meaningless there — its models show only
         # while a local Ollama answers (cached liveness probe).
         selectable = [m for m in self._curated_models() if self.model_selectable(m)]
+        # Pulled Ollama models are offered live while Ollama answers — no need to add each one.
+        if self._ollama_alive():
+            selectable = list(dict.fromkeys([*selectable, *self._ollama_models()]))
+        for local in LOCAL_SERVERS:
+            if self.secrets.get(f"provider:{local}") and self._local_server_alive(local):
+                selectable = list(dict.fromkeys([*selectable, *self._local_server_models(local)]))
         if self.model not in selectable:
             selectable.insert(0, self.model)
         from ..providers.matrix import model_context_windows, model_labels
@@ -4681,9 +5160,10 @@ class SessionManager:
             "model_context_windows": model_context_windows(),
             "has_key": env_key or stored,
             # Provider-agnostic "can this default model actually run?" — true when the default
-            # model's provider is configured (any provider, not just OpenAI). Drives the GUI's
+            # model's provider is configured (any provider, not just OpenAI), or for an
+            # `ollama:*` default, when a local Ollama answers. Drives the GUI's
             # "No model connected" composer chip and the onboarding Skip warning.
-            "model_ready": self._provider_configured(self._model_provider(self.model)),
+            "model_ready": self.model_selectable(self.model),
             "source": "env" if env_key else ("store" if stored else None),
             "onboarded": bool(self._prefs.get("onboarded")),
             "experimental_connectors": experimental_enabled(self.secrets),
@@ -4691,10 +5171,16 @@ class SessionManager:
             "nav_layout": self._nav_layout(),
             "sessions_peek": self.sessions_peek(),
             "context_bar": self.context_bar(),
+            # #611: collapse/hide the live thinking stream while a turn runs (OFF by default so
+            # existing users keep seeing it; the finalized reasoning still shows after the turn).
+            "hide_reasoning_running": self.hide_reasoning_running(),
             # Auto-Approve feature flag + its shadow-eval sibling (spec §1.5). Drive the
             # Settings toggles and gate the composer's Auto-Approve mode entry.
             "auto_approve": self.auto_approve(),
             "auto_approve_shadow": self.auto_approve_shadow(),
+            "auto_approve_reviewer": self.auto_approve_reviewer(),
+            # Whether each decision-model reviewer has a key (env or saved), never the key.
+            "auto_approve_reviewer_keys": self.reviewer_key_status(),
             "scratch_base": self._prefs.get("scratch_base")
             or self.DEFAULT_SCRATCH_BASE,
             # Real on-disk secrets location, so the UI shows the OS-native path instead of a
@@ -4702,6 +5188,8 @@ class SessionManager:
             "secrets_path": str(self.secrets.path),
             **self.pdf_settings(),
             **self.compaction_settings_payload(),
+            # Per-model settings the user saved (model_config.py), keyed by model id.
+            "model_config": _model_config.load(),
         }
 
     def _surfaces(self) -> dict[str, bool]:
@@ -4766,6 +5254,19 @@ class SessionManager:
         self._save_prefs()
         return {"ok": True, "context_bar": self.context_bar()}
 
+    # -- Hide live reasoning while running (#611) ---------------------------------------
+    # The GUI streams the model's reasoning live during a turn; at full write speed it's a
+    # wall of fast-moving text. This pref collapses that live stream to a quiet one-line
+    # indicator (the finalized reasoning still appears after the turn). OFF by default.
+
+    def hide_reasoning_running(self) -> bool:
+        return bool(self._prefs.get("hide_reasoning_running", False))
+
+    def set_hide_reasoning_running(self, hidden: Any) -> dict[str, Any]:
+        self._prefs["hide_reasoning_running"] = bool(hidden)
+        self._save_prefs()
+        return {"ok": True, "hide_reasoning_running": self.hide_reasoning_running()}
+
     # -- Auto-Approve (spec §1.5, Part 6 step 3) --------------------------------
     # The feature flag and its shadow-eval sibling live in prefs (GUI-writable), falling
     # back to the config.toml value a power user may have hand-set. Prefs is user-global,
@@ -4797,6 +5298,86 @@ class SessionManager:
         if "auto_approve_shadow" in self._prefs:
             return bool(self._prefs["auto_approve_shadow"])
         return bool(load_config().auto_approve_shadow)
+
+    def auto_approve_reviewer(self) -> str:
+        """Which reviewer Auto-Approve uses (OPE-224). User-global: prefs, else config.toml."""
+        from ..config import load_config
+        from ..decision_reviewer import normalize_reviewer_choice
+
+        if "auto_approve_reviewer" in self._prefs:
+            return normalize_reviewer_choice(self._prefs["auto_approve_reviewer"])
+        return normalize_reviewer_choice(getattr(load_config(), "auto_approve_reviewer", "session"))
+
+    def set_auto_approve_reviewer(self, choice: Any) -> dict[str, Any]:
+        from ..decision_reviewer import REVIEWER_CHOICES
+
+        value = str(choice or "").strip().lower()
+        if value not in REVIEWER_CHOICES:
+            return {"ok": False, "error": f"unknown reviewer {choice!r}; one of {list(REVIEWER_CHOICES)}"}
+        self._prefs["auto_approve_reviewer"] = value
+        self._save_prefs()
+        self.sync_cached_reviewers()
+        return {"ok": True, "auto_approve_reviewer": self.auto_approve_reviewer()}
+
+    def reviewer_key_status(self) -> dict[str, bool]:
+        from ..decision_reviewer import BACKENDS
+
+        return {name: bool(cls.resolve_api_key(self.secrets)) for name, cls in BACKENDS.items()}
+
+    def set_reviewer_key(self, backend: Any, api_key: Any) -> dict[str, Any]:
+        """Save the API key a decision-model reviewer needs (OPE-224). Decisions uses the
+        OpenAI key, so it is saved as the OpenAI provider's key. TypeSafe is not a chat
+        provider, so its key gets its own `provider:typesafe` profile, which the adapter
+        reads, and it never appears in the model picker."""
+        key = str(api_key or "").strip()
+        if not key:
+            return {"ok": False, "error": "api key required"}
+        if backend == "openai-decisions":
+            result = self.set_provider("openai", {"api_key": key})
+        elif backend == "jev":
+            from datetime import date
+
+            profile = dict(self.secrets.get("provider:typesafe") or {})
+            profile.update({"api_key": key, "key_set_at": date.today().isoformat()})
+            self.secrets.put("provider:typesafe", profile)
+            result = {"ok": True}
+        else:
+            return {"ok": False, "error": f"unknown reviewer {backend!r}"}
+        if result.get("ok"):
+            self.sync_cached_reviewers()
+            result = {"ok": True, "auto_approve_reviewer_keys": self.reviewer_key_status()}
+        return result
+
+    def shadow_summary(self) -> dict[str, Any]:
+        """Shadow results of the currently chosen reviewer, last 30 days (OPE-224)."""
+        return self.audit_store.shadow_summary(self.auto_approve_reviewer())
+
+    def export_shadow_csv(self) -> dict[str, Any]:
+        """Write every shadow check of the chosen reviewer (last 30 days) to a readable CSV
+        and return its path, for a person to investigate in a spreadsheet (OPE-224)."""
+        import csv
+        from datetime import date
+
+        reviewer = self.auto_approve_reviewer()
+        rows = self.audit_store.shadow_rows(reviewer)
+        out_dir = self._data_base / "shadow-results"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        path = out_dir / f"shadow-{reviewer}-{date.today().isoformat()}.csv"
+        would = {"allow": "run", "unsure": "ask you", "deny": "stop"}
+        yours = {"approved": "allowed", "denied": "denied", "": "not answered"}
+        with path.open("w", newline="", encoding="utf-8-sig") as fh:
+            w = csv.writer(fh)
+            w.writerow(["time (UTC)", "session", "tool", "action", "reviewer",
+                        "reviewer would", "reviewer reason", "your decision", "matched"])
+            for r in rows:
+                v, d = r["verdict"], r["decision"]
+                if v == "unsure" or not d:
+                    matched = ""
+                else:
+                    matched = "yes" if (v, d) in (("allow", "approved"), ("deny", "denied")) else "no"
+                w.writerow([r["timestamp"], r["session_id"], r["tool"], r["args"], reviewer,
+                            would.get(v, v), r["reason"], yours.get(d, d), matched])
+        return {"ok": True, "path": str(path), "rows": len(rows)}
 
     def set_auto_approve(self, on: Any) -> dict[str, Any]:
         self._prefs["auto_approve"] = bool(on)
@@ -4949,7 +5530,37 @@ class SessionManager:
         self.model = model
         self._prefs["default_model"] = model
         self._save_prefs()
+        _model_config.set(model, {"default": True})
         return {"ok": True, **self.get_settings()}
+
+    # -- per-model settings (model_config.py) ---------------------------------------
+
+    def get_model_config(self, model: str = "") -> dict[str, Any]:
+        """One model's settings in force, with where each came from; or every saved
+        record when no model is named."""
+        if model:
+            return {"model": model, **_model_config.effective(model)}
+        return {"models": _model_config.load()}
+
+    def set_model_config(self, model: str, values: dict[str, Any]) -> dict[str, Any]:
+        """Save settings for one model. `default: true` also makes it the model new
+        sessions start with, like the Make default button."""
+        model = (model or "").strip()
+        if not model:
+            return {"ok": False, "error": "empty model"}
+        record, error = _model_config.set(model, values or {})
+        if error:
+            return {"ok": False, "error": error}
+        if record.get("default") and self.model != model:
+            self.model = model
+            self._prefs["default_model"] = model
+            self._save_prefs()
+        self.provider.invalidate() if hasattr(self.provider, "invalidate") else None
+        return {"ok": True, "model": model, **_model_config.effective(model)}
+
+    def remove_model_config(self, model: str) -> dict[str, Any]:
+        _model_config.remove((model or "").strip())
+        return {"ok": True}
 
     def set_onboarded(self, value: bool = True) -> dict[str, Any]:
         """Record that first-run setup is complete (so it isn't shown again)."""
@@ -5039,6 +5650,80 @@ class SessionManager:
             if str(user_id).strip()
         }
 
+    # -- Telegram approval owners (OPE-217 / #712) -------------------------------
+    # Telegram has no OAuth installer, so like manual Slack Socket Mode the humans who may
+    # resolve consequential prompts are listed explicitly on the connector profile.
+    def telegram_approval_owner_ids(self) -> set[str]:
+        profile = self.secrets.get("telegram:default") or {}
+        return {
+            str(user_id).strip()
+            for user_id in (profile.get("approval_owner_ids") or [])
+            if str(user_id).strip()
+        }
+
+    def set_telegram_approval_owner(
+        self, user_id: str, *, add: bool, display_name: str = ""
+    ) -> dict[str, Any]:
+        """Edit the Telegram approval owners. Owner status implies inbound permission."""
+        user_id = str(user_id).strip()
+        if not user_id:
+            return {"ok": False, "error": "user_id required"}
+        profile = self.secrets.get("telegram:default")
+        if not profile:
+            return {"ok": False, "error": "Telegram is not connected."}
+        owners = self.telegram_approval_owner_ids()
+        if add:
+            owners.add(user_id)
+        else:
+            owners.discard(user_id)
+        profile["approval_owner_ids"] = sorted(owners)
+        if add:
+            allowed = set(profile.get("allowed_users") or [])
+            allowed.add(user_id)
+            profile["allowed_users"] = sorted(allowed)
+        self.secrets.put("telegram:default", profile)
+        if display_name:
+            self._note_person("telegram", user_id, display_name)
+        if self.gateway is not None and "telegram" in self.gateway.settings:
+            self.gateway.settings["telegram"].allowed_users = set(
+                profile.get("allowed_users") or []
+            )
+        return {
+            "ok": True,
+            "approval_owner_ids": sorted(owners),
+            "allowed_users": list(profile.get("allowed_users") or []),
+        }
+
+    def _telegram_actor_owns_item(
+        self, item, *, actor_id: str, chat_id: str
+    ) -> bool:
+        """Authorize a Telegram resolution of a protected item.
+
+        Two conditions, mirroring the Slack rule (owner + bound channel):
+
+        - the reply must arrive in the chat the item's inbox is bound to — a reply from any
+          other chat is refused whoever sent it (an in-app-only inbox is not remotely
+          resolvable at all);
+        - the sender must be an approval owner. With owners configured that is the list.
+          With none configured, a binding to a private chat means exactly one allowed
+          human lives there (a Telegram DM's chat id IS the user's id), so that person is
+          the owner — single-user bots need no setup. A group binding (negative chat id)
+          with no owners configured refuses: a whole group never gains approval rights by
+          accident.
+        """
+        binding = self.inbox_routing.binding_for(item.inbox)
+        if binding.channel != "telegram" or not binding.target:
+            return False
+        bound_chat = str(binding.target).strip()
+        if str(chat_id or "").strip() != bound_chat or not actor_id:
+            return False
+        owners = self.telegram_approval_owner_ids()
+        if owners:
+            return actor_id in owners
+        if bound_chat.startswith("-"):
+            return False  # group/supergroup: owners must be chosen explicitly
+        return actor_id == bound_chat
+
     def set_slack_approval_owner(
         self, user_id: str, *, add: bool, display_name: str = ""
     ) -> dict[str, Any]:
@@ -5117,6 +5802,69 @@ class SessionManager:
             if owner_team != event_team or bound_channel != event_channel:
                 return False
         return bool(actor_id) and actor_id in self.slack_approval_owner_ids(owner_team)
+
+    # Protected item kinds: resolving one runs a consequential action / grants a filesystem
+    # root / commits a plan, so only an authorized owner may resolve it — never a bare
+    # allow-listed chat member. Questions and free-text answers are NOT protected.
+    _PROTECTED_ITEM_KINDS = {"approval", "directory", "plan"}
+
+    def _actor_owns_protected_item(
+        self,
+        item,
+        *,
+        platform: str,
+        actor_id: str,
+        chat_id: str,
+        team_id: Optional[str],
+    ) -> bool:
+        """Authorize a protected-item resolution over ANY transport.
+
+        The owner check used to run only on the Slack lane, so a Telegram reply (or button)
+        resolved protected approval/directory/plan items with no owner or channel-binding
+        validation at all — and items mirrored to Slack were resolvable from Telegram,
+        bypassing Slack's enforcement. This gates every transport:
+
+        - cross-transport is refused: an item bound to one channel can only be resolved from
+          that same channel (an in-app-only item is not remotely resolvable at all);
+        - Slack defers to the existing owner + bound-channel check;
+        - Telegram checks the bound chat and its own approval-owner list (OPE-217);
+        - any other transport has no approval-owner model, so it cannot resolve protected
+          items remotely — they stay pending for in-app resolution.
+        """
+        binding = self.inbox_routing.binding_for(item.inbox)
+        if binding.channel and binding.channel != platform:
+            return False
+        if platform == "slack":
+            return self._slack_actor_owns_item(
+                item, actor_id=actor_id, chat_id=chat_id, team_id=team_id
+            )
+        if platform == "telegram":
+            return self._telegram_actor_owns_item(
+                item, actor_id=actor_id, chat_id=chat_id
+            )
+        return False
+
+    def _notify_refused_reply(self, platform: str, chat_id: str, thread_id=None) -> None:
+        """Tell a human their tagged reply was refused by the owner check. Best-effort and
+        off the caller's path: the resolver runs synchronously inside the gateway's loop, so
+        the send is scheduled as a task; with no running loop (tests, CLI) it is skipped."""
+        if self.gateway is None or not platform or not chat_id:
+            return
+        from ..connectors.base import format_target
+        from ..connectors.gateway import APPROVAL_OWNER_REQUIRED
+
+        target = format_target(platform, str(chat_id), thread_id)
+
+        async def _send() -> None:
+            try:
+                await self.gateway.deliver(target, APPROVAL_OWNER_REQUIRED)
+            except Exception:
+                logger.debug("refusal reply to %s failed", target, exc_info=True)
+
+        try:
+            asyncio.get_running_loop().create_task(_send())
+        except RuntimeError:
+            pass
 
     def set_inbox_binding(
         self, name: str, *, channel: Optional[str], target: str
@@ -5634,6 +6382,15 @@ class SessionManager:
             message = {**message, "data": {**data, **self.team_card_extras(session_id, data.get("members") or [])}}
         if message.get("type") == "mode_notice" and engine:
             message = {**message, "data": {**data, "mode": engine.permissions.mode.value}}
+        if message.get("type") == "tool_finished" and engine and data.get("name") in _SITE_TOOLS:
+            # OPE-218/219: a card on one of these may have allowed a site; the header chip
+            # shows the session's list as it stands now.
+            from ..sandbox.settings import session_sandbox
+
+            try:
+                message = {**message, "data": {**data, "sandbox": session_sandbox(engine)}}
+            except Exception:  # noqa: BLE001 - the chip must not break a tool result
+                pass
         if message.get("type") == "permission_required" and data.get("name") == "decide_worker_call":
             worker_call = self.worker_call_for(data.get("arguments") or {}, lead_session=session_id)
             if worker_call:
@@ -5688,6 +6445,9 @@ class SessionManager:
         await self.stop_gateway()
         await self.mcp.aclose()
         self.audit_store.close()
+        from ..providers import llamacpp_setup
+
+        llamacpp_setup.runner().shutdown()
 
     # -- automation (scheduled tasks) -------------------------------------------
     def worker_call_for(self, arguments: dict[str, Any], *, lead_session: str | None = None) -> dict[str, Any] | None:
@@ -5883,21 +6643,34 @@ class SessionManager:
     ) -> bool:
         """Persist a standing rule a human minted via "Allow every time" on a run's
         approval card (§25's retrofit path). Server-side validation, not trust in the
-        card: the session must be an automation run and the call must be rule-eligible
-        (external risk, declared target argument, non-empty target). Also applies the
-        rule to the live engine so the run's next call auto-allows."""
-        from ..permissions import standing_rule_candidate
+        card: the session must be an automation run, and the call either names a target
+        (external risk, declared target argument) or is a tool eligible for a
+        target-less grant (egress — see standing_tool_candidate). Also applies the rule
+        to the live engine so the run's next call auto-allows."""
+        from ..permissions import standing_rule_candidate, standing_tool_candidate
 
         task = self.task_store.task_for_run_session(session_id)
         if task is None:
             return False
         target = standing_rule_candidate(tool_name, arguments or {}, metadata)
-        if not target or not task.add_rule(tool_name, target):
+        if target:
+            minted = task.add_rule(tool_name, target)
+        elif standing_tool_candidate(tool_name, metadata):
+            # No target to bind (web_search takes a query, not a destination). Grant the
+            # tool for this task instead of downgrading to a one-off — otherwise the
+            # routine asks the same question on every run and "Always" means nothing.
+            target, minted = None, task.add_tool_rule(tool_name)
+        else:
+            return False
+        if not minted:
             return False
         self.task_store.save(task)
         engine = self._engines.get(session_id)
         if engine is not None:
-            engine.permissions.task_rules.setdefault(tool_name, set()).add(target)
+            if target is None:
+                engine.permissions.allow_tool_for_session(tool_name)
+            else:
+                engine.permissions.task_rules.setdefault(tool_name, set()).add(target)
         try:
             self.audit_store.append(
                 {
@@ -5906,7 +6679,11 @@ class SessionManager:
                     "arguments": arguments or {},
                     "stage": "standing_rule_minted",
                     "status": "granted",
-                    "reason": f"allow every time: {tool_name} → {target} (task {task.id})",
+                    "reason": (
+                        f"allow every time: {tool_name} → {target} (task {task.id})"
+                        if target
+                        else f"allow every time: {tool_name}, any arguments (task {task.id})"
+                    ),
                 }
             )
         except Exception:
@@ -5959,6 +6736,7 @@ class SessionManager:
             ApprovalOutcome.ALWAYS_TOOL,
             ApprovalOutcome.ALWAYS_COMMAND,
             ApprovalOutcome.ALWAYS_DOMAIN,
+            ApprovalOutcome.ALWAYS_SITE,
             # ALWAYS_TRUST was unlisted (a raw resolve could mint an inert-but-real
             # trust rule for a non-MCP tool — evaluate ignores those, but the store
             # shouldn't carry them); THIS_RUN validates like every grant.
@@ -5987,11 +6765,21 @@ class SessionManager:
             "auto-approve": 3,
             "auto": 4,
             "bypass-approvals": 4,
+            "dangerously-bypass-approvals": 5,
         }
+        # Attendance: attended < inbox (prompts leave the screen) < auto (the engine
+        # answers). The legacy boolean maps onto the first two.
+        attendance_order = {"attended": 0, "inbox": 1, "auto": 2}
+
+        def _attendance_rank(value: Any) -> int:
+            from ..unattended import normalize_attendance
+
+            return attendance_order.get(normalize_attendance(value), 0)
+
         raised = (
             order.get(str(after), 0) > order.get(str(before), 0)
             if kind == "mode"
-            else bool(after) and not bool(before)
+            else _attendance_rank(after) > _attendance_rank(before)
         )
         try:
             self.audit_store.append(
@@ -6007,16 +6795,120 @@ class SessionManager:
         except Exception:
             pass
 
-    def set_unattended(self, session_id: str, on: bool) -> dict[str, Any]:
-        """Flip the attended/unattended toggle, with an audit row. Note this changes only
-        WHERE the human is reached, never the autonomy ceiling (that's the mode) — but it is
-        still worth recording, since an unattended session routes prompts away from the
-        screen the user is looking at."""
-        before = self.unattended.is_unattended(session_id)
-        self.unattended.set(session_id, on)
-        if before != on:
-            self.audit_autonomy_change(session_id, "unattended", before, on)
-        return {"ok": True, "session_id": session_id, "unattended": on}
+    def set_session_model_settings(self, session_id: str, values: dict[str, Any]) -> dict[str, Any]:
+        """This session's thinking switch or reasoning effort (UX-056: the brain and the
+        effort pill in the composer). Overrides the model's setting for this session only;
+        None puts the model's setting back. Other sessions are untouched. A value the model
+        does not take is refused."""
+        engine = self._engines.get(session_id)
+        if engine is None:
+            return {"ok": False, "error": "session not running"}
+        controls = self.model_controls(engine.model)
+        defaults = _model_config.model_settings_for(engine.model)
+        settings = dict(engine.model_settings)
+        if "reasoning_effort" in values:
+            effort = values["reasoning_effort"]
+            if effort is None:
+                if defaults.get("reasoning_effort"):
+                    settings["reasoning_effort"] = defaults["reasoning_effort"]
+                else:
+                    settings.pop("reasoning_effort", None)
+            elif controls["reasoning"]["support"] == "supported" and effort in controls["reasoning"]["levels"]:
+                settings["reasoning_effort"] = effort
+            else:
+                return {"ok": False, "error": f"{engine.model} does not take reasoning effort {effort!r}"}
+        if "thinking" in values:
+            think = values["thinking"]
+            extra = dict(settings.get("extra_body") or {})
+            if think is None:
+                default_think = (defaults.get("extra_body") or {}).get("think")
+                if isinstance(default_think, bool):
+                    extra["think"] = default_think
+                else:
+                    extra.pop("think", None)
+            elif isinstance(think, bool) and controls["thinking"]["support"] == "supported":
+                extra["think"] = think
+            else:
+                return {"ok": False, "error": f"{engine.model} has no thinking switch"}
+            if extra:
+                settings["extra_body"] = extra
+            else:
+                settings.pop("extra_body", None)
+        engine.model_settings = settings
+        return {"ok": True, "session_id": session_id, **self.session_model_settings(session_id)}
+
+    def session_model_settings(self, session_id: str, model: str = "") -> dict[str, Any]:
+        """What this session sends for thinking and reasoning effort right now (None = the
+        model's default), and which of the two controls the model has (UX-056). `model`
+        is asked about when the session has not started yet."""
+        engine = self._engines.get(session_id)
+        settings = (engine.model_settings if engine else None) or {}
+        think = (settings.get("extra_body") or {}).get("think")
+        controls = self.model_controls((engine.model if engine else "") or model)
+        session_model = _model_config.model_settings_for(engine.model) if engine else {}
+        default_think = (session_model.get("extra_body") or {}).get("think")
+        return {
+            # Only what this session changed; the model's own setting reads as None.
+            "thinking": think if isinstance(think, bool) and think != default_think else None,
+            "reasoning_effort": (
+                settings.get("reasoning_effort")
+                if settings.get("reasoning_effort") != session_model.get("reasoning_effort")
+                else None
+            ),
+            "controls": controls,
+        }
+
+    def model_controls(self, model: str) -> dict[str, Any]:
+        """The thinking switch and reasoning-effort levels a model has, with its defaults
+        (providers/model_controls.py). Local models: from what their server reports."""
+        from ..providers import local_server, model_controls, ollama_facts
+        from ..providers.recommended import recommendation_for
+
+        if not model:
+            return model_controls.NONE.as_dict()
+        provider = self._model_provider(model)
+        bare = model.split(":", 1)[1] if (provider != "openai" or model.startswith("openai:")) else model
+        d = get_descriptor(provider)
+        local = d is not None and d.kind == "local"
+        server_thinking = None
+        if local:
+            try:
+                profile = self.secrets.get(f"provider:{provider}") or {}
+                rows = (
+                    ollama_facts.model_facts(profile.get("base_url"))
+                    if provider == "ollama"
+                    else local_server.model_facts(provider, profile.get("base_url"), profile.get("api_key"))
+                )
+                server_thinking = next((r.get("thinking") for r in rows if r.get("model") == model), None)
+            except Exception:
+                server_thinking = None
+        rec = recommendation_for(model)
+        controls = model_controls.controls_for(
+            provider,
+            bare,
+            local=local,
+            server_thinking=server_thinking,
+            recommended_thinking=(rec.thinking_available, rec.thinking_default) if rec else None,
+            saved=_model_config.get(model),
+        )
+        return controls.as_dict()
+
+    def set_unattended(self, session_id: str, value: Any) -> dict[str, Any]:
+        """Set the session's attendance (attended / inbox / auto, or the legacy boolean),
+        with an audit row. Note this changes only WHO ANSWERS when the agent asks, never
+        the autonomy ceiling (that's the mode) — but it is still worth recording, since an
+        unattended session routes prompts away from the screen the user is looking at, and
+        `auto` answers them by rule."""
+        before = self.unattended.attendance(session_id)
+        after = self.unattended.set(session_id, value)
+        if before != after:
+            self.audit_autonomy_change(session_id, "unattended", before, after)
+        return {
+            "ok": True,
+            "session_id": session_id,
+            "unattended": after != "attended",
+            "attendance": after,
+        }
 
     def _audit_grant_refused(self, session_id: str, request, resolution: str) -> None:
         try:
@@ -6075,16 +6967,20 @@ class SessionManager:
         engine.permissions.task_rules = task.standing_rules()
         for tool in task.name_allowed_tools():
             engine.permissions.allow_tool_for_session(tool)
+        for cmd in task.always_allowed_commands:
+            engine.permissions.allow_command_for_session(cmd)
 
     def _build_task_engine(self, task, *, session_id: str) -> TurnEngine:
         ag = get_agent(task.agent)
         task.workspace = str(ensure_under_base(task.workspace, "scheduled workspace"))
         Path(task.workspace).mkdir(parents=True, exist_ok=True)
+        task_model = self.resolve_persona_model(task.agent, task.model)
         engine = build_engine(
             agent=ag,
             workspace=task.workspace,
-            model=self.resolve_persona_model(task.agent, task.model),
+            model=task_model,
             mode=Mode.INTERACTIVE,
+            model_settings=_model_config.model_settings_for(task_model),
             approver=self._scheduled_approver(task, session_id),
             provider=self.provider,
             memory_store=self.memory_store,
@@ -6118,8 +7014,12 @@ class SessionManager:
     # -- mirroring inbox items to a bound channel -------------------------------
     async def mirror_inbox_item(self, item) -> None:
         """Mirror an Inbox item to its bound channel. Discrete choices (approve/deny, ask_user
-        options) render as BUTTONS — the item id rides in each, so a click resolves it
-        unambiguously. Free-text answers aren't offered over messaging (open the app).
+        options) render as BUTTONS where the platform has them — the item id rides in each, so a
+        click resolves it unambiguously. Where it doesn't (any adapter that hasn't implemented
+        `send_interactive`, Telegram included), the same choice goes out as text carrying the
+        `[ow:id]` tag and a line saying how to answer, because `_resolve_inbox_reply` needs that
+        tag to correlate a reply. Without it the reader is shown a question they cannot answer
+        from the surface it arrived on, and an agent suspended on that prompt waits forever.
         """
         from ..interactions import buttons_for
 
@@ -6136,12 +7036,12 @@ class SessionManager:
         body = "\n".join(p for p in (item.title, item.body) if p).strip()
         buttons = buttons_for(item)
         try:
-            if buttons:
+            if buttons and self.gateway.supports_interactive(target):
                 await self.gateway.deliver_interactive(target, body, buttons)
             else:
                 await self.gateway.deliver(
                     target,
-                    f"{body}\n(Open the app to respond.)\n[ow:{item.id}]".strip(),
+                    f"{body}\n{_reply_hint(item, buttons)}\n[ow:{item.id}]".strip(),
                 )
         except Exception:
             pass
@@ -6160,20 +7060,30 @@ class SessionManager:
         item = self.inbox.get(item_id)
         if item is None:
             return
-        protected_kinds = {"approval", "directory", "plan"}
-        if (
-            getattr(event, "platform", "") == "slack"
-            and item.kind in protected_kinds
-        ):
-            actor_id = str(getattr(event, "user_id", "") or "")
-            if not self._slack_actor_owns_item(
+        if item.kind in self._PROTECTED_ITEM_KINDS:
+            if not self._actor_owns_protected_item(
                 item,
-                actor_id=actor_id,
+                platform=str(getattr(event, "platform", "") or ""),
+                actor_id=str(getattr(event, "user_id", "") or ""),
                 chat_id=getattr(event, "chat_id", "") or "",
                 team_id=getattr(event, "team_id", None),
             ):
+                platform = str(getattr(event, "platform", "") or "")
                 if self.gateway is not None:
+                    # Slack answers with an ephemeral; everywhere else the gateway's
+                    # reject path is a no-op, so send the same sentence as a plain reply.
                     await self.gateway.reject_interaction(event)
+                    if platform != "slack":
+                        from ..connectors.base import format_target
+                        from ..connectors.gateway import APPROVAL_OWNER_REQUIRED
+
+                        try:
+                            await self.gateway.deliver(
+                                format_target(platform, str(getattr(event, "chat_id", "") or "")),
+                                APPROVAL_OWNER_REQUIRED,
+                            )
+                        except Exception:
+                            logger.debug("refusal reply failed", exc_info=True)
                 return
         already = item is not None and item.state != "pending"
         resolved = await self.resolve_inbox(item_id, resolution)
@@ -6206,17 +7116,26 @@ class SessionManager:
             item = self.inbox.get(item_id)
             if item is None:
                 return False
-            if (
-                getattr(event.source, "platform", "") == "slack"
-                and item.kind in {"approval", "directory", "plan"}
-            ):
-                actor_id = str(getattr(event.source, "user_id", "") or "")
-                if not self._slack_actor_owns_item(
+            # Plan and directory items need a structured JSON payload (approved/granted,
+            # mode/path/writable) that a bare chat reply cannot provide. The mirrored
+            # message already says "(Open the app to respond.)" and buttons_for returns
+            # [] for these kinds — honour that by leaving them pending instead of
+            # consuming them into a silent refusal.
+            if item.kind in {"plan", "directory"}:
+                return False
+            if item.kind in self._PROTECTED_ITEM_KINDS:
+                if not self._actor_owns_protected_item(
                     item,
-                    actor_id=actor_id,
+                    platform=str(getattr(event.source, "platform", "") or ""),
+                    actor_id=str(getattr(event.source, "user_id", "") or ""),
                     chat_id=getattr(event.source, "chat_id", "") or "",
                     team_id=getattr(event.source, "team_id", None),
                 ):
+                    self._notify_refused_reply(
+                        str(getattr(event.source, "platform", "") or ""),
+                        getattr(event.source, "chat_id", "") or "",
+                        getattr(event.source, "thread_id", None),
+                    )
                     return False
             return self.inbox.resolve(item_id, resolution)
 
@@ -6902,60 +7821,70 @@ class SessionManager:
             task_id=task.id, trigger=trigger
         )  # __post_init__ sets run.session_id
         self.task_store.add_run(run)  # mark "running"
-        # UX-026: tell every open app window a SCHEDULED run just started (the 5s
-        # top-right toast). Manual runs never come through here — the user is
-        # already watching those live.
-        await self.broadcast_event(
-            {
-                "type": "automation_run_started",
-                "data": {
-                    "task_id": task.id,
-                    "task_title": task.title,
-                    "session_id": run.session_id,
-                    "workspace": task.workspace,
-                    "agent": task.agent,
-                    "trigger": trigger,
-                },
-            }
-        )
-        # Each run is a real, persisted conversation thread: it runs the instructions under its
-        # own session id, then saves the transcript. The user can reopen that session and ask a
-        # follow-up — the scheduled agent is no longer fire-and-forget.
         engine = None
-        # The first turn is the task itself. The framing matters: instructions often restate the
-        # schedule ("every day at 5:32pm…"), so make explicit that the schedule already fired and
-        # the job now is to execute, not to (re)schedule.
-        opening = (
-            f"⏰ Scheduled run — {task.title}\n\n"
-            "This automation is due now: carry out the task below immediately and produce the "
-            "result. The schedule already exists — do not create or modify any scheduled tasks.\n\n"
-            f"{task.instructions}"
-        )
         try:
+            # UX-026: tell every open app window a SCHEDULED run just started (the 5s
+            # top-right toast). Manual runs never come through here — the user is
+            # already watching those live.
+            await self.broadcast_event(
+                {
+                    "type": "automation_run_started",
+                    "data": {
+                        "task_id": task.id,
+                        "task_title": task.title,
+                        "session_id": run.session_id,
+                        "workspace": task.workspace,
+                        "agent": task.agent,
+                        "trigger": trigger,
+                    },
+                }
+            )
+            # Each run is a real, persisted conversation thread: it runs the instructions under
+            # its own session id, then saves the transcript. The user can reopen that session and
+            # ask a follow-up — the scheduled agent is no longer fire-and-forget.
             engine = self._build_task_engine(task, session_id=run.session_id)
-            # A parked approval must find the live engine before the turn starts.
+            # Register the live engine up-front: a parked approval persists the session
+            # mid-run (durable suspend), and resolving from the Inbox must find this engine.
             self._engines[run.session_id] = engine
+            # Instructions often restate the schedule, so make explicit that it already fired.
+            opening = (
+                f"⏰ Scheduled run — {task.title}\n\n"
+                "This automation is due now: carry out the task below immediately and produce "
+                "the result. The schedule already exists — do not create or modify any "
+                "scheduled tasks.\n\n"
+                f"{task.instructions}"
+            )
             async for _event in engine.run(opening):
                 if _event.type is EventType.ERROR:
                     raise RuntimeError(str(_event.data.get("error") or "scheduled engine failed"))
             run.result_text = _last_assistant_text(engine.messages)
             run.artifacts = _recent_files(task.workspace, since=run.started_at)
             run.status = "ok"
-            if task.notify_on_completion:
-                await self._notify_task_done(task, run)
+        except asyncio.CancelledError:
+            if engine is not None:
+                engine.request_interrupt()
+            run.status, run.error = "error", "cancelled during scheduler shutdown"
+            raise
         except Exception as exc:
             run.status, run.error = "error", str(exc)
         finally:
             run.finished_at = _epoch()
             # Persist the run as a continuable session + keep the live engine for an immediate
             # follow-up; record the run (now carrying its session_id).
-            try:
-                if engine is not None:
+            if engine is not None:
+                try:
                     self.save(run.session_id, engine)
                     self._engines[run.session_id] = engine
-            except Exception:
-                pass
+                except Exception:
+                    pass
             self.task_store.add_run(run)
+        if task.notify_on_completion and run.status == "ok":
+            try:
+                await self._notify_task_done(task, run)
+            except asyncio.CancelledError:
+                # Execution and persistence completed. Preserve success so Scheduler.run_task
+                # advances the task instead of repeating side effects after restart.
+                pass
         return run
 
     async def _notify_task_done(self, task, run: TaskRun) -> None:
@@ -7220,13 +8149,23 @@ class SessionManager:
         ]
 
     # -- LLM auto-titles (FB-010) -------------------------------------------------
+    # The title must speak the user's language: with no language pinned, an English
+    # instruction ("4-5 word title") yields English titles for Chinese/Japanese/…
+    # sessions. Same-language also relaxes the word count to a length that is natural
+    # for the opener's script (CJK titles are a few characters, not 4-5 "words").
+    # A title asked again without an effort setting (OPE-201): room for the reasoning a
+    # model that cannot turn it off spends before the few words of the title.
+    _AUTOTITLE_REASONING_MAX_TOKENS = 1024
     _AUTOTITLE_PROMPT = (
         "You title chat sessions. Given the user's opening message(s) — and, when "
-        "present, the assistant's first reply for context — reply with ONLY a 4-5 word "
-        "title for the session, named after what the session is actually about — no "
-        "quotes or punctuation wrapping it. If there is no topic at all ("
-        '"hey", "how are you", "hi there" and a generic reply), reply with exactly: '
-        "small-talk"
+        "present, the assistant's first reply for context — reply with ONLY a short "
+        "title for the session, named after what the session is actually about. "
+        "Write the title in the same language as the user's opening message "
+        "(4-5 words for English; the natural equivalent brevity for other "
+        "languages) — no quotes or punctuation wrapping it. If there is no topic "
+        "at all ("
+        '"hey", "how are you", "hi there" and a generic reply), reply with '
+        "exactly: small-talk"
     )
 
     def _maybe_autotitle(self, session_id: str) -> None:
@@ -7315,31 +8254,49 @@ class SessionManager:
         fallback stays; the small-talk sentinel leaves auto_title unset so the turn-2
         retry can run."""
         try:
-            turn = await asyncio.to_thread(
-                engine.provider.complete,
-                model=engine.model,
-                messages=[
-                    {"role": "system", "content": self._AUTOTITLE_PROMPT},
-                    {
-                        "role": "user",
-                        "content": "\n\n".join(openers)
-                        + (
-                            f"\n\n[the assistant's first reply]\n{assistant}"
-                            if assistant
-                            else ""
-                        ),
-                    },
-                ],
-                temperature=0.2,
-                # Reasoning-routed models spend hidden tokens BEFORE emitting text; a
-                # tight cap plus default effort yields an empty completion and a silent
-                # no-op. Effort "none" means "no thinking": every provider's effort
-                # mapper handles it (OpenAI-vocabulary endpoints get it on the wire,
-                # Anthropic omits the field; see effort.NO_EFFORT), and 64 leaves
-                # headroom either way.
-                max_tokens=64,
-                reasoning_effort="none",
-            )
+            messages = [
+                {"role": "system", "content": self._AUTOTITLE_PROMPT},
+                {
+                    "role": "user",
+                    "content": "\n\n".join(openers)
+                    + (
+                        f"\n\n[the assistant's first reply]\n{assistant}"
+                        if assistant
+                        else ""
+                    ),
+                },
+            ]
+            try:
+                turn = await asyncio.to_thread(
+                    engine.provider.complete,
+                    model=engine.model,
+                    messages=messages,
+                    temperature=0.2,
+                    # Reasoning-routed models spend hidden tokens BEFORE emitting text; a
+                    # tight cap plus default effort yields an empty completion and a silent
+                    # no-op. Effort "none" means "no thinking": every provider's effort
+                    # mapper handles it (OpenAI-vocabulary endpoints get it on the wire,
+                    # Anthropic omits the field; see effort.NO_EFFORT), and 64 leaves
+                    # headroom either way.
+                    max_tokens=64,
+                    reasoning_effort="none",
+                )
+            except Exception as exc:
+                # OPE-201: some endpoints cannot turn reasoning off and refuse "none"
+                # (OpenRouter GLM 5.3: 400 "Reasoning is mandatory for this endpoint and
+                # cannot be disabled"). Ask once more with the model's own effort, and
+                # room for the reasoning it spends before the few words of the title.
+                text = str(exc).lower()
+                if "reasoning" not in text and "effort" not in text:
+                    raise
+                logger.info("autotitle for %s: retrying without reasoning effort (%s)", session_id, exc)
+                turn = await asyncio.to_thread(
+                    engine.provider.complete,
+                    model=engine.model,
+                    messages=messages,
+                    temperature=0.2,
+                    max_tokens=self._AUTOTITLE_REASONING_MAX_TOKENS,
+                )
             raw = (getattr(turn, "text", None) or "").strip()
             # Sanitize: surrounding quotes off, whitespace collapsed, capped at 60.
             title = " ".join(raw.strip("\"'“”‘’`").split())
@@ -7474,6 +8431,76 @@ class SessionManager:
         self.session_store.touch_workspace(str(resolved))
         self._promotion_rebuild.add(session_id)
         return {"ok": True, "path": str(resolved), "roots": self.get_roots(session_id)}
+
+    # -- the session's allowed sites (OPE-219): the person's own list for one session ------
+    def session_sites(self, session_id: str) -> dict[str, Any]:
+        """The session's sandbox as its header chip and Access section show it: the sites
+        from Settings, and those allowed for this session only."""
+        from ..sandbox.settings import session_sandbox
+
+        engine = self._engines.get(session_id)
+        if engine is None:
+            return {"state": "off"}
+        try:
+            return session_sandbox(engine)
+        except Exception:  # noqa: BLE001 - a list must not break the pane
+            return {"state": "off"}
+
+    def _session_site_engine(self, session_id: str, host: str):
+        """(engine, "host:port") for a change to the session's own sites, or an error text.
+        Exact host names only, as on the agent's card: wildcards stay in Settings."""
+        from ..permissions import network_request_hosts
+
+        engine = self._engines.get(session_id)
+        if engine is None or getattr(engine.permissions, "sandbox_sites", None) is None:
+            return None, "", "This session has no allowed-sites list."
+        good, bad = network_request_hosts({"hosts": [host]})
+        if bad or len(good) != 1:
+            return None, "", "Give an exact host name, such as registry.npmjs.org (add a port only when it is not 443)."
+        return engine, good[0], ""
+
+    def allow_session_site(self, session_id: str, host: str) -> dict[str, Any]:
+        """The person allows a site for this session, from the Access section. Commands and
+        web tools reach it at once; nothing is stored, and it ends with the session."""
+        engine, entry, error = self._session_site_engine(session_id, host)
+        if engine is None:
+            return {"ok": False, "error": error}
+        permissions = engine.permissions
+        if permissions._entry_allowed(entry):
+            return {"ok": True, "sandbox": self.session_sites(session_id)}
+        permissions.allow_network_hosts([entry], always=False)
+        failed = permissions.site_open_errors.get(entry)
+        if failed:
+            # The sandbox did not take it: do not leave a site listed that commands lack.
+            permissions.site_open_errors.pop(entry, None)
+            if entry in permissions.session_sites:
+                permissions.session_sites.remove(entry)
+            permissions.session_allow_domains.discard(entry.rsplit(":", 1)[0])
+            return {"ok": False, "error": f"The sandbox could not take {entry}: {failed}", "sandbox": self.session_sites(session_id)}
+        self._audit_session_site(session_id, "allowed", entry)
+        return {"ok": True, "sandbox": self.session_sites(session_id)}
+
+    def remove_session_site(self, session_id: str, host: str) -> dict[str, Any]:
+        """The person takes back a site allowed for this session. Sites from Settings are
+        not removed here."""
+        engine, entry, error = self._session_site_engine(session_id, host)
+        if engine is None:
+            return {"ok": False, "error": error}
+        try:
+            removed = engine.permissions.remove_session_site(entry)
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": f"The sandbox could not drop {entry}: {exc}", "sandbox": self.session_sites(session_id)}
+        if not removed:
+            return {"ok": False, "error": f"{entry} is not a site allowed for this session. Sites from Settings are changed in Settings > Sandbox.", "sandbox": self.session_sites(session_id)}
+        self._audit_session_site(session_id, "removed", entry)
+        return {"ok": True, "sandbox": self.session_sites(session_id)}
+
+    def _audit_session_site(self, session_id: str, what: str, entry: str) -> None:
+        try:
+            # Allowing a site widens what the session reaches ("raised"); taking it back narrows it.
+            self.audit_autonomy_change(session_id, "session_site", *(("", entry) if what == "allowed" else (entry, "")))
+        except Exception:  # noqa: BLE001 - the audit line must not fail the change
+            pass
 
     def add_root(
         self, session_id: str, path: str, writable: bool = False
@@ -7695,6 +8722,30 @@ class SessionManager:
                     shutil.rmtree(resolved)
             except OSError:
                 pass  # a stale/foreign path must not fail the delete
+        # Project-backed sessions keep their primary folder, but PDF originals copied
+        # into conversation scratch must go away when the conversation is deleted.
+        if (
+            ok
+            and record
+            and self._SESSION_ID_RE.fullmatch(session_id)
+            and session_id not in {".", ".."}
+        ):
+            team = record.team or {}
+            lead = str(team.get("lead_session") or "")
+            scratch = self.scratch_base().resolve()
+            if (
+                team.get("role") == "worker"
+                and self._SESSION_ID_RE.fullmatch(lead)
+                and lead not in {".", "..", session_id}
+            ):
+                attachment_dir = scratch / lead / "workers" / session_id / "attachments"
+            else:
+                attachment_dir = scratch / session_id / "attachments"
+            try:
+                if attachment_dir.is_dir() and attachment_dir.resolve() == attachment_dir:
+                    shutil.rmtree(attachment_dir)
+            except OSError:
+                pass  # a missing or inaccessible scratch folder must not fail deletion
         return {"ok": ok, "session_id": session_id}
 
     # -- provider proxy ---------------------------------------------------------

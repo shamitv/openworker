@@ -11,3 +11,6 @@ dist/
 .env
 .claude/settings.local.json
 opencode.json
+
+# Reviewer eval run outputs stay local; the study archive lives in ocw-context (OPE-225).
+/reports/

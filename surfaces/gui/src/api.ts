@@ -678,6 +678,28 @@ export async function removeRoot(
   return res.json();
 }
 
+// -- the session's allowed sites (OPE-219) -------------------------------------
+// The answer carries the session's sandbox as the header chip shows it.
+type SitesAnswer = { ok: boolean; error?: string; sandbox?: any };
+
+export async function allowSessionSite(sessionId: string, host: string): Promise<SitesAnswer> {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/sites`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ host }),
+  });
+  return res.json();
+}
+
+export async function removeSessionSite(sessionId: string, host: string): Promise<SitesAnswer> {
+  const q = new URLSearchParams({ host });
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/sites?${q.toString()}`,
+    { method: "DELETE" },
+  );
+  return res.json();
+}
+
 // -- MCP servers --------------------------------------------------------------
 export interface McpServer {
   name: string;
@@ -959,7 +981,7 @@ export interface Connector {
   authorize_url?: string | null; // hosted consent URL while this connector authorizes
   allowed_users: string[]; // the allow-list (managed inline in the Connectors tab)
   allowed_user_names?: Record<string, string | null>; // id → display name (people directory)
-  approval_owner_ids?: string[]; // Manual Slack: humans allowed to resolve approvals
+  approval_owner_ids?: string[]; // Manual Slack / Telegram: humans allowed to resolve approvals
   approval_owner_names?: Record<string, string | null>;
   recent?: RecentSender[]; // recently-seen senders on a connected two-way connector
   unauthorized?: ParkedMessage[]; // parked messages from unallowed senders (§19)
@@ -1048,7 +1070,7 @@ export async function cloudLogout(): Promise<{ ok: boolean }> {
 export async function connectManaged(
   name: string,
   options?: { access?: "read" | "write"; flow?: "install" },
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; signed_in?: boolean }> {
   const res = await fetch(
     `${httpBase()}/v1/connectors/${encodeURIComponent(name)}/connect-managed`,
     {
@@ -1181,6 +1203,7 @@ export interface AuditEvent {
   result_preview: string;
   reason: string;
   resource: string;
+  call_id?: string;
 }
 
 export async function getAudit(params: {
@@ -1188,8 +1211,11 @@ export async function getAudit(params: {
   session_id?: string;
   connector?: string;
   tool?: string;
+  // OPE-238: one tool call's rows (the "changes made without asking" summary links here).
+  call_id?: string;
 } = {}): Promise<AuditEvent[]> {
   const q = new URLSearchParams();
+  if (params.call_id) q.set("call_id", params.call_id);
   if (params.limit) q.set("limit", String(params.limit));
   if (params.session_id) q.set("session_id", params.session_id);
   if (params.connector) q.set("connector", params.connector);
@@ -1265,13 +1291,22 @@ export interface ModelSettings {
   // Composer: show the context-window fill bar (default FALSE; absent → the chip shows
   // the session total). The usage popover keeps both numbers regardless.
   context_bar?: boolean;
+  // #611: collapse the live reasoning stream while a turn runs (default FALSE). When on,
+  // the reasoning is hidden during the run, but its finalized form still appears after.
+  hide_reasoning_running?: boolean;
   // Auto-Approve mode (spec §1.5): the feature flag that offers the reviewer mode, and its
   // shadow-eval sibling. Both default FALSE and are absent on older backends — the composer
   // hides the Auto-Approve mode entry unless auto_approve is explicitly true.
   auto_approve?: boolean;
   auto_approve_shadow?: boolean;
+  // Which reviewer Auto-Approve uses (OPE-224), and whether each decision-model reviewer
+  // has a key. Absent on older backends, meaning the session model.
+  auto_approve_reviewer?: ReviewerChoice;
+  auto_approve_reviewer_keys?: Partial<Record<"openai-decisions" | "jev", boolean>>;
   // Curated-matrix display names ({full id → "GLM-5.2 · via Together"}); custom models absent.
   model_labels?: Record<string, string>;
+  // Per-model settings the user saved (model_config.json), keyed by model id.
+  model_config?: Record<string, ModelConfigRecord>;
   // {full id → context window in tokens}, verified matrix entries only — drives the
   // composer's context-fill meter (absent id → the meter hides). Optional for older backends.
   model_context_windows?: Record<string, number>;
@@ -1338,6 +1373,72 @@ export async function inspectPdf(
   return res.json();
 }
 
+// -- Settings ▸ Customization ▸ Web search (UX-058) --------------------------------
+// One provider is active; every provider keeps its own key in the machine's secret store
+// (never returned here — only whether one exists and where it came from).
+export type WebSearchProviderInfo = {
+  name: string;
+  display_name: string;
+  key_mode: "none" | "optional" | "required";
+  key_url: string;
+  has_key: boolean;
+  key_source: "store" | "env" | null;
+  // The environment variable the key comes from, when key_source is "env".
+  key_env: string;
+  // Whether `web_fetch` can read pages through this provider (Exa, Firecrawl, Tavily).
+  supports_fetch: boolean;
+};
+export type WebSearchInfo = {
+  provider: string;
+  fetch_via_provider: boolean;
+  providers: WebSearchProviderInfo[];
+};
+type WebSearchResult = { ok: boolean; error?: string } & Partial<WebSearchInfo>;
+
+export async function getWebSearch(machineId?: string | null): Promise<WebSearchInfo> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search`);
+  if (!res.ok) throw new Error(`web-search: ${res.status}`);
+  return res.json();
+}
+
+/** Make `name` the active search service. A 400 (a keyed service with no key) comes back
+ * as `{ok: false, error}` with the server's plain message. */
+export async function setWebSearchProvider(name: string, machineId?: string | null): Promise<WebSearchResult> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider: name }),
+  });
+  return res.json();
+}
+
+/** "Test and save": the server runs one search with the key before storing it. */
+export async function setWebSearchKey(name: string, apiKey: string, machineId?: string | null): Promise<WebSearchResult> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search/keys/${encodeURIComponent(name)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ api_key: apiKey }),
+  });
+  return res.json();
+}
+
+export async function clearWebSearchKey(name: string, machineId?: string | null): Promise<WebSearchResult> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search/keys/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+  });
+  return res.json();
+}
+
+/** "Fetch pages through the search service" — honoured while the active provider offers it. */
+export async function setFetchViaProvider(enabled: boolean, machineId?: string | null): Promise<WebSearchResult> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search/fetch-via-provider`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled }),
+  });
+  return res.json();
+}
+
 /** Persist whether the composer shows the context-window fill bar. */
 export async function setContextBar(
   shown: boolean,
@@ -1346,6 +1447,18 @@ export async function setContextBar(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ context_bar: shown }),
+  });
+  return res.json();
+}
+
+/** #611: persist whether the composer suppresses the live reasoning stream while a turn runs. */
+export async function setHideReasoningRunning(
+  hidden: boolean,
+): Promise<{ ok: boolean; hide_reasoning_running?: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/hide-reasoning`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hide_reasoning_running: hidden }),
   });
   return res.json();
 }
@@ -1373,6 +1486,56 @@ export async function setAutoApproveShadow(on: boolean): Promise<AutoApproveResu
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ auto_approve_shadow: on }),
+  });
+  return res.json();
+}
+
+export type ReviewerChoice = "session" | "openai-decisions" | "jev";
+
+/** Choose which reviewer Auto-Approve uses (OPE-224); open sessions switch at once. */
+export async function setAutoApproveReviewer(
+  choice: ReviewerChoice,
+): Promise<{ ok: boolean; auto_approve_reviewer?: ReviewerChoice; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve-reviewer`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ auto_approve_reviewer: choice }),
+  });
+  return res.json();
+}
+
+export type ShadowSummary = {
+  reviewer: ReviewerChoice;
+  days: number;
+  checks: number;
+  run: number;
+  asked: number;
+  stopped: number;
+  decided: number;
+  matched: number;
+};
+
+/** Shadow results of the chosen reviewer, last 30 days (OPE-224). */
+export async function getShadowSummary(): Promise<ShadowSummary> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve-shadow-summary`);
+  return res.json();
+}
+
+/** Write every shadow check of the chosen reviewer to a CSV; returns where it was saved. */
+export async function exportShadowResults(): Promise<{ ok: boolean; path?: string; rows?: number; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve-shadow-export`, { method: "POST" });
+  return res.json();
+}
+
+/** Save the API key a decision-model reviewer needs. The key is never sent back. */
+export async function setAutoApproveReviewerKey(
+  reviewer: "openai-decisions" | "jev",
+  apiKey: string,
+): Promise<{ ok: boolean; auto_approve_reviewer_keys?: Record<string, boolean>; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve-reviewer-key`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reviewer, api_key: apiKey }),
   });
   return res.json();
 }
@@ -2137,11 +2300,41 @@ export async function unsubscribeChannel(
   return res.json();
 }
 
+// Who answers when the agent asks (server: coworker/unattended.py). "attended" = inline,
+// "inbox" = parked in the Inbox until someone returns, "auto" = the engine answers by
+// fixed rule and refuses anything only a person could approve.
+export type Attendance = "attended" | "inbox" | "auto";
+
 export async function getUnattended(sessionId: string): Promise<boolean> {
   const res = await fetch(
     `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/unattended`,
   );
   return (await res.json()).unattended;
+}
+
+export async function getAttendance(sessionId: string): Promise<Attendance> {
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/unattended`,
+  );
+  const body = await res.json();
+  const value = body.attendance;
+  if (value === "inbox" || value === "auto") return value;
+  return body.unattended ? "inbox" : "attended";
+}
+
+export async function setAttendance(
+  sessionId: string,
+  attendance: Attendance,
+): Promise<{ ok: boolean; unattended: boolean; attendance: Attendance }> {
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/unattended`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attendance }),
+    },
+  );
+  return res.json();
 }
 
 export async function setUnattended(
@@ -2311,9 +2504,16 @@ export async function runSandboxRemove(machineId?: string | null): Promise<{ ok:
   return res.json();
 }
 
-export async function getSettings(machineId?: string | null): Promise<ModelSettings> {
-  const res = await fetch(`${engineBase(machineId)}/v1/settings`);
-  return res.json();
+export async function getSettings(machineId?: string | null, timeoutMs = 10_000): Promise<ModelSettings> {
+  // A hung server must end in an error the page can show (#43), never an endless "Loading…".
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${engineBase(machineId)}/v1/settings`, { signal: ctrl.signal });
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function setModelKey(
@@ -2458,9 +2658,23 @@ export interface ProviderInfo {
   recommended_model: string | null; // pre-filled default for this provider (e.g. qwen3-coder:30b)
   blurb?: string; // one-line note under the title ("Uses X's OpenAI-compatible API…")
   key_set_at?: string | null; // ISO date the key was last (re)saved — absent for env-only config
+  // Where the key comes from: saved in Settings, the provider's environment variable, or
+  // nowhere. "env" keys cannot be removed from the app, so the card hides "Remove key" and
+  // names the variable instead (#742). Absent on an older backend → treated as "store".
+  key_source?: "store" | "env" | null;
+  env_key?: string | null; // the variable's name, when it is set
   last_used_at?: number | null; // epoch secs the provider last served a completion
   // OAuth providers (auth === "oauth"): browser sign-in instead of a key form.
   auth?: string | null;
+  // How Models & Keys groups it: a server on the user's own hardware, a plan signed
+  // into, or an API key. Absent on an older backend → treated as an API key.
+  kind?: "local" | "subscription" | "api_key";
+  is_custom?: boolean; // user-created OpenAI-compatible provider
+  // Local servers only: whether the server answers right now (cached probe).
+  alive?: boolean;
+  // llama.cpp on a Mac (UX-057): OpenWorker can set it up and run it, and what it runs.
+  setup_here?: boolean;
+  managed?: { phase: LlamaCppPhase; model: string | null };
   signed_in?: boolean;
   account?: string | null; // signed-in account label (email or id)
   authorizing?: boolean;
@@ -2468,6 +2682,25 @@ export interface ProviderInfo {
 }
 
 // -- ChatGPT-subscription provider sign-in (OAuth; tokens never reach the GUI) ------
+export interface OpenRouterAuthStatus {
+  connected: boolean;
+  authorizing: boolean;
+  attempt_id: string | null;
+  authorize_url: string | null;
+  error: string | null;
+}
+
+export async function openRouterAuth(
+  action: "status" | "signin" | "complete" | "cancel" | "disconnect",
+  body: Record<string, unknown> = {},
+): Promise<OpenRouterAuthStatus> {
+  const response = await fetch(`${httpBase()}/v1/providers/openrouter-account/${action}`, action === "status" ? undefined : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error("OpenRouter authentication request failed");
+  return response.json();
+}
+
 export interface CodexAuthStatus {
   signed_in: boolean;
   account?: string | null;
@@ -2488,6 +2721,225 @@ export async function codexAuthStatus(): Promise<CodexAuthStatus> {
 
 export async function codexSignout(): Promise<{ ok: boolean }> {
   const res = await fetch(`${httpBase()}/v1/providers/openai-codex/signout`, { method: "POST" });
+  return res.json();
+}
+
+// -- per-model settings, the machine, and what local servers hold ----------------------
+
+export interface ModelConfigRecord {
+  context_size?: number;
+  max_output_tokens?: number;
+  thinking?: boolean;
+  reasoning_effort?: string;
+  temperature?: number;
+  top_p?: number;
+  compaction_threshold_pct?: number;
+  default?: boolean;
+}
+
+export interface ModelSettingValue {
+  value: number | boolean | string;
+  from: "user" | "recommended";
+}
+
+export interface ModelRecommendation {
+  name: string;
+  context_max: number | null;
+  context_for_agents: number | null;
+  max_output_tokens: number | null;
+  thinking: { available: boolean; default: boolean };
+  sampling: Record<string, number>;
+  notes: string;
+  source: string;
+}
+
+/** One model's settings in force, each with where it came from. */
+export interface ModelConfigView {
+  model: string;
+  context_size?: ModelSettingValue;
+  max_output_tokens?: ModelSettingValue;
+  thinking?: ModelSettingValue;
+  reasoning_effort?: ModelSettingValue;
+  temperature?: ModelSettingValue;
+  top_p?: ModelSettingValue;
+  compaction_threshold_pct?: ModelSettingValue;
+  default: ModelSettingValue;
+  recommendation?: ModelRecommendation;
+}
+
+export async function getModelConfig(model: string): Promise<ModelConfigView> {
+  const res = await fetch(`${httpBase()}/v1/settings/model-config?model=${encodeURIComponent(model)}`);
+  return res.json();
+}
+
+export async function setModelConfig(
+  model: string,
+  values: Partial<Record<keyof ModelConfigRecord, number | boolean | string | null>>,
+): Promise<ModelConfigView & { ok: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/model-config`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model, values }),
+  });
+  return res.json();
+}
+
+export async function removeModelConfig(model: string): Promise<{ ok: boolean }> {
+  const res = await fetch(`${httpBase()}/v1/settings/model-config/remove`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model }),
+  });
+  return res.json();
+}
+
+/** This session's thinking switch and effort level (UX-055, the ⚙ beside the model). */
+// UX-056: what a model lets the user set per session (providers/model_controls.py).
+export interface ModelControls {
+  thinking: { support: "supported" | "not_supported"; default?: boolean | null };
+  reasoning: { support: "supported" | "not_supported"; levels?: string[]; default?: string | null };
+}
+
+export interface SessionModelControls {
+  // What this session changed; null = the model's default.
+  thinking: boolean | null;
+  reasoning_effort: string | null;
+  controls: ModelControls;
+}
+
+export async function getSessionModelSettings(sessionId: string, model = ""): Promise<SessionModelControls> {
+  const q = model ? `?model=${encodeURIComponent(model)}` : "";
+  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/model-settings${q}`);
+  return res.json();
+}
+
+export async function setSessionModelSettings(
+  sessionId: string,
+  values: { thinking?: boolean | null; reasoning_effort?: string | null },
+): Promise<{ ok: boolean; error?: string } & Partial<SessionModelControls>> {
+  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/model-settings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(values),
+  });
+  return res.json();
+}
+
+/** This machine, for the "Your system" section. */
+export interface SystemFacts {
+  processor: string;
+  graphics: string;
+  kind: "apple_silicon" | "nvidia" | "dgx_spark" | "jetson" | "cpu";
+  memory_bytes: number | null;
+  gpu_memory_bytes: number | null;
+  storage_free_bytes: number | null;
+  storage_total_bytes: number | null;
+  model_memory_bytes: number | null;
+  runs_well_up_to_bytes: number | null;
+}
+
+export async function getSystemFacts(): Promise<SystemFacts> {
+  const res = await fetch(`${httpBase()}/v1/system`);
+  return res.json();
+}
+
+/** One model a local server holds, as the settings table shows it. */
+export interface LocalModelRow {
+  model: string; // full id, e.g. ollama:qwen3-coder:30b
+  name: string;
+  size_bytes: number | null;
+  tools: boolean | null; // null: the server did not say
+  thinking: boolean | null;
+  vision: boolean | null;
+  remote: boolean;
+  parameter_size: string | null;
+  quantization: string | null;
+  context_max: number | null;
+  context: number | null;
+  context_from: "user" | "machine" | "server";
+  fit: "runs_well" | "tight" | "too_large" | "cloud" | "unknown";
+  recommendation: string | null;
+}
+
+export async function getLocalModels(
+  provider: string,
+): Promise<{ provider: string; models: LocalModelRow[]; alive?: boolean; error?: string }> {
+  // A stuck request must end in an error the page can show, never an endless blank.
+  const res = await fetch(`${httpBase()}/v1/providers/${encodeURIComponent(provider)}/models`, {
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// -- llama.cpp set up and run by OpenWorker (UX-057) ---------------------------------
+export type LlamaCppPhase = "idle" | "installing" | "downloading" | "loading" | "checking" | "running" | "failed";
+export type ModelFit = "runs_well" | "tight" | "too_large" | "unknown";
+export type LlamaCppChoice =
+  | { kind: "suggested"; id: string }
+  | { kind: "ollama"; name: string }
+  | { kind: "file"; path: string };
+
+export interface LlamaCppSetup {
+  supported: boolean;
+  brew: string | null;
+  installed: { path: string; version: string | null } | null;
+  install_command: string;
+  cache_dir: string;
+  cache_free_bytes: number | null;
+  suggested: {
+    id: string;
+    name: string;
+    vendor: string | null;
+    quant: string | null;
+    features: string[];
+    size: number | null;
+    fit: ModelFit;
+    downloaded: boolean;
+    // The model's licence, named and linked before Download (from its Hugging Face card).
+    license: string | null;
+    license_url: string | null;
+  }[];
+  ollama: { name: string; path: string; size: number; fit: ModelFit }[];
+  ollama_pull: { name: string; size: number | null; fit: ModelFit; command: string }[];
+  phase: LlamaCppPhase;
+  lines: string[];
+  // `verifying`: the file is down and its sha256 is being checked against Hugging Face's.
+  progress: { done: number; total: number; seconds_left: number | null; verifying?: boolean } | null;
+  model: { name: string; detail: string | null; alias: string; download?: boolean; context?: number; file?: string } | null;
+  error: string | null;
+  check: { answers: boolean; tools: boolean } | null;
+  // "unverified": the Hugging Face API was unreachable, so the download's checksum was not checked.
+  note: "unverified" | null;
+  // Seconds until the next try while Hugging Face rate-limits the download.
+  retry_in: number | null;
+  address: string | null;
+  autostart: boolean;
+  last_choice: LlamaCppChoice | null;
+}
+
+async function llamacppPost(path: string, body?: unknown): Promise<LlamaCppSetup & { ok?: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/llamacpp/${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function getLlamaCppSetup(): Promise<LlamaCppSetup> {
+  const res = await fetch(`${httpBase()}/v1/llamacpp/setup`, { signal: AbortSignal.timeout(15_000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+export const installLlamaCpp = () => llamacppPost("install");
+export const startLlamaCpp = (choice: LlamaCppChoice) => llamacppPost("start", { choice });
+export const stopLlamaCpp = () => llamacppPost("stop");
+export const cancelLlamaCpp = () => llamacppPost("cancel");
+export const setLlamaCppAutostart = (on: boolean) => llamacppPost("autostart", { on });
+export async function pickGgufFile(): Promise<{ ok: boolean; path?: string; canceled?: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/llamacpp/pick-file`, { method: "POST" });
   return res.json();
 }
 
@@ -2512,6 +2964,20 @@ export async function setProvider(
   return res.json();
 }
 
+/** Create a named, user-configured OpenAI-compatible provider. */
+export async function createCustomProvider(
+  name: string,
+  title: string,
+  fields: Record<string, string>,
+): Promise<{ ok: boolean; error?: string; provider?: string }> {
+  const res = await fetch(`${httpBase()}/v1/providers/custom`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, title, fields }),
+  });
+  return res.json();
+}
+
 /** Forget a provider's stored config (Settings ▸ Models "Remove key…"). */
 export async function removeProvider(name: string): Promise<{ ok: boolean; error?: string }> {
   const res = await fetch(`${httpBase()}/v1/providers/${encodeURIComponent(name)}`, {
@@ -2524,7 +2990,7 @@ export async function removeProvider(name: string): Promise<{ ok: boolean; error
 export async function verifyProvider(
   name: string,
   fields: Record<string, string>,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; warning?: string }> {
   const res = await fetch(`${httpBase()}/v1/providers/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -2538,8 +3004,10 @@ export function detectProvider(apiKey: string): string | null {
   const key = (apiKey || "").trim();
   if (!key) return null;
   if (key.startsWith("sk-ant-")) return "anthropic";
+  if (key.startsWith("sk-orca-")) return "orcarouter";
   if (key.startsWith("sk-or-")) return "openrouter";
   if (key.startsWith("AIza")) return "gemini";
+  if (key.startsWith("nvapi-")) return "nvidia";
   if (key.startsWith("sk-") || key.startsWith("sk_")) return "openai";
   return null;
 }
@@ -2826,6 +3294,32 @@ export async function removeSlackApprovalOwner(
   userId: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const res = await fetch(`${httpBase()}/v1/connectors/slack/approval-owners/remove`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId }),
+  });
+  return res.json();
+}
+
+export async function addTelegramApprovalOwner(
+  userId: string,
+  displayName?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/connectors/telegram/approval-owners/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      ...(displayName ? { name: displayName } : {}),
+    }),
+  });
+  return res.json();
+}
+
+export async function removeTelegramApprovalOwner(
+  userId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/connectors/telegram/approval-owners/remove`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user_id: userId }),

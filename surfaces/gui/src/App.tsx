@@ -19,7 +19,7 @@ import {
   getSettings,
   getPersonas,
   getInbox,
-  getUnattended,
+  getAttendance,
   PERSONAS_CHANGED,
   resolveInboxItem,
   routeInboxItemLike,
@@ -37,6 +37,7 @@ import {
   renameSession,
   runAutomation,
   setSessionFlags,
+  setAttendance,
   setUnattended,
   Session,
   type InboxItem,
@@ -48,6 +49,7 @@ import {
   type SurfaceVisibility,
   type WorkspaceCommandTrust,
   type TeamMemberDecision,
+  type Attendance,
   API_UNAUTHORIZED,
 } from "./api";
 import type {
@@ -81,6 +83,7 @@ import { SearchModal } from "./components/SearchModal";
 import { SessionIntro } from "./components/SessionIntro";
 import { FolderGate } from "./components/FolderGate";
 import { SessionSetupRow } from "./components/SessionSetupRow";
+import { SandboxChip, type SessionSandbox } from "./components/SandboxChip";
 import { SendFolderDialog } from "./components/SendFolderDialog";
 import { Onboarding } from "./components/Onboarding";
 import { UpdateBanner } from "./components/UpdateBanner";
@@ -116,6 +119,7 @@ import { TeamRequestCard } from "./components/TeamRequestCard";
 import { WorkItemsCard } from "./components/WorkItemsCard";
 import { TeamChatView } from "./components/TeamChatView";
 import { WorkspaceTrustPrompt } from "./components/WorkspaceTrustPrompt";
+import { shouldStartWindowDrag } from "./windowDrag";
 
 const newId = () =>
   (crypto as any).randomUUID ? crypto.randomUUID().slice(0, 12) : Math.random().toString(36).slice(2, 14);
@@ -236,12 +240,17 @@ export function App() {
   const [model, setModel] = useState("gpt-5.6-sol");
   const [models, setModels] = useState<string[]>([]);
   const [modelLabels, setModelLabels] = useState<Record<string, string>>({});
+  // Per-model settings the user saved (UX-055): the picker shows context and thinking.
+  const [modelConfig, setModelConfig] = useState<Record<string, import("./api").ModelConfigRecord>>({});
   // {full model id → context window in tokens} from the curated matrix (verified only);
   // drives the composer usage chip's context-fill meter.
   const [modelContextWindows, setModelContextWindows] = useState<Record<string, number>>({});
   // Settings: show the composer's context-window fill bar. OFF by default (owner ask),
   // so an older backend without the field also shows the session total.
   const [contextBar, setContextBar] = useState(false);
+  // #611: when on, the live reasoning stream is collapsed to a quiet indicator while a
+  // turn runs; the finalized reasoning still appears after. Loaded from Settings.
+  const [hideReasoningRunning, setHideReasoningRunning] = useState(false);
   // Per-session token usage (OPE-42): rebuilt from the transcript on session load,
   // accumulated live from assistant_message events, reset with the transcript.
   const [usage, setUsage] = useState<SessionUsage>(emptyUsage());
@@ -251,6 +260,8 @@ export function App() {
   // OPE-206: the provider name while this session's sandbox is being built (the socket
   // is open, `ready` has not come yet); null otherwise. Drives the waiting row.
   const [preparingSandbox, setPreparingSandbox] = useState<string | null>(null);
+  // OPE-218: which walls this session runs behind, for the header chip. From `ready`.
+  const [sandboxInfo, setSandboxInfo] = useState<SessionSandbox | null>(null);
   // The server refused to build this session (its sandbox cannot be used) and closed the
   // socket for good: no reconnect strip, the error notice in the transcript says why.
   const [sessionRefused, setSessionRefused] = useState(false);
@@ -359,6 +370,8 @@ export function App() {
   // composer's "No model connected" chip. Default true so we don't flash the chip before settings
   // load; corrected by loadSettings.
   const [modelReady, setModelReady] = useState(true);
+  // OPE-238: Activity opened on one tool call's audit rows (unset = all activity).
+  const [auditCallId, setAuditCallId] = useState<string | undefined>(undefined);
   const [surface, setSurface] = useState<
     "session" | "scheduled" | "audit" | "inbox" | "persona" | "settings"
   >("session");
@@ -537,17 +550,31 @@ export function App() {
   // so we suppress the inline live cards (the Inbox / answer-in-context path shows them instead).
   // A ref too, because the WS event handler closes over stale state.
   const [unattended, setUnattendedState] = useState(false);
+  // The three-way attendance value behind the boolean: "inbox" and "auto" are both
+  // unattended; only "auto" makes the engine answer on the user's behalf.
+  const [attendance, setAttendanceState] = useState<Attendance>("attended");
   const unattendedRef = useRef(false);
-  const markUnattended = useCallback((on: boolean) => {
-    unattendedRef.current = on;
-    setUnattendedState(on);
+  const markAttendance = useCallback((value: Attendance) => {
+    unattendedRef.current = value !== "attended";
+    setUnattendedState(value !== "attended");
+    setAttendanceState(value);
   }, []);
+  const markUnattended = useCallback(
+    (on: boolean) => markAttendance(on ? "inbox" : "attended"),
+    [markAttendance],
+  );
   // The Mode menu's "Send approvals to Inbox" toggle (§22 — the old InboxControl, folded in).
   const toggleUnattended = async (on: boolean) => {
     await setUnattended(sessionId, on);
     markUnattended(on);
     // First Unattended enable = Inbox machinery engaged → the account row's chip unlocks (§26).
     if (on) announceInboxUnlock();
+  };
+  // The Mode menu's "Answer for me while I'm away" toggle: attendance "auto".
+  const toggleAutoAnswer = async (on: boolean) => {
+    const value: Attendance = on ? "auto" : "attended";
+    await setAttendance(sessionId, value);
+    markAttendance(value);
   };
   const resolveSessionInbox = async (id: string, resolution: string) => {
     await resolveInboxItem(id, resolution);
@@ -767,8 +794,10 @@ export function App() {
       .then((s) => {
         setModels(s.models || []);
         setModelLabels(s.model_labels || {});
+        setModelConfig(s.model_config || {});
         setModelContextWindows(s.model_context_windows || {});
         setContextBar(s.context_bar === true);
+        setHideReasoningRunning(s.hide_reasoning_running === true);
         setModelReady(s.model_ready);
         if (s.surfaces) setSurfaces(s.surfaces);
       })
@@ -880,6 +909,7 @@ export function App() {
           break;
         case "ready":
           setPreparingSandbox(null);
+          setSandboxInfo(d.sandbox || null);
           setSessionRefused(false);
           setConnected(true);
           if (d.model) setModel(d.model);
@@ -956,7 +986,7 @@ export function App() {
             setTodo(normalizeTodos(d.arguments.todos ?? d.arguments.items));
           setItems((p) => [
             ...p,
-            { kind: "tool", id: newId(), name: d.name, args: d.arguments, status: "…" },
+            { kind: "tool", id: newId(), name: d.name, args: d.arguments, status: "…", ...(d.tool_call_id ? { callId: String(d.tool_call_id) } : {}) },
           ]);
           break;
         case "permission_required":
@@ -999,6 +1029,8 @@ export function App() {
           setItems((p) => [...p, questionItemFromPayload(d)]);
           break;
         case "tool_finished":
+          // A card on this tool may have allowed a site: the header chip follows (OPE-219).
+          if (d.sandbox) setSandboxInfo(d.sandbox);
           if (d.tool_call_id) {
             const calls = finishedGateCalls.current.get(gateScope) || new Set<string>();
             calls.add(d.tool_call_id);
@@ -1021,18 +1053,20 @@ export function App() {
             setItems(p => [...p, { kind: "teamcreated", teamId: c.team_id, workers: c.workers || [], ts: Date.now() / 1000 }]);
           }
           setItems((p) =>
-            updateLastTool(
-              p,
-              d.name,
-              d.status,
-              d.result_preview || d.reason,
-              d.display?.hidden_by_filters,
-              d.standing_rule,
-              d.reviewer_reason,
-              d.allow_anyway,
-              d.approval_origin,
-              d.approval_note,
-            ),
+            updateLastTool(p, d.name, d.status, d.result_preview || d.reason, {
+              hidden: d.display?.hidden_by_filters,
+              standingRule: d.standing_rule,
+              reviewerReason: d.reviewer_reason,
+              allowAnyway: d.allow_anyway,
+              approvalOrigin: d.approval_origin,
+              approvalNote: d.approval_note,
+              callId: d.tool_call_id,
+              effect: d.approval_effect,
+              tier: d.approval_tier,
+              ...("exit_code" in d ? { exitCode: d.exit_code } : {}),
+              timedOut: d.timed_out,
+              background: d.background,
+            }),
           );
           // §8.4 breaker: the reviewer paused itself for the rest of the turn — say so
           // where the user is looking (persisted server-side for reloads) and on the
@@ -1327,14 +1361,14 @@ export function App() {
         setSessionInbox(pendingInbox(inbox));
         setItems(items => reconcileResolvedGates(items, inbox));
       }).catch(() => {});
-      getUnattended(sessionId).then(value => {
-        if (!canceled && current === request) markUnattended(value);
+      getAttendance(sessionId).then(value => {
+        if (!canceled && current === request) markAttendance(value);
       }).catch(() => {});
     };
     load();
     const t = setInterval(load, 4000);
     return () => { canceled = true; clearInterval(t); };
-  }, [surface, sessionId, browserRefreshKey, markUnattended, pendingInbox, gateScope]);
+  }, [surface, sessionId, browserRefreshKey, markAttendance, pendingInbox, gateScope]);
 
   const send = (text: string, attachments?: Attachment[], skill?: string) => {
     // UX-029: folder enforcement AT SEND. A code-family session with no folder has no
@@ -1360,6 +1394,14 @@ export function App() {
     ) {
       setItems((p) => [...p, { kind: "user", text, ts: Date.now() / 1000 }]);
       respondItemsReq(false, text);
+      return;
+    }
+    // The same for an open ask_user question: what the user types in the composer is
+    // the answer. Before this, Enter did nothing while a question was up, and a
+    // question sent with allow_text false left no other place to type (owner-hit
+    // 2026-10-06).
+    if (!unattended && pendingQuestion?.kind === "question" && !attachments?.length && !skill) {
+      answerQuestion(text);
       return;
     }
     // Force-run shows exactly what the user typed: "/name rest". Must match the server's
@@ -1851,7 +1893,7 @@ export function App() {
     overlay && (macosMajor() >= 26 || new URLSearchParams(window.location.search).get("overlay") === "26");
   const overlayClass = overlay ? " tauri-overlay" + (lightsHigh ? " macos-26" : "") : "";
   const beginWindowDrag = (event: PointerEvent) => {
-    if (!desktop || event.button !== 0) return;
+    if (!desktop || !shouldStartWindowDrag(event)) return;
     startWindowDrag();
   };
 
@@ -2032,7 +2074,10 @@ export function App() {
           setSurface("scheduled");
         }}
         onOpenIntegrations={() => openSettings("connectors")}
-        onOpenAudit={() => setSurface("audit")}
+        onOpenAudit={() => {
+          setAuditCallId(undefined);
+          setSurface("audit");
+        }}
         onOpenInbox={() => setSurface("inbox")}
         scheduledActive={surface === "scheduled"}
         integrationsActive={surface === "settings" && settingsTab === "connectors"}
@@ -2082,7 +2127,7 @@ export function App() {
           }}
         />
       ) : surface === "audit" ? (
-        <AuditView />
+        <AuditView callId={auditCallId} />
       ) : surface === "inbox" ? (
         <InboxView onOpenSession={openSessionFromInbox} />
       ) : surface === "persona" ? (
@@ -2183,6 +2228,11 @@ export function App() {
                 <span className="topbar-artifacts-count">{artifactCount}</span>
               </button>
             )}
+            {/* OPE-218: which walls this session runs behind. No chip when the machine has
+                no sandbox; amber only for a session opened before the sandbox was switched on. */}
+            {surface === "session" && (
+              <SandboxChip info={sandboxInfo} onOpenSettings={() => openSettings("sandbox")} />
+            )}
             {/* §32: the panel toggle is the ONE session-panel entry, for every non-chat persona
                 (the rail now carries Access, so code-family gets it too). */}
             {agent !== "chat" && (
@@ -2272,6 +2322,11 @@ export function App() {
                     onRetry={retry}
                     onOpenConnectors={() => openSettings("connectors")}
                     onAllowAnyway={allowAnyway}
+                    onOpenAudit={(callId) => {
+                      // OPE-238: an item of "changes made without asking" → its audit rows.
+                      setAuditCallId(callId);
+                      setSurface("audit");
+                    }}
                     onUndoMemory={(id, previous) => void undoMemorySave(id, previous)}
                     // §33 ref #3: sub-threshold streamed text renders INSIDE the live turn
                     // group (header when collapsed, quiet line when expanded) — never as a
@@ -2281,10 +2336,19 @@ export function App() {
                   {/* Live thinking (reasoning models): a quiet collapsed block that streams the
                       trace for anyone who expands it; folds into the answer's disclosure when
                       the message finalizes. */}
-                  {running && reasoningStream && !streaming && (
-                    <div className="transcript">
-                      <ThinkingBlock text={reasoningStream} live />
-                    </div>
+                  {running &&
+                    reasoningStream &&
+                    !streaming &&
+                    !hideReasoningRunning && (
+                      <div className="transcript">
+                        <ThinkingBlock text={reasoningStream} live />
+                      </div>
+                    )}
+                  {/* #611: "Hide thinking while running" collapses the fast-scrolling live trace
+                      to a quiet one-line indicator — the finalized reasoning still appears in the
+                      assistant item after the turn, so no signal is lost. */}
+                  {running && reasoningStream && !streaming && hideReasoningRunning && (
+                    <WaitingForAgent label={t("app.thinking_hidden")} />
                   )}
                   {/* OPE-206: the sandbox for this session is being built (a container, its
                       runner, its mounts). Not a turn, so `running` is false; the row says so. */}
@@ -2407,8 +2471,15 @@ export function App() {
               unavailableModels={unavailableModels}
               wantedModels={personaModels}
               modelLabels={machine ? machineSettings?.model_labels || {} : modelLabels}
+              modelConfig={machine ? machineSettings?.model_config || {} : modelConfig}
+              // "Pick or configure a model…" opens Models & Keys with the dialog up.
+              onPickModel={() => {
+                try { sessionStorage.setItem("ow:pick-model", "1"); } catch { /* private window */ }
+                openSettings("models");
+              }}
               running={running}
-              gateOpen={!unattended && (!!pendingTeam || !!pendingItemsReq)}
+              gateOpen={!unattended && (!!pendingTeam || !!pendingItemsReq || !!pendingQuestion)}
+              gateKind={!unattended && pendingQuestion && !pendingTeam && !pendingItemsReq ? "question" : "proposal"}
               // An offline machine's cached transcript is read-only: the send
               // path is dead by construction, so say so explicitly rather than
               // letting a hopeful socket state enable the button.
@@ -2435,6 +2506,8 @@ export function App() {
               workspace={workspace || ""}
               unattended={unattended}
               onUnattendedChange={agent !== "chat" ? toggleUnattended : undefined}
+              attendance={attendance}
+              onAutoAnswerChange={agent !== "chat" ? toggleAutoAnswer : undefined}
               prefill={composerPrefill}
               resetKey={sessionId}
               usage={usage}
@@ -2549,6 +2622,9 @@ export function App() {
             scratchPrimary={tempWorkspace || !isProjectScoped(personaOf(agent))}
             openAccessKey={accessKey}
             onOpenIntegrations={() => openSettings("connectors")}
+            sandbox={sandboxInfo}
+            onSandbox={setSandboxInfo}
+            onOpenSandboxSettings={() => openSettings("sandbox")}
             board={board}
             onExpandBoard={() => openTeamView()}
             onOpenBoardItem={openTeamView}
@@ -2647,35 +2723,61 @@ function WaitingForAgent({ label }: { label?: string }) {
   );
 }
 
-function updateLastTool(
+// Pairs a finished event with its pending tool item. By call id when the engine gave one
+// (OPE-238: two same-named calls in one batch finish in call order, and matching the LAST
+// pending item by name handed each one the other's result, exit code and audit link);
+// otherwise the last pending item with that name, as before.
+export function updateLastTool(
   items: Item[],
   name: string,
   status: string,
-  preview?: string,
-  hidden?: number,
-  standingRule?: string,
-  reviewerReason?: string,
-  allowAnyway?: boolean,
-  approvalOrigin?: string,
-  approvalNote?: string,
+  preview: string | undefined,
+  fields: {
+    hidden?: number;
+    standingRule?: string;
+    reviewerReason?: string;
+    allowAnyway?: boolean;
+    approvalOrigin?: string;
+    approvalNote?: string;
+    callId?: string;
+    effect?: string;
+    tier?: string;
+    exitCode?: number | null;
+    timedOut?: boolean;
+    background?: boolean;
+  } = {},
 ): Item[] {
   const copy = [...items];
-  for (let i = copy.length - 1; i >= 0; i--) {
-    const it = copy[i];
-    if (it.kind === "tool" && it.name === name && it.status === "…") {
-      copy[i] = {
-        ...it,
-        status,
-        preview,
-        ...(hidden ? { hidden } : {}),
-        ...(standingRule ? { standingRule } : {}),
-        ...(reviewerReason ? { reviewerReason } : {}),
-        ...(allowAnyway ? { allowAnyway } : {}),
-        ...(approvalOrigin ? { approvalOrigin } : {}),
-        ...(approvalNote ? { approvalNote } : {}),
-      };
-      break;
+  const { hidden, standingRule, reviewerReason, allowAnyway, approvalOrigin, approvalNote, callId, effect, tier, timedOut, background } = fields;
+  let at = -1;
+  if (callId) at = copy.findIndex((it) => it.kind === "tool" && it.callId === callId && it.status === "…");
+  if (at < 0)
+    for (let i = copy.length - 1; i >= 0; i--) {
+      const it = copy[i];
+      if (it.kind === "tool" && it.name === name && it.status === "…") {
+        at = i;
+        break;
+      }
     }
+  if (at >= 0) {
+    const it = copy[at] as Extract<Item, { kind: "tool" }>;
+    copy[at] = {
+      ...it,
+      status,
+      preview,
+      ...(hidden ? { hidden } : {}),
+      ...(standingRule ? { standingRule } : {}),
+      ...(reviewerReason ? { reviewerReason } : {}),
+      ...(allowAnyway ? { allowAnyway } : {}),
+      ...(approvalOrigin ? { approvalOrigin } : {}),
+      ...(approvalNote ? { approvalNote } : {}),
+      ...(callId ? { callId } : {}),
+      ...(effect ? { effect } : {}),
+      ...(tier ? { tier } : {}),
+      ...("exitCode" in fields ? { exitCode: fields.exitCode } : {}),
+      ...(timedOut ? { timedOut } : {}),
+      ...(background ? { background } : {}),
+    };
   }
   return copy;
 }

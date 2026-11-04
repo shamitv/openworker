@@ -150,13 +150,37 @@ One elevated PowerShell script, one prompt. It:
 ```
 
 - **Allow everything** (`open`) — any host. Nothing to configure. The files are still the
-  wall. This is the default on Windows, and the page shows it in amber.
+  wall. This is the default on Windows, and the page shows it in amber. With it, the only
+  checks on where a command sends data are the approval flow's: the reviewer, and the
+  floor that sends anything carrying a secret-looking file or value to a person (a
+  backstop: a shell command can't always be read reliably). If the agent works with
+  credentials, prefer **Only the sites you allow**.
 - **Only the sites you allow** (`allowlist`) — the sites you tick under **Choose sites…**
   (code hosting, package registries, search APIs, or any site you add), through the proxy;
   nothing until you tick some. A program that ignores the proxy variables has no network
   at all, because the account's direct traffic is blocked in the kernel.
 
 A credential entry (below) also lets through the sites its tool needs.
+
+The coworker's **web search** and **web fetch** tools run in the OpenWorker app, not in the
+sandbox, and follow the same list. A site that is not on it asks you first; the card offers
+once, this session, or **Always allow**, which adds the site to the list. With full access
+(no approvals) the fetch is refused instead. "This session" and "Always allow" also open the
+site for the session's commands, at once: the running sandbox takes the new entry without a
+restart. "Once" is that one web call only. Connectors and MCP servers are not covered by the
+list; each has its own approval.
+
+When a command needs a site that is not on the list, it fails inside the sandbox. The
+coworker can then ask you for the site: a card names it, gives the coworker's reason, and
+says whether the sandbox has in fact blocked it. You choose **Allow for this session**,
+**Always allow**, or **Deny**; the site opens for the running session without a restart.
+The coworker is told which sites the sandbox blocked while a command ran, so it asks for the
+right one. With full access (no approvals) the coworker cannot ask;
+add the site in Settings ▸ Sandbox yourself.
+
+The session's **Access** section lists its sites. Those you allowed for this session only
+are marked **Session only**; you can take one back there, or allow another for the session.
+Sites from Settings are changed in Settings ▸ Sandbox. A session site ends with the session.
 
 Choosing a mode never touches the firewall. The rules are written once at setup; OpenWorker
 picks the account. In the closed mode a sandbox can still **listen** on a local port (a dev

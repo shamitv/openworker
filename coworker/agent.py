@@ -49,6 +49,7 @@ from .tools.toolreq import request_tool_tool
 from .tools.subagent import explorer_tools
 from .web import make_web_fetch_tool, make_web_search_tool
 from .workspace_trust import WorkspaceTrustStore
+from .sandbox import inside as _openshell
 from .sandbox.selection import select as select_sandbox
 from .sandbox.workspace import open_workspace
 from .tools.todo import TodoList
@@ -206,6 +207,10 @@ def _skill_dirs(workspace: Optional[Path]) -> list[Path]:
     dirs = [state_dir() / "skills"]
     if workspace is not None:
         dirs.append(workspace / ".coworker" / "skills")
+    # Inside an OpenShell sandbox its own skills join the menu (sandbox/inside.py). The
+    # folder may be missing, or filled in later, when the user turns proposals on.
+    if _openshell.inside_openshell():
+        dirs.append(_openshell.SKILLS_DIR)
     return dirs
 
 
@@ -255,6 +260,11 @@ def build_engine(
     memory_saving_enabled: Optional[Any] = None,
     messages: Optional[list[dict[str, Any]]] = None,
     extra_tools: Optional[list[Any]] = None,
+    # False withholds web_search and web_fetch from the registry altogether. For sealed
+    # evaluation runs and air-gapped work, where "the tool was never offered" is the
+    # property that matters: a network block only stops the call, the model still sees
+    # the tool and may spend turns on it. Default True keeps every existing caller as is.
+    web_tools: bool = True,
     secrets: Optional[SecretStore] = None,
     task_store: Optional[Any] = None,
     wake_store: Optional[Any] = None,
@@ -286,6 +296,9 @@ def build_engine(
     # are user-global, preserving the "a repo can't enable this" invariant.
     auto_approve: Optional[bool] = None,
     auto_approve_shadow: Optional[bool] = None,
+    # Which reviewer (OPE-224): "session" | "openai-decisions" | "jev". None means the
+    # config.toml value.
+    auto_approve_reviewer: Optional[str] = None,
     # Persona-carried skill folders (OPE-58): the bundle's skills/ dir joins the loader so
     # its skills are readable by load_skill, not just listed by the filter.
     extra_skill_dirs: Optional[list[str | Path]] = None,
@@ -311,6 +324,13 @@ def build_engine(
     # it (2026-09-14: the first trial spilled under the run's log folder and read_file
     # answered "path escapes the session's directories"). The workspace itself is never
     # written to, so a repository or task tree stays clean.
+    # Inside an OpenShell sandbox the agent may read OpenShell's skills folder: the policy
+    # skill there points to a longer file beside it.
+    if _openshell.inside_openshell() and root_list and not any(
+        _is_within(_openshell.SKILLS_DIR, r.path) for r in root_list
+    ):
+        root_list.append(RootDir(path=_openshell.SKILLS_DIR, writable=False, label="openshell-skills"))
+
     if tool_result_spill_dir is not None:
         spill_dir: Optional[Path] = Path(tool_result_spill_dir).expanduser().resolve()
     else:
@@ -432,9 +452,11 @@ def build_engine(
                 roots=root_list or None,
             )
         )
-    # Web search + fetch: research tools for every agent (keyless DuckDuckGo default).
-    registry.register(make_web_search_tool(secrets))
-    registry.register(make_web_fetch_tool())
+    # Web search + fetch: research tools for every agent (keyless DuckDuckGo default),
+    # unless the caller withheld them (`openworker run --no-web-tools`).
+    if web_tools:
+        registry.register(make_web_search_tool(secrets))
+        registry.register(make_web_fetch_tool(secrets))
     # ask_user: the universal human-in-the-loop Q&A primitive (every agent; engine-intercepted).
     if question_asker is not None:
         registry.register(ask_user_tool())
@@ -594,6 +616,8 @@ def build_engine(
         risk_overrides=override_store.resolver(),
         trust_overrides=override_store.trusted,
         grant_trust=override_store.set_trust,
+        inert_writes=str(config.auto_approve_inert_writes),
+        readonly_commands=str(config.auto_approve_readonly_commands),
     )
     # The plan-mode exit door — mutually exclusive with the board's decomposition
     # gate, DERIVED from the team trait (owner call 2026-08-16): a lead never
@@ -602,7 +626,7 @@ def build_engine(
     # mode). Solo/worker personas keep propose_plan as always (mode can flip
     # mid-session; the engine rejects the call outside plan mode).
     if agent.team != "lead":
-        registry.register(propose_plan_tool())
+        registry.register(propose_plan_tool(steps=bool(config.auto_approve_plan_approval)))
 
     # The lead's gates: propose_work_items (decomposition → items on approval, any
     # mode) and propose_team (staffing → pre-spawn on approval).
@@ -668,6 +692,14 @@ def build_engine(
             text = sandbox_ctx()
             if text:
                 parts.append(text)
+        # OpenWorker itself inside an OpenShell sandbox: what a blocked request looks like
+        # and what to do. Read each turn, since the policy skill can appear mid-session.
+        eng = _engine_box[0] if _engine_box else None
+        openshell_ctx = _openshell.context(
+            nobody_answers=eng is not None and eng._auto_answering()
+        )
+        if openshell_ctx:
+            parts.append(openshell_ctx)
         # Live skill menu (SKILLS-SPEC §4.1): recomputed every turn like the roots list, so
         # a skill installed/enabled/disabled mid-session applies from the NEXT MESSAGE —
         # no new session, no lost context.
@@ -680,7 +712,6 @@ def build_engine(
         # steering the model even after the skill is turned off/deleted — history can't be
         # un-read. So a loaded-but-no-longer-available skill gets an explicit stop note,
         # recomputed fresh each turn (re-enable → the note disappears; never persisted).
-        eng = _engine_box[0] if _engine_box else None
         if eng is not None:
             available = set(skill_loader.names()) if allowed is None else set(allowed)
             for name in sorted(_loaded_skill_names(eng.messages) - available):
@@ -735,8 +766,52 @@ def build_engine(
         )
     if _compaction_overrides:
         engine.compaction_settings = lambda: dict(_compaction_overrides)
+    # OPE-237: in auto-approve, an approved plan's steps become reviewer evidence.
+    engine.plan_approval = bool(config.auto_approve_plan_approval)
     engine.executor = executor  # type: ignore[attr-defined]
+    # OPE-232 / OPE-234: the read-only session grant and the auto-approve read-only tier
+    # judge paths from the persistent shell's current folder, not the workspace folder it
+    # may have moved away from.
+    if executor is not None:
+        engine.permissions.shell_cwd = engine.current_shell_cwd
     engine.sandbox_workspace = sandbox_workspace  # type: ignore[attr-defined]
+    # OPE-219: a sandboxed session with "Only the sites you allow" holds its web tools to
+    # the same list as its commands. They run in this process, outside the sandbox, so the
+    # permission engine is the wall for them. No sandbox, or "Allow everything": no wall.
+    _sandbox_provider = getattr(sandbox_workspace, "provider", None)
+    if _sandbox_provider is not None and getattr(_sandbox_provider, "profile", "") == "allowlist":
+        from .sandbox import settings as _sandbox_settings
+        from .web import provider_host as _provider_host
+
+        engine.permissions.sandbox_sites = list(getattr(_sandbox_provider, "extra_hosts", None) or [])
+        engine.permissions.search_host = lambda: _provider_host(secrets)
+
+        def _grant_site(host: str) -> list[str]:
+            return _sandbox_settings.add_site(host)
+
+        def _open_site(host: str) -> None:
+            # The running sandbox takes the site too, so commands reach it from now on. A
+            # failure is logged and raised: the permission engine keeps it, so the agent
+            # and the app can say that commands still lack the site.
+            import logging
+
+            from .sandbox.network_profiles import clean_host
+
+            try:
+                sandbox_workspace.add_hosts([clean_host(host)])
+            except Exception as exc:  # noqa: BLE001
+                logging.getLogger(__name__).warning("could not open %s on the session's sandbox: %s", host, exc)
+                raise
+
+        engine.permissions.grant_site = _grant_site
+        engine.permissions.open_site = _open_site
+        engine.permissions.close_site = lambda entry: sandbox_workspace.remove_hosts([entry])
+        # The agent can ask for a site, except where nobody can answer (full access).
+        from .permissions import Mode as _Mode
+        from .tools.network import request_network_access_tool
+
+        registry.register(request_network_access_tool(engine.permissions))
+        sandbox_workspace.can_ask_network = lambda: engine.permissions.mode is not _Mode.BYPASS_APPROVALS
     engine.todo = todo  # type: ignore[attr-defined]
     engine.agent_name = agent.name  # type: ignore[attr-defined]
     engine.roots = root_list  # type: ignore[attr-defined]  # shared list; Slice C mutates in place
@@ -763,6 +838,13 @@ def build_engine(
             from .web import provider_name
 
             return {"search_provider": provider_name(secrets)}
+        if tool_name == "web_fetch":
+            # Same rule for web_fetch: when the page goes through the search service
+            # (Settings ▸ Customization), the card names it.
+            from .web import fetch_provider_name
+
+            via = fetch_provider_name(secrets)
+            return {"fetch_provider": via} if via else {}
         return {}
 
     engine.approval_extras = _approval_extras
@@ -796,13 +878,20 @@ def build_engine(
     )
     engine.reviewer_enabled = bool(live_on)
     if live_on or shadow_on:
-        from .reviewer import Reviewer
+        from .decision_reviewer import make_auto_reviewer, normalize_reviewer_choice
 
-        engine.reviewer = Reviewer(
+        choice = normalize_reviewer_choice(
+            auto_approve_reviewer
+            if auto_approve_reviewer is not None
+            else getattr(config, "auto_approve_reviewer", "session")
+        )
+        engine.reviewer = make_auto_reviewer(
+            choice,
             provider=provider,
             model=model,
             known_world=engine.session_facts.world.render() + "\nRUNTIME FACTS (availability, not access grants)\n" + json.dumps(engine.runtime_facts),
         )
+        engine.reviewer_choice = choice
         # Shadow evaluation (Part 6 step 3): with only the shadow flag on, the reviewer is
         # attached but the LIVE path stays off unless the live feature flag is also on
         # and the session is in Mode.AUTO_APPROVE. Shadow verdicts never clear actions.

@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { getI18n, useTranslation } from "react-i18next";
 import {
+  addTelegramApprovalOwner,
   allowUser,
   connectConnector,
   connectManaged,
   connectMcpBacked,
+  createCustomProvider,
+  getLocalModels,
   disallowUser,
   getSettings,
   getSubscriptions,
   removeModel,
+  removeTelegramApprovalOwner,
   resolveUnauthorized,
   unsubscribeChannel,
   setDefaultModel,
@@ -20,8 +24,13 @@ import {
   type ProviderInfo,
 } from "../api";
 import { CloudSignInInline, CloudStatusPending } from "./connectors/CloudSignIn";
+import { Icon } from "./Icon";
 import { ModelChecklist } from "./ModelChecklist";
-import { ProviderCards, ProviderForm, useProviderSetup } from "../providers/ProviderSetup";
+import { LlamaCppPage } from "./models/LlamaCppSetup";
+import { LocalModelsTable, YourSystem } from "./models/LocalModels";
+import { PickModelDialog } from "./models/PickModelDialog";
+import { ProviderGroups } from "./models/ProviderGroups";
+import { ProviderForm, useProviderSetup } from "../providers/ProviderSetup";
 import { WalletChips } from "./WalletChips";
 
 // "2h ago"-style label for the providers' Last-used line (null when never used).
@@ -41,6 +50,7 @@ const relTime = (epoch?: number | null): string | null => {
 // when Settings/Activity became full-page surfaces): ModelsTab → Settings ▸ Models; ConnectorsTab →
 // Integrations ▸ Connectors (the MCP tab retired into the Connectors page, UX-034).
 const SEC_H = "text-label text-faint font-medium";
+const CARD = "rounded-xl2 border border-line bg-panel";
 const BTN_BORDERED =
   "text-ui px-3 py-1.5 rounded-lg border border-line bg-paper hover:border-lineStrong shrink-0";
 const BTN_ACCENT = "text-ui px-3 py-1.5 rounded-lg bg-accent text-white shrink-0 disabled:opacity-50";
@@ -53,6 +63,34 @@ function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+// "Remove key…" under a provider's form. Only for a key the app itself stores: a key
+// that comes from the provider's environment variable (key_source "env") cannot be
+// removed here, so the button is left out and the env note below the form says why (#742).
+export function ProviderKeyFooter({
+  info,
+  credentialed,
+  onRemove,
+}: {
+  info: ProviderInfo | null | undefined;
+  credentialed: boolean;
+  onRemove: () => void;
+}) {
+  const { t } = useTranslation();
+  if (!credentialed || info?.key_source === "env") return null;
+  return (
+    <button
+      className="text-ui text-danger/80 hover:text-danger hover:underline underline-offset-2"
+      data-testid="set-remove-key"
+      onClick={() => {
+        const key = info?.is_custom ? "manage.remove_provider_confirm" : "manage.remove_key_confirm";
+        if (window.confirm(t(key, { title: info?.title || "" }))) onRemove();
+      }}
+    >
+      {t(info?.is_custom ? "manage.remove_provider" : "manage.remove_key")}
+    </button>
+  );
+}
+
 // -- Configure Models tab (UX-021: the shared provider gallery + key form) ----
 // Settings ▸ Models reuses onboarding §39's ProviderCards/ProviderForm so the two
 // surfaces can't drift. Settings-only extras: per-card "used Nh ago", a "Remove
@@ -61,49 +99,149 @@ function initials(name: string): string {
 export function ModelsTab() {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<ModelSettings | null>(null);
-  const refreshSettings = () => getSettings().then(setSettings).catch(() => setSettings(null));
+  // The Pick a model dialog (UX-055): "" closed, "+" picking, else the model to configure.
+  const [dialog, setDialog] = useState<string>("");
+  const [settingsError, setSettingsError] = useState(false);
+  const [addingCustom, setAddingCustom] = useState(false);
+  const [openCustom, setOpenCustom] = useState<string | null>(null);
+  // A custom provider's "Fetch from server": the ids its GET /models listed (offered as
+  // suggestions in the checklist) and the one-line outcome.
+  const [fetched, setFetched] = useState<string[]>([]);
+  const [fetching, setFetching] = useState(false);
+  const [fetchNote, setFetchNote] = useState<string | null>(null);
+  const refreshSettings = () => {
+    setSettingsError(false);
+    getSettings()
+      .then(setSettings)
+      .catch(() => {
+        setSettings(null);
+        setSettingsError(true);
+      });
+  };
   const ps = useProviderSetup({ onSaved: refreshSettings });
   useEffect(() => {
     refreshSettings();
+    // The composer's "Pick or configure a model…" lands here with the dialog up.
+    try {
+      if (sessionStorage.getItem("ow:pick-model") === "1") {
+        sessionStorage.removeItem("ow:pick-model");
+        setDialog("+");
+      }
+    } catch { /* private window */ }
   }, []);
+
+  useEffect(() => {
+    if (openCustom && ps.providers.some((p) => p.name === openCustom)) {
+      setOpenCustom(null);
+      ps.openProvider(openCustom);
+    }
+  }, [openCustom, ps.providers]);
+
+  useEffect(() => {
+    setFetched([]);
+    setFetchNote(null);
+  }, [ps.sel]);
+
+  const fetchModels = async () => {
+    if (!ps.sel) return;
+    setFetching(true);
+    setFetchNote(null);
+    try {
+      const res = await getLocalModels(ps.sel);
+      const ids = res.models.map((m) => m.name);
+      setFetched(ids);
+      setFetchNote(res.error || (ids.length ? t("manage.custom_fetched_count", { count: ids.length }) : t("manage.custom_fetched_none")));
+    } catch {
+      setFetchNote(t("manage.local_models_failed"));
+    }
+    setFetching(false);
+  };
+
+  // #43: a failed or hung settings fetch says so and offers Retry (same shape as the
+  // local-models status line below) instead of sitting on "Loading…" forever.
+  if (settingsError) {
+    return (
+      <div className="text-ui text-warnInk" data-testid="settings-error">
+        {t("manage.settings_failed")}{" "}
+        <button className="text-muted underline underline-offset-2 hover:text-ink" onClick={refreshSettings} data-testid="settings-retry">
+          {t("manage.retry")}
+        </button>
+      </div>
+    );
+  }
 
   if (!settings) return <div className="text-ui text-muted">{t("manage.loading")}</div>;
 
   const info = ps.info;
   const knownNames = ps.providers.map((p) => p.name);
+  const dialogEl = dialog ? (
+    <PickModelDialog
+      providers={ps.providers}
+      settings={settings}
+      keylessOk={ps.keylessOk}
+      configure={dialog === "+" ? null : dialog}
+      onClose={() => setDialog("")}
+      onChanged={() => {
+        refreshSettings();
+        ps.refreshProviders();
+      }}
+    />
+  ) : null;
 
   if (ps.sel === null) {
     return (
       <div>
-        <ProviderCards ps={ps} tp="set" gridClass="grid grid-cols-2 xl:grid-cols-3 gap-2.5" lastUsed />
-        <ComposerPickerCard settings={settings} providers={ps.providers} onChanged={refreshSettings} />
+        {addingCustom ? (
+          <CustomProviderForm
+            onCancel={() => setAddingCustom(false)}
+            onCreated={async (name) => {
+              setAddingCustom(false);
+              setOpenCustom(name);
+              await ps.refreshProviders();
+              refreshSettings();
+            }}
+          />
+        ) : (
+          <ProviderGroups ps={ps} tp="set" models={settings.models} onAddCustom={() => setAddingCustom(true)} />
+        )}
+        <ComposerPickerCard settings={settings} providers={ps.providers} onChanged={refreshSettings} onPick={() => setDialog("+")} onConfigure={(m) => setDialog(m)} />
+        {dialogEl}
+      </div>
+    );
+  }
+
+  const removeKeyFooter = <ProviderKeyFooter info={info} credentialed={ps.credentialed} onRemove={ps.removeKey} />;
+  const localTables = (key = "", withTable = true) => (
+    <>
+      <YourSystem />
+      {withTable && <LocalModelsTable
+        key={key}
+        provider={ps.sel!}
+        curated={settings.models}
+        defaultModel={settings.model}
+        onChanged={refreshSettings}
+        onConfigure={(m) => setDialog(m)}
+      />}
+      {dialogEl}
+    </>
+  );
+
+  if (ps.sel === "llamacpp" && info?.setup_here) {
+    // UX-057: OpenWorker sets llama.cpp up and runs it on this Mac.
+    return (
+      <div>
+        <LlamaCppPage ps={ps} tp="set" footer={removeKeyFooter} onChanged={refreshSettings} after={localTables} />
       </div>
     );
   }
 
   return (
     <div>
-      <ProviderForm
-        ps={ps}
-        tp="set"
-        footer={
-          ps.credentialed ? (
-            <button
-              className="text-ui text-danger/80 hover:text-danger hover:underline underline-offset-2"
-              data-testid="set-remove-key"
-              onClick={() => {
-                if (window.confirm(t("manage.remove_key_confirm", { title: info?.title || "" }))) ps.removeKey();
-              }}
-            >
-              {t("manage.remove_key")}
-            </button>
-          ) : null
-        }
-      />
+      <ProviderForm ps={ps} tp="set" footer={removeKeyFooter} />
 
-      {ps.sel === "openai" && settings.source === "env" && (
-        <p className="text-meta text-muted mt-3 leading-relaxed">
-          {t("manage.openai_env_help")}
+      {info?.env_key && (
+        <p className="text-meta text-muted mt-3 leading-relaxed" data-testid="set-env-key-note">
+          {t(info.key_source === "env" ? "manage.env_key_help" : "manage.env_key_fallback_help", { var: info.env_key })}
         </p>
       )}
 
@@ -112,16 +250,33 @@ export function ModelsTab() {
           have nothing in the wallet — no row. */}
       {ps.credentialed && ps.sel && <WalletChips profiles={[`provider:${ps.sel}`]} />}
 
-      {info?.configured ? (
+      {info?.kind === "local" ? (
+        // A local provider: the machine, then what the server holds (UX-055).
+        localTables()
+      ) : info?.configured ? (
         <div className="mt-6">
           <div className={SEC_H + " mb-1.5"}>{t("manage.models")}</div>
           <p className="text-meta text-muted mb-2.5 leading-relaxed">
-            {t("manage.models_help")}
+            {t(info?.is_custom ? "manage.custom_models_help" : "manage.models_help")}
           </p>
+          {ps.sel === "azure" && (
+            // No catalogue on Azure: the id to add is the deployment's name.
+            <p className="text-meta text-muted mb-2.5 leading-relaxed" data-testid="set-azure-deployment-note">
+              {t("manage.azure_deployment_help")}
+            </p>
+          )}
+          {info?.is_custom && (
+            <div className="flex items-center gap-3 mb-2.5" data-testid="custom-fetch-row">
+              <button className={BTN_BORDERED} data-testid="custom-fetch-models" disabled={fetching} onClick={() => void fetchModels()}>
+                {fetching ? t("manage.custom_fetching") : t("manage.custom_fetch_models")}
+              </button>
+              {fetchNote && <span className="text-meta text-muted" data-testid="custom-fetch-note">{fetchNote}</span>}
+            </div>
+          )}
           <ModelChecklist
             provider={ps.sel}
             knownProviders={knownNames}
-            suggested={info?.suggested_models || []}
+            suggested={[...(info?.suggested_models || []), ...fetched].filter((m, i, a) => a.indexOf(m) === i)}
             curated={settings.models}
             defaultModel={settings.model}
             labels={settings.model_labels}
@@ -135,7 +290,7 @@ export function ModelsTab() {
           <div className="mt-6" data-testid="model-preview">
             <div className={SEC_H + " mb-1.5"}>{t("manage.included_models")}</div>
             <p className="text-meta text-muted mb-2.5 leading-relaxed">
-              {t("manage.included_models_help")}
+              {t(info?.auth === "oauth" ? "manage.included_models_help_signin" : "manage.included_models_help")}
             </p>
             <div className="space-y-1">
               {(info?.suggested_models || []).map((m) => {
@@ -158,6 +313,125 @@ export function ModelsTab() {
   );
 }
 
+/** A route prefix from a display name: lowercase, dashes between words, starting with a
+ * letter, at most 32 characters — the slug the backend accepts for `<prefix>:<model-id>`. */
+export function routePrefixFor(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/^[^a-z]+/, "")
+    .slice(0, 32)
+    .replace(/-+$/, "");
+}
+
+/** The form behind the "Add an OpenAI-compatible provider" box: a name of the user's
+ * choosing (the new card's title), the route prefix derived from it (editable until the
+ * first save), the endpoint and the key. Saving creates the card and opens it, where the
+ * model ids are typed or fetched from the server. */
+function CustomProviderForm({
+  onCancel,
+  onCreated,
+}: {
+  onCancel: () => void;
+  onCreated: (name: string) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
+  const [nameTouched, setNameTouched] = useState(false);
+  const [baseUrl, setBaseUrl] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const input = "w-full px-3 py-2 rounded-lg border border-line bg-panel text-ui outline-none focus:border-accent";
+  const label = "block text-meta text-muted mt-3 mb-1";
+  const prefix = name || routePrefixFor(title);
+
+  const save = async () => {
+    setSaving(true);
+    setError(null);
+    const result: { ok: boolean; error?: string; provider?: string } = await createCustomProvider(
+      prefix,
+      title,
+      { base_url: baseUrl, api_key: apiKey },
+    ).catch(() => ({ ok: false, error: t("provider.err_unreachable") }));
+    setSaving(false);
+    if (!result.ok || !result.provider) {
+      setError(result.error || t("manage.custom_add_failed"));
+      return;
+    }
+    await onCreated(result.provider);
+  };
+
+  return (
+    <div className={CARD + " p-4 max-w-xl mb-6"} data-testid="set-custom-provider-form">
+      <div className="text-body font-semibold">{t("manage.custom_add_title")}</div>
+      <p className="text-meta text-muted mt-1 leading-relaxed">{t("manage.custom_add_desc")}</p>
+      <label className={label} htmlFor="custom-provider-title">{t("manage.custom_name_label")}</label>
+      <input
+        id="custom-provider-title"
+        className={input}
+        value={title}
+        placeholder={t("manage.custom_name_placeholder")}
+        data-testid="custom-provider-title"
+        onChange={(e) => {
+          setTitle(e.target.value);
+          if (!nameTouched) setName(routePrefixFor(e.target.value));
+        }}
+      />
+      <label className={label} htmlFor="custom-provider-route">{t("manage.custom_route_label")}</label>
+      <input
+        id="custom-provider-route"
+        className={input + " font-mono"}
+        value={prefix}
+        spellCheck={false}
+        autoCapitalize="none"
+        data-testid="custom-provider-route"
+        onChange={(e) => {
+          setNameTouched(true);
+          setName(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""));
+        }}
+      />
+      <p className="text-meta text-faint mt-1">{t("manage.custom_route_hint", { prefix: prefix || "acme" })}</p>
+      <label className={label} htmlFor="custom-provider-endpoint">{t("manage.custom_endpoint_label")}</label>
+      <input
+        id="custom-provider-endpoint"
+        className={input}
+        value={baseUrl}
+        placeholder="https://…/v1"
+        spellCheck={false}
+        autoCapitalize="none"
+        data-testid="custom-provider-endpoint"
+        onChange={(e) => setBaseUrl(e.target.value)}
+      />
+      <p className="text-meta text-faint mt-1">{t("manage.custom_endpoint_help")}</p>
+      <label className={label} htmlFor="custom-provider-key">{t("manage.custom_key_label")}</label>
+      <input
+        id="custom-provider-key"
+        className={input}
+        type="password"
+        value={apiKey}
+        autoComplete="off"
+        data-testid="custom-provider-key"
+        onChange={(e) => setApiKey(e.target.value)}
+      />
+      <div className="mt-3 min-h-[19px] text-ui">{error && <span className="text-warnInk" data-testid="custom-provider-error">{error}</span>}</div>
+      <div className="flex gap-2 mt-1">
+        <button
+          className={BTN_ACCENT}
+          disabled={saving || !title.trim() || !prefix || !baseUrl.trim() || !apiKey.trim()}
+          data-testid="custom-provider-add"
+          onClick={() => void save()}
+        >
+          {saving ? t("manage.custom_adding") : t("manage.custom_add_btn")}
+        </button>
+        <button className={BTN_BORDERED} onClick={onCancel} data-testid="custom-provider-cancel">{t("manage.custom_cancel")}</button>
+      </div>
+    </div>
+  );
+}
+
 // The gallery view's "In the composer's picker" card: every curated model across providers,
 // with its provider tag. Unticking removes it from the picker; adding happens from a
 // provider's card (the ModelChecklist there has the suggested list + free-type add).
@@ -165,12 +439,17 @@ function ComposerPickerCard({
   settings,
   providers,
   onChanged,
+  onPick,
+  onConfigure,
 }: {
   settings: ModelSettings;
   providers: ProviderInfo[];
   onChanged: () => void;
+  onPick: () => void;
+  onConfigure: (model: string) => void;
 }) {
   const { t } = useTranslation();
+  const [query, setQuery] = useState("");
   const names = providers.map((p) => p.name);
   const provOf = (id: string) => {
     const i = id.indexOf(":");
@@ -180,41 +459,83 @@ function ComposerPickerCard({
     const p = providers.find((x) => x.name === provOf(id));
     return (p?.title || provOf(id)).split(" (")[0];
   };
+  // "ollama:qwen3-coder:30b" reads as "qwen3-coder:30b"; the provider sits beside it.
+  const shortId = (id: string) => (id.startsWith(provOf(id) + ":") ? id.slice(provOf(id).length + 1) : id);
+  // The card says the provider on its second line, so a label that ends in it
+  // ("GPT-5.6 Sol · OpenAI") loses that tail on the first.
+  const title = (id: string) => {
+    const label = settings.model_labels?.[id] || shortId(id);
+    const tail = ` · ${tag(id)}`;
+    return label.endsWith(tail) ? label.slice(0, -tail.length) : label;
+  };
+  const detail = (id: string) => {
+    const cfg = settings.model_config?.[id];
+    const bits = [tag(id)];
+    if (cfg?.context_size) bits.push(`${Math.round(cfg.context_size / 1024)}K`);
+    if (cfg?.thinking) bits.push(t("manage.thinking_tag"));
+    return bits.join(" · ");
+  };
+  const q = query.trim().toLowerCase();
+  const shown = settings.models.filter((id) => !q || id.toLowerCase().includes(q) || (settings.model_labels?.[id] || "").toLowerCase().includes(q));
   return (
-    <div className="mt-6" data-testid="composer-picker">
-      <div className={SEC_H + " mb-1.5"}>{t("manage.composer_picker_title")}</div>
-      <p className="text-meta text-muted mb-2.5 leading-relaxed">
-        {t("manage.composer_picker_help")}
-      </p>
-      <div className="mlist">
-        {settings.models.map((id) => {
+    <div className="mt-10" data-testid="composer-picker">
+      <div className="flex items-center mb-2">
+        <div className={SEC_H + " uppercase tracking-wide"}>{t("manage.composer_picker_title")}</div>
+        <label className="ml-auto flex items-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1 w-[220px] text-meta">
+          <Icon name="search" size={12} className="text-faint shrink-0" />
+          <input className="flex-1 bg-transparent outline-none" placeholder={t("manage.picker_search")} value={query} onChange={(e) => setQuery(e.target.value)} data-testid="picker-search" />
+        </label>
+        <button
+          className="ml-2 grid place-items-center w-[30px] h-[30px] rounded-lg border border-line bg-panel text-muted hover:text-ink hover:border-lineStrong transition-colors"
+          title={t("manage.pick_model_btn")}
+          onClick={onPick}
+          data-testid="pick-model-btn"
+        >
+          <Icon name="plus" size={14} />
+        </button>
+      </div>
+      {/* Each model is a card like the provider cards above: name, then provider and any
+          saved settings; ✕ and "Make default" show on hover. No table, no dividers. */}
+      <div className={"grid grid-cols-2 xl:grid-cols-3 gap-3" + (shown.length > 9 ? " max-h-[262px] overflow-y-auto pr-1 -mr-1" : "")}>
+        {shown.map((id) => {
           const isDefault = id === settings.model;
           return (
-            <div className="mlist-row" key={id}>
-              <label className="mlist-main">
-                <input
-                  type="checkbox"
-                  checked
-                  disabled={isDefault}
-                  title={isDefault ? t("models.default_locked") : t("manage.remove_from_picker")}
-                  onChange={() => removeModel(id).then((r) => r.ok && onChanged())}
-                />
-                <span className="mlist-name" title={id}>
-                  {settings.model_labels?.[id] || id}
+            <div
+              className="mlist-row group relative flex items-center gap-3 rounded-xl border border-line bg-panel/50 px-5 py-4 min-h-[70px] text-ui hover:border-lineStrong transition-colors"
+              key={id}
+              data-testid={`picker-row-${id}`}
+            >
+              <span className="min-w-0 flex-1">
+                <button className="block w-full truncate text-left leading-tight hover:underline underline-offset-2" title={t("manage.configure_model")} onClick={() => onConfigure(id)}>
+                  {title(id)}
+                </button>
+                <span className="flex items-center gap-2 mt-1 text-meta text-faint">
+                  <span className="truncate">{detail(id)}</span>
+                  {isDefault ? (
+                    <span className="mlist-default">{t("models.default_badge")}</span>
+                  ) : (
+                    <button className="mlist-make" onClick={() => setDefaultModel(id).then(() => onChanged())}>
+                      {t("models.make_default")}
+                    </button>
+                  )}
                 </span>
-              </label>
-              <span className="text-label text-faint mr-2 shrink-0">{tag(id)}</span>
-              {isDefault ? (
-                <span className="mlist-default">{t("models.default_badge")}</span>
-              ) : (
-                <button className="mlist-make" onClick={() => setDefaultModel(id).then(() => onChanged())}>
-                  {t("models.make_default")}
+              </span>
+              {!isDefault && (
+                <button
+                  className="text-faint hover:text-ink opacity-0 group-hover:opacity-100 transition-opacity"
+                  title={t("manage.remove_from_picker")}
+                  onClick={() => removeModel(id).then((r) => r.ok && onChanged())}
+                  data-testid={`picker-remove-${id}`}
+                >
+                  ✕
                 </button>
               )}
             </div>
           );
         })}
+        {shown.length === 0 && <div className="px-1 py-2 text-meta text-faint">—</div>}
       </div>
+      <p className="text-meta text-muted mt-3 leading-relaxed">{t("manage.composer_picker_help_v3")}</p>
     </div>
   );
 }
@@ -431,6 +752,95 @@ export function AllowlistBlock({
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Who may APPROVE from this Telegram bot — a stricter list than "allowed to message"
+// (OPE-217 / #712). Empty means: the one person in a bound private chat may approve;
+// a bound group needs owners chosen here before anyone can.
+export function TelegramApprovalOwnersBlock({ c, onChanged }: { c: Connector; onChanged: () => void }) {
+  const { t } = useTranslation();
+  const [err, setErr] = useState<string | null>(null);
+  const [pick, setPick] = useState("");
+  const owners = c.approval_owner_ids ?? [];
+  const names = { ...(c.allowed_user_names ?? {}), ...(c.approval_owner_names ?? {}) };
+  const candidates = c.allowed_users.filter((u) => !owners.includes(u));
+  const label = (u: string) => names[u] || u;
+  const add = async (userId: string) => {
+    const result = await addTelegramApprovalOwner(userId, names[userId] || undefined);
+    if (!result.ok) {
+      setErr(result.error || t("manage.owners_update_failed"));
+      return;
+    }
+    setErr(null);
+    setPick("");
+    onChanged();
+  };
+  const remove = async (userId: string) => {
+    const result = await removeTelegramApprovalOwner(userId);
+    if (!result.ok) {
+      setErr(result.error || t("manage.owners_update_failed"));
+      return;
+    }
+    setErr(null);
+    onChanged();
+  };
+  return (
+    <div className="border-t border-line px-3.5 py-3" data-testid="telegram-approval-owners">
+      <div className={SEC_H + " mb-1"}>{t("manage.approval_owners")}</div>
+      <div className="text-meta text-faint mb-2">{t("manage.approval_owners_help")}</div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {owners.length === 0 && (
+          <span className="text-meta text-faint">{t("manage.approval_owners_empty")}</span>
+        )}
+        {owners.map((u) => (
+          <span
+            key={u}
+            className="inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-full bg-paper border border-line text-meta"
+            title={t("manage.id_title", { id: u })}
+            data-testid={`telegram-approval-owner-${u}`}
+          >
+            <span className="w-4 h-4 rounded-full bg-accentSoft text-accent grid place-items-center text-[9px] font-bold">
+              {initials(label(u))}
+            </span>
+            {label(u)}
+            <button
+              className="w-4 h-4 grid place-items-center text-faint hover:text-danger"
+              title={t("common.remove")}
+              onClick={() => remove(u)}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        {candidates.length > 0 && (
+          <span className="inline-flex items-center gap-1">
+            <select
+              className="text-meta bg-paper border border-line rounded-md px-1.5 py-0.5"
+              value={pick}
+              onChange={(e) => setPick(e.target.value)}
+              data-testid="telegram-approval-owner-pick"
+            >
+              <option value="">{t("manage.approval_owners_pick")}</option>
+              {candidates.map((u) => (
+                <option key={u} value={u}>
+                  {label(u)}
+                </option>
+              ))}
+            </select>
+            <button
+              className="text-meta px-2 py-0.5 rounded-md bg-accent text-white disabled:opacity-50"
+              disabled={!pick}
+              onClick={() => pick && add(pick)}
+              data-testid="telegram-approval-owner-add"
+            >
+              {t("manage.add_btn")}
+            </button>
+          </span>
+        )}
+        {err && <span className="basis-full text-meta text-warnInk">{err}</span>}
       </div>
     </div>
   );
