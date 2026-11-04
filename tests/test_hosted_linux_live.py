@@ -1,6 +1,6 @@
 """Opt-in Linux acceptance gate using real OpenShell containers and engines.
 
-Run OPENWORKER_TEST_HOSTED_LINUX=1 with OpenShell 0.0.116 and grpcio installed.
+Run OPENWORKER_TEST_HOSTED_LINUX=1 with the pinned OpenShell release and grpcio installed.
 Use --basetemp beneath the operator's home: a gateway with PrivateTmp cannot
 bind-mount pytest's default /tmp paths. Missing prerequisites FAIL the gate.
 Only the shared deterministic model endpoint is a fake.

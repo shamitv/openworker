@@ -224,9 +224,9 @@ The gateway provides application-level separation across accounts. It does not c
 
 ## Linux Phase 2 acceptance gate
 
-Install the Python OpenShell extra (`pip install -e '.[dev,openshell]'`), Docker, OpenShell **0.0.116**, and its pinned base image before running the gate. The OpenShell gateway must run as the same operator that starts `openworker-web`, with bind mounts enabled; see [OpenShell setup](openshell.md). Private engines use their own home, state, configuration, cache, and runtime directories, and link only the operator's OpenShell client configuration into their configuration tree.
+Install the Python OpenShell extra (`pip install -e '.[dev,openshell]'`), Docker, the [pinned OpenShell release](openshell.md#what-you-need), and its pinned base image before running the gate. The OpenShell gateway must run as the same operator that starts `openworker-web`, with bind mounts enabled; see [OpenShell setup](openshell.md). Private engines use their own home, state, configuration, cache, and runtime directories, and link only the operator's OpenShell client configuration into their configuration tree.
 
-Use Linux's default `allowlist` network profile and configure explicit allowed destinations. The existing `open` profile is rejected by OpenShell 0.0.116 and prevents sandbox startup. Linux Phase 2 passed on the supplied Ubuntu VM; see [the recorded acceptance evidence](plans/headless-vm-ui-serving/phase-02-private-engines/status.md).
+Use Linux's default `allowlist` network profile and configure explicit allowed destinations. The `open` profile prevents OpenShell sandbox startup. The original Linux Phase 2 run passed on the supplied Ubuntu VM with OpenShell 0.0.116; see [the recorded acceptance evidence](plans/headless-vm-ui-serving/phase-02-private-engines/status.md).
 
 From the repository on the Linux VM:
 

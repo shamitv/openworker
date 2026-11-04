@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # One-time dev bootstrap for a fresh checkout: creates the Python venv every
-# from-source flow expects at .venv — the browser dev flow runs its
-# openworker-server directly, and the Tauri desktop shell falls back to it when
-# no packaged sidecar binary is present (src-tauri/src/lib.rs, resolution step 3).
+# from-source flow expects at .venv. The browser dev flow and the Tauri
+# desktop fallback use that venv to run the server module.
 #
 # Usage: bash packaging/setup_dev_env.sh
 set -euo pipefail
@@ -47,4 +46,4 @@ echo "Using $PYTHON ($version)"
 
 "$VENV/bin/python" -c 'import aisuite, coworker' # fail loudly if the wiring broke
 echo "Ready: $VENV"
-echo "  server: $VENV/bin/openworker-server --cwd /path/to/your/project --port 8765"
+echo "  server: $VENV/bin/python -m coworker.server.run --cwd /path/to/your/project --port 8765"

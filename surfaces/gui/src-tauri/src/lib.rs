@@ -213,9 +213,9 @@ fn sidecar_env() -> std::collections::HashMap<String, String> {
 ///      builds used Tauri externalBin).
 ///   4. Dev fallback: the repo venv, relative to this crate (`src-tauri` → repo-root `.venv`;
 ///      `bin/` on POSIX, `Scripts\` on Windows).
-fn server_bin() -> PathBuf {
+fn server_command() -> Command {
     if let Ok(p) = std::env::var("COWORKER_SERVER_BIN") {
-        return PathBuf::from(p);
+        return Command::new(p);
     }
     let exe_name = if cfg!(windows) {
         "openworker-server.exe"
@@ -233,18 +233,20 @@ fn server_bin() -> PathBuf {
             candidates.push(dir.join(exe_name)); // legacy onefile externalBin slot
             for c in candidates {
                 if c.exists() {
-                    return c;
+                    return Command::new(c);
                 }
             }
         }
     }
     let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     if cfg!(windows) {
-        p.push("../../../.venv/Scripts/openworker-server.exe");
+        p.push("../../../.venv/Scripts/python.exe");
     } else {
-        p.push("../../../.venv/bin/openworker-server");
+        p.push("../../../.venv/bin/python");
     }
-    p
+    let mut command = Command::new(p);
+    command.args(["-m", "coworker.server.run"]);
+    command
 }
 
 /// Mirror of `coworker.secrets.state_dir()` so the shell and server agree on `desktop.json`.
@@ -828,7 +830,7 @@ pub fn run() {
         ])
         .setup(move |app| {
             // 1. Start the Python server sidecar on the chosen port (inherits our env).
-            let mut server_cmd = Command::new(server_bin());
+            let mut server_cmd = server_command();
             server_cmd
                 .args(["--host", "127.0.0.1", "--port", &port.to_string()])
                 // The user's real shell environment (PATH to their tools, AWS_PROFILE,
