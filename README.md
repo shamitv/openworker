@@ -103,6 +103,13 @@ OpenWorker is local-first. Everything lives on your machine: the agent loop, you
 
 ## Run from source
 
+Linux is the current target for development and testing, including the hosted VM
+deployment. On Windows, WSL can provide the Linux environment; create and install
+dependencies in a Linux virtual environment rather than reusing a Windows `.venv`.
+The existing Windows and macOS desktop documentation remains applicable to those
+platforms; hosted Windows sandbox live verification is still pending. See
+[Hosting the full UI](docs/headless-vm-ui.md) for deployment and acceptance details.
+
 Prerequisites: Python 3.10+, Node 20+, and (for the desktop shell) the Rust toolchain via [rustup](https://rustup.rs/).
 
 ```shell
