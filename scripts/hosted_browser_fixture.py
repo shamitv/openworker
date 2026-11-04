@@ -164,6 +164,9 @@ http {{
     access_log {directory}/access.log;
     client_body_temp_path {directory}/client_temp;
     proxy_temp_path {directory}/proxy_temp;
+    fastcgi_temp_path {directory}/fastcgi_temp;
+    uwsgi_temp_path {directory}/uwsgi_temp;
+    scgi_temp_path {directory}/scgi_temp;
     map $http_upgrade $upgrade_connection {{ default upgrade; '' close; }}
     server {{
         listen {str(ipaddress.ip_address(listen_host)) + ':' if listen_host else ''}{origin.port or 443} ssl;
