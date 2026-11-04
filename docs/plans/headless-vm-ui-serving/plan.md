@@ -2,6 +2,10 @@
 
 ## Goal
 
+Linux with OpenShell is the current deployment and verification target. Native
+Windows hosted sandbox verification remains a separate pending gate; existing
+Windows implementation and historical evidence are retained.
+
 Serve the full OpenWorker UI from a headless VM to up to 20 admin-provisioned users over HTTPS, with supervised temporary internet access through Cloudflare Quick Tunnel. Each account owns a private engine, state, keys, sessions, and workspace root. Authentication and home ownership live in an application database; no per-user OS accounts are required. Agent shell and file tools must run through an enforcing sandbox.
 
 ## Architecture
