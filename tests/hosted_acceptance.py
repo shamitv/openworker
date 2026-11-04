@@ -46,28 +46,34 @@ def model_app():
     def tags():
         return {"models": [{"name": "phase2"}]}
 
-    @app.post("/v1/chat/completions")
+    @app.post("/api/show")
+    def show():
+        return {"model_info": {"phase2.context_length": 32768}}
+
+    @app.post("/api/chat")
     async def complete(request: Request):
         body = await request.json()
         finished = any(message.get("role") == "tool" for message in body["messages"]) or not body.get("tools")
-        calls = [{"id": "phase2-write", "type": "function", "function": {"name": "write_file",
-                  "arguments": json.dumps({"path": "marker.txt", "content": "scheduled work ran"})}}]
-        message = {"role": "assistant", "content": "Done" if finished else None}
+        message = {"role": "assistant", "content": "Done" if finished else ""}
         if not finished:
-            message["tool_calls"] = calls
-        reason = "stop" if finished else "tool_calls"
+            message["tool_calls"] = [{
+                "function": {
+                    "name": "write_file",
+                    "arguments": {"path": "marker.txt", "content": "scheduled work ran"},
+                },
+            }]
+        frame = {"model": body["model"], "message": message}
         if not body.get("stream"):
-            return {"id": "phase2", "object": "chat.completion", "created": int(time.time()), "model": "phase2",
-                    "choices": [{"index": 0, "message": message, "finish_reason": reason}]}
-        delta = dict(message)
-        if not finished:
-            delta["tool_calls"] = [{**calls[0], "index": 0}]
-        frames = [{"id": "phase2", "object": "chat.completion.chunk", "created": int(time.time()), "model": "phase2",
-                   "choices": [{"index": 0, "delta": delta, "finish_reason": None}]},
-                  {"id": "phase2", "object": "chat.completion.chunk", "created": int(time.time()), "model": "phase2",
-                   "choices": [{"index": 0, "delta": {}, "finish_reason": reason}]}]
-        return StreamingResponse(iter([*("data: " + json.dumps(frame) + "\n\n" for frame in frames), "data: [DONE]\n\n"]),
-                                 media_type="text/event-stream")
+            return {**frame, "done": True, "done_reason": "stop"}
+        frames = [
+            {**frame, "done": False},
+            {"model": body["model"], "done": True, "done_reason": "stop"},
+        ]
+        return StreamingResponse(
+            (json.dumps(frame) + "\n" for frame in frames),
+            media_type="application/x-ndjson",
+        )
+
     return app
 
 
