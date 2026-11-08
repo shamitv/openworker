@@ -1,6 +1,20 @@
 # Phase 5 status
 
-Status: In progress — attempt 03 collection and offline replay complete; final reviewed report publication remains pending.
+Status: Complete — the 2026-11-04 collection, offline replay, review and publication are recorded below.
+
+## New collection — 2026-11-04
+
+The user requested completion of Phase 5 with the available LLM. The prior attempt 03 capture and replay directories were found empty, so their full detailed report cannot be regenerated from the recorded locations. A fresh catalog check advertised `Ornith-1.5-35B-Uncensored-Q6_K`, the original planned model. The complete new held-out matrix and its schedule hash were recorded before inference in [execution-request-20261104.json](execution-request-20261104.json). This is a separate experiment from attempt 03.
+
+The new standalone wheel was rebuilt from revision `9f873b2` and installed into an independent environment. Its wheel SHA-256 is `f8228bf1ec9957ecfe03e7f9f40dc74a2a87379f525ac640904bc2b0f26b900a`. Offline validation reproduced asset bundle SHA-256 `37673a35e7bcf37058d705133e75ab676ef73345fbc49c6a9e13284161ae24bf` and scorer SHA-256 `f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e`. Raw evidence is being kept in a durable private directory outside Git.
+
+Installed-wheel tests from an unrelated working directory passed 390 tests, with one symlink test skipped because Windows symlink privileges are unavailable. Pytest could not write its cache in the checkout; this did not affect test results. Python was 3.14.2, httpx 0.28.1 and pytest 9.2.0. The independent environment did not contain OpenWorker.
+
+The collection ran from 2026-11-04 22:16:27 through 2026-11-08 21:50:17 IST with the full matrix and 12,288-token setting. All 540 tracks and 6,660 checkpoints were executed. Of the checkpoints, 6,203 completed, 261 reached the whole-turn deadline, 193 produced format errors and three exhausted the operation-round limit. All 457 failures remain in the results. Across 7,740 scheduled turns, 7,698 were executed and 42 follow-up turns were unexecuted after earlier failures. There were no collection errors. The infrastructure gate passed; model and deadline outcomes remain part of the measured results.
+
+The run made 12,069 inference requests and one catalog request. Of the inference requests, 11,808 returned responses with usage and 261 ended at the deadline without usage. Reported usage was 30,232,018 prompt tokens and 16,059,408 completion tokens. Median request latency was 17.69 seconds and p90 was 68.50 seconds. The requested settings were recorded; server-effective settings were unavailable. The manifest records successful removal of all 3,600 owned SQLite stores and the capture contains no remaining stores. Raw capture and diagnostics are retained privately outside Git under `C:\Users\shamit\.codex\memory-benchmark\phase5-20261104\capture`.
+
+Offline replay made zero inference requests, retained scorer SHA-256 `f5cfb1e2a52df159790ee589f2a977a255f66f19607856a8787f24b7994a323e`, and reproduced the original report byte for byte. The two results JSON files differ only in the additional replay scoring-history entry. Schedule, checkpoint journal and manifest were independently reconciled. The reviewed [summary](../../../memory/standalone-evaluations/phase05-heldout-20261104/summary.md), [report](../../../memory/standalone-evaluations/phase05-heldout-20261104/report.md) and [results](../../../memory/standalone-evaluations/phase05-heldout-20261104/results.json) are published synthetic evidence. The report SHA-256 is `e5e6a48248b46d1f1f50fb070a9a1b6f541b16ab867efccd1669ef8a259ebcc1`; the replay results SHA-256 is `19b09e43aab4b91c3fbb12e8d01914310f3ea243485e759264f54f7465e235dd`. Automated review found no known credential, endpoint or local-path patterns in the public artifacts. A single model and repetition support descriptive comparisons only.
 
 Planning date: 2026-10-03 (Asia/Kolkata). Dependencies: Phases 1–4 and explicit full-sweep request. The user asked to delete the prior short-limit run, start over, and then explicitly selected the available model when the previously selected ID was absent.
 
