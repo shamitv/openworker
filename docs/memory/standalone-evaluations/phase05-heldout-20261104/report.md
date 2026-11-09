@@ -2,9 +2,11 @@
 
 Collection status: **complete**. Infrastructure gate: **passed**.
 
-Model misses, false recall, consent questions and format/tool failures are measured outcomes; they do not become infrastructure successes or disappear when a later response finishes.
+The infrastructure gate passed with full checkpoint coverage and no collection errors. Model misses, false recall, consent questions and format or tool failures remain in the measured outcomes.
 
 Coverage: 540 track runs; 6203 completed, 457 failed and 0 unexecuted checkpoints.
+
+The review compares answers on the same scored cases and checks what the sequence correction snapshots contain. See the [reviewed summary and conclusions](summary.md).
 
 ## Conditions and separate tracks
 
@@ -132,7 +134,9 @@ Unexecuted/missing answers and absent control prerequisites remain unscored; den
 
 ## Comparisons with fixed factors
 
-Conservative requires explicit durability; recurring additionally saves stable non-sensitive incidental context. Their conformance labels differ. Common behavioral outcomes use fixed targets.
+Conservative requires explicit durability. Recurring also saves stable, non-sensitive incidental context. Conformance and storage scores use policy-specific targets. The common behavioral outcomes use the same targets across policies.
+
+“Matched selected cases” means the two sides scheduled the same persona, repetition and conversation identities. Each difference subtracts the left aggregate rate from the right aggregate rate, using each side's own scored denominator. For example, conservative baseline reads scored 88 answers in each interface, with different cases missing from the two sets. See the [paired answer results](summary.md#findings) for comparisons restricted to cases scored on both sides.
 
 ### Wording
 
@@ -233,7 +237,7 @@ No matched comparison selected. A model comparison requires at least two adverti
 
 ## Requests, provenance and cleanup
 
-Inference requests: 12069; failed HTTP requests: 261; missing usage: 261.
+The run made 12,069 inference requests. Of these, 261 reached the deadline without returned usage.
 Reported tokens: input=30232018, output=16059408; local cost=null.
 Turn coverage: `{"completed": 7241, "executed": 7698, "failed": 457, "scheduled": 7740, "unexecuted": 42}`. Unexecuted follow-ups and unexecuted checkpoints remain distinct.
 Latency in seconds: `{"max": 180.01753039998584, "median": 17.69067460001679, "min": 0.24510930001270026, "missing_requests": 0, "p90": 68.50457270001061, "p90_method": "nearest rank", "reported_requests": 12069}`.
@@ -7267,4 +7271,6 @@ Selected case identities must match to calculate rate differences; failed and un
 Policies have different conformance requirements; use fixed common outcomes when contrasting policies.
 Sequence storage sums repeated checkpoint-state observations, not distinct facts or independent samples.
 Null denominators, missing answers and unexercised prerequisites do not count as passes.
-Fixed lexical matching can miss paraphrases; results remain separate from historical benchmarks.
+Fixed lexical matching can miss paraphrases. Storage and current correction also require an accepted key and the expected scope. Among 122 exercised sequence corrections, 117 contained a matching value in the expected scope under a key outside the accepted aliases. See the [correction finding](summary.md#findings) for the diagnostic and its denominator.
+
+The October collection used a different model. This report describes the November collection.

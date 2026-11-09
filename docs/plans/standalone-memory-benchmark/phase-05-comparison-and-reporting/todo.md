@@ -6,7 +6,7 @@
 - [x] Record the complete requested matrix and repetition count before inference.
 - [x] Run all selected held-out conditions with fresh independent state.
 - [x] Preserve failed/unexecuted coverage, model misses and unexercised prerequisites.
-- [x] Implement and verify reports keeping tracks, interfaces, within-policy wording and policy differences separate (final held-out evidence pending).
+- [x] Implement and verify reports keeping tracks, interfaces, within-policy wording and policy differences separate.
 - [x] Publish write-change versus sequence-state scoring, TP/FP/FN, zero-denominator nulls and fixed common outcomes.
 - [x] Report request counts, available tokens, latency, settings and full provenance.
 - [x] Generate reviewed synthetic JSON/Markdown with representative failures and limitations.
