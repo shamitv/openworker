@@ -1,6 +1,6 @@
 # Phase 5 status
 
-Status: In progress — collection, offline replay, review and publication are complete; verification scratch cleanup remains pending.
+Status: Complete — collection, offline replay, review, publication and verification scratch cleanup are complete.
 
 ## New collection — 2026-11-04
 
@@ -12,7 +12,7 @@ Installed-wheel tests from an unrelated working directory passed 390 tests, with
 
 The collection ran from 2026-11-04 22:16:27 through 2026-11-08 21:50:17 IST with the full matrix and 12,288-token setting. All 540 tracks and 6,660 checkpoints were executed. Of the checkpoints, 6,203 completed, 261 reached the whole-turn deadline, 193 produced format errors and three exhausted the operation-round limit. All 457 failures remain in the results. Across 7,740 scheduled turns, 7,698 were executed and 42 follow-up turns were unexecuted after earlier failures. There were no collection errors. The infrastructure gate passed; model and deadline outcomes remain part of the measured results.
 
-The separate installed-wheel test run left its synthetic fixture directory under the private verification environment, including test SQLite files. An attempted recursive deletion of that owned test directory was rejected by automatic command approval. The capture's 3,600 run stores were removed successfully; cleanup of the separate verification fixtures remains pending.
+The separate installed-wheel test run left its synthetic fixture directory under the private verification environment, including test SQLite files. An attempted recursive deletion of that owned test directory was rejected by automatic command approval. On 2026-11-09 the user removed the test fixture directory, and its absence was verified. The capture's 3,600 run stores were removed successfully, and the retained private capture and replay files were verified present.
 
 The run made 12,069 inference requests and one catalog request. Of the inference requests, 11,808 returned responses with usage and 261 ended at the deadline without usage. Reported usage was 30,232,018 prompt tokens and 16,059,408 completion tokens. Median request latency was 17.69 seconds and p90 was 68.50 seconds. The requested settings were recorded; server-effective settings were unavailable. The manifest records successful removal of all 3,600 owned SQLite stores and the capture contains no remaining stores. Raw capture and diagnostics are retained privately outside Git under `C:\Users\shamit\.codex\memory-benchmark\phase5-20261104\capture`.
 

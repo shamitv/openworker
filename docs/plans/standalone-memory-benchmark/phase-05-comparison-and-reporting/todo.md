@@ -11,5 +11,5 @@
 - [x] Report request counts, available tokens, latency, settings and full provenance.
 - [x] Generate reviewed synthetic JSON/Markdown with representative failures and limitations.
 - [x] Verify portability using only the standalone package and its dependencies.
-- [ ] Retain private diagnostics and remove owned temporary stores/resources. Collection stores are removed; the installed-wheel test fixture directory remains.
+- [x] Retain private diagnostics and remove owned temporary stores/resources. Collection stores and the installed-wheel test fixture directory are removed.
 - [x] Commit/push sanitized results, report and completed checklist in a separate batch.
